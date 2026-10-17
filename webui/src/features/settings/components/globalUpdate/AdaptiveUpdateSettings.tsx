@@ -135,7 +135,7 @@ export const AdaptiveUpdateSettings = () => {
             {settings.canManage && (
                 <>
                     <FormControlLabel
-                        sx={{ px: 2 }}
+                        sx={{ mx: 0, px: 2 }}
                         label={t`Show all languages`}
                         control={
                             <Switch
