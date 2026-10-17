@@ -30,6 +30,7 @@ export type AdaptiveMangaScheduleKeySpecifier = (
     | 'canManage'
     | 'effective'
     | 'emptyChecks'
+    | 'historicalConfirmations'
     | 'intervalDays'
     | 'lastCheckAt'
     | 'lastDiscoveryAt'
@@ -39,6 +40,7 @@ export type AdaptiveMangaScheduleKeySpecifier = (
     | 'nextAutomaticCheckAt'
     | 'nextEligibleAt'
     | 'observations'
+    | 'provisionalIntervalDays'
     | 'reason'
     | 'usesPublicationDate'
     | AdaptiveMangaScheduleKeySpecifier
@@ -47,6 +49,7 @@ export type AdaptiveMangaScheduleFieldPolicy = {
     canManage?: FieldPolicy<any> | FieldReadFunction<any>;
     effective?: FieldPolicy<any> | FieldReadFunction<any>;
     emptyChecks?: FieldPolicy<any> | FieldReadFunction<any>;
+    historicalConfirmations?: FieldPolicy<any> | FieldReadFunction<any>;
     intervalDays?: FieldPolicy<any> | FieldReadFunction<any>;
     lastCheckAt?: FieldPolicy<any> | FieldReadFunction<any>;
     lastDiscoveryAt?: FieldPolicy<any> | FieldReadFunction<any>;
@@ -56,6 +59,7 @@ export type AdaptiveMangaScheduleFieldPolicy = {
     nextAutomaticCheckAt?: FieldPolicy<any> | FieldReadFunction<any>;
     nextEligibleAt?: FieldPolicy<any> | FieldReadFunction<any>;
     observations?: FieldPolicy<any> | FieldReadFunction<any>;
+    provisionalIntervalDays?: FieldPolicy<any> | FieldReadFunction<any>;
     reason?: FieldPolicy<any> | FieldReadFunction<any>;
     usesPublicationDate?: FieldPolicy<any> | FieldReadFunction<any>;
 };
@@ -325,6 +329,39 @@ export type ClearDownloaderPayloadKeySpecifier = (
 export type ClearDownloaderPayloadFieldPolicy = {
     clientMutationId?: FieldPolicy<any> | FieldReadFunction<any>;
     downloadStatus?: FieldPolicy<any> | FieldReadFunction<any>;
+};
+export type CompletedCategoryOptionKeySpecifier = ('id' | 'name' | CompletedCategoryOptionKeySpecifier)[];
+export type CompletedCategoryOptionFieldPolicy = {
+    id?: FieldPolicy<any> | FieldReadFunction<any>;
+    name?: FieldPolicy<any> | FieldReadFunction<any>;
+};
+export type CompletedCategoryPreviewKeySpecifier = (
+    | 'alreadyPresent'
+    | 'categoryId'
+    | 'skipped'
+    | 'toAdd'
+    | CompletedCategoryPreviewKeySpecifier
+)[];
+export type CompletedCategoryPreviewFieldPolicy = {
+    alreadyPresent?: FieldPolicy<any> | FieldReadFunction<any>;
+    categoryId?: FieldPolicy<any> | FieldReadFunction<any>;
+    skipped?: FieldPolicy<any> | FieldReadFunction<any>;
+    toAdd?: FieldPolicy<any> | FieldReadFunction<any>;
+};
+export type CompletedCategorySettingsKeySpecifier = (
+    | 'categories'
+    | 'categoryId'
+    | 'destinationMissing'
+    | 'effective'
+    | 'enabled'
+    | CompletedCategorySettingsKeySpecifier
+)[];
+export type CompletedCategorySettingsFieldPolicy = {
+    categories?: FieldPolicy<any> | FieldReadFunction<any>;
+    categoryId?: FieldPolicy<any> | FieldReadFunction<any>;
+    destinationMissing?: FieldPolicy<any> | FieldReadFunction<any>;
+    effective?: FieldPolicy<any> | FieldReadFunction<any>;
+    enabled?: FieldPolicy<any> | FieldReadFunction<any>;
 };
 export type CreateBackupPayloadKeySpecifier = ('clientMutationId' | 'url' | CreateBackupPayloadKeySpecifier)[];
 export type CreateBackupPayloadFieldPolicy = {
@@ -1145,6 +1182,7 @@ export type MutationKeySpecifier = (
     | 'loginTrackerOAuth'
     | 'logoutKoSyncAccount'
     | 'logoutTracker'
+    | 'organiseCompletedManga'
     | 'pullKoSyncProgress'
     | 'pushKoSyncProgress'
     | 'redeemRecoveryCode'
@@ -1167,6 +1205,7 @@ export type MutationKeySpecifier = (
     | 'setCategoryMetas'
     | 'setChapterMeta'
     | 'setChapterMetas'
+    | 'setCompletedCategorySettings'
     | 'setGlobalMeta'
     | 'setGlobalMetas'
     | 'setMangaMeta'
@@ -1244,6 +1283,7 @@ export type MutationFieldPolicy = {
     loginTrackerOAuth?: FieldPolicy<any> | FieldReadFunction<any>;
     logoutKoSyncAccount?: FieldPolicy<any> | FieldReadFunction<any>;
     logoutTracker?: FieldPolicy<any> | FieldReadFunction<any>;
+    organiseCompletedManga?: FieldPolicy<any> | FieldReadFunction<any>;
     pullKoSyncProgress?: FieldPolicy<any> | FieldReadFunction<any>;
     pushKoSyncProgress?: FieldPolicy<any> | FieldReadFunction<any>;
     redeemRecoveryCode?: FieldPolicy<any> | FieldReadFunction<any>;
@@ -1266,6 +1306,7 @@ export type MutationFieldPolicy = {
     setCategoryMetas?: FieldPolicy<any> | FieldReadFunction<any>;
     setChapterMeta?: FieldPolicy<any> | FieldReadFunction<any>;
     setChapterMetas?: FieldPolicy<any> | FieldReadFunction<any>;
+    setCompletedCategorySettings?: FieldPolicy<any> | FieldReadFunction<any>;
     setGlobalMeta?: FieldPolicy<any> | FieldReadFunction<any>;
     setGlobalMetas?: FieldPolicy<any> | FieldReadFunction<any>;
     setMangaMeta?: FieldPolicy<any> | FieldReadFunction<any>;
@@ -1638,6 +1679,8 @@ export type QueryKeySpecifier = (
     | 'chapters'
     | 'checkForServerUpdates'
     | 'checkForWebUIUpdate'
+    | 'completedCategoryPreview'
+    | 'completedCategorySettings'
     | 'downloadStatus'
     | 'extension'
     | 'extensionStore'
@@ -1680,6 +1723,8 @@ export type QueryFieldPolicy = {
     chapters?: FieldPolicy<any> | FieldReadFunction<any>;
     checkForServerUpdates?: FieldPolicy<any> | FieldReadFunction<any>;
     checkForWebUIUpdate?: FieldPolicy<any> | FieldReadFunction<any>;
+    completedCategoryPreview?: FieldPolicy<any> | FieldReadFunction<any>;
+    completedCategorySettings?: FieldPolicy<any> | FieldReadFunction<any>;
     downloadStatus?: FieldPolicy<any> | FieldReadFunction<any>;
     extension?: FieldPolicy<any> | FieldReadFunction<any>;
     extensionStore?: FieldPolicy<any> | FieldReadFunction<any>;
@@ -3198,6 +3243,27 @@ export type StrictTypedTypePolicies = {
     ClearDownloaderPayload?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
         keyFields?: false | ClearDownloaderPayloadKeySpecifier | (() => undefined | ClearDownloaderPayloadKeySpecifier);
         fields?: ClearDownloaderPayloadFieldPolicy;
+    };
+    CompletedCategoryOption?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
+        keyFields?:
+            | false
+            | CompletedCategoryOptionKeySpecifier
+            | (() => undefined | CompletedCategoryOptionKeySpecifier);
+        fields?: CompletedCategoryOptionFieldPolicy;
+    };
+    CompletedCategoryPreview?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
+        keyFields?:
+            | false
+            | CompletedCategoryPreviewKeySpecifier
+            | (() => undefined | CompletedCategoryPreviewKeySpecifier);
+        fields?: CompletedCategoryPreviewFieldPolicy;
+    };
+    CompletedCategorySettings?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
+        keyFields?:
+            | false
+            | CompletedCategorySettingsKeySpecifier
+            | (() => undefined | CompletedCategorySettingsKeySpecifier);
+        fields?: CompletedCategorySettingsFieldPolicy;
     };
     CreateBackupPayload?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
         keyFields?: false | CreateBackupPayloadKeySpecifier | (() => undefined | CreateBackupPayloadKeySpecifier);

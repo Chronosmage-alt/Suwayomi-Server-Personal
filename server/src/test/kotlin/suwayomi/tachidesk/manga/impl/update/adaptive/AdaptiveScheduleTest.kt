@@ -111,4 +111,188 @@ class AdaptiveScheduleTest {
             assertEquals(AdaptivePhase.LEARNING, result.phase)
         }
     }
+
+    private fun historical(interval: Int = 7) = (1..6).map { chapter(it, (10L + it * interval) * day) }
+
+    @Test fun historicalThresholdsAndUnreliableTails() {
+        val history = historical()
+        val now = 53 * day
+        assertEquals(7 * day, AdaptiveSchedule.historicalCandidate(history, now)?.interval)
+        assertEquals(null, AdaptiveSchedule.historicalCandidate(history.take(5), now))
+        assertEquals(null, AdaptiveSchedule.historicalCandidate(history, 63 * day))
+        assertEquals(null, AdaptiveSchedule.historicalCandidate(history + chapter(7), now))
+        assertEquals(null, AdaptiveSchedule.historicalCandidate(history + chapter(7, 40 * day), now))
+        assertEquals(null, AdaptiveSchedule.historicalCandidate(history + chapter(6, 49 * day, "duplicate"), now))
+        assertEquals(7 * day, AdaptiveSchedule.historicalCandidate(history + chapter(6, 52 * day, "duplicate"), now)?.interval)
+        assertEquals(null, AdaptiveSchedule.historicalCandidate(historical(2), 22 * day))
+        assertEquals(30 * day, AdaptiveSchedule.historicalCandidate(historical(30), 191 * day)?.interval)
+        val jitter = history.mapIndexed { index, chapter -> chapter.copy(uploadDate = chapter.uploadDate + (index % 2) * day / 2) }
+        assertEquals(7 * day + day / 2, AdaptiveSchedule.historicalCandidate(jitter, 53 * day)?.interval)
+        val bulk = (1..24).map { chapter(it, (10L + (it - 1) / 4 * 7) * day) }
+        assertEquals(null, AdaptiveSchedule.historicalCandidate(bulk, now))
+        val batches = (1..12).map { chapter(it, (10L + (it - 1) / 2 * 7) * day) }
+        assertEquals(7 * day, AdaptiveSchedule.historicalCandidate(batches, now)?.interval)
+    }
+
+    @Test fun historicalConfirmationKeepsNormalChecksUntilTwoNewReleases() {
+        var history = historical()
+        var state = AdaptiveSchedule.observe(AdaptiveState(), emptyList(), history, 53 * day)
+        assertEquals(0, state.historical?.confirmations)
+        assertTrue(state.observations.isEmpty())
+        repeat(2) { index ->
+            val now = (59L + 7 * index) * day
+            val next = history + chapter(7 + index, now)
+            state = AdaptiveSchedule.observe(state.copy(lastCheck = now - day / 2), history, next, now)
+            history = next
+            assertEquals(index + 1, state.observations.size)
+            if (index == 0) {
+                assertEquals(1, state.historical?.confirmations)
+                assertEquals(0L, state.interval)
+                assertTrue(AdaptiveSchedule.due(state, now))
+            }
+        }
+        assertEquals(7 * day, state.interval)
+        assertEquals(null, state.historical)
+    }
+
+    @Test fun rejectedHistoryDoesNotReseedAndFreshLearningContinues() {
+        var history = historical()
+        var state = AdaptiveSchedule.observe(AdaptiveState(), emptyList(), history, 53 * day)
+        repeat(4) { index ->
+            val now = (55L + 4 * index) * day
+            val next = history + chapter(7 + index, now)
+            state = AdaptiveSchedule.observe(state.copy(lastCheck = now - day / 2), history, next, now)
+            history = next
+            assertEquals(null, state.historical)
+            assertEquals(index + 1, state.observations.size)
+        }
+        assertEquals(4 * day, state.interval)
+        val seed = AdaptiveSchedule.observe(AdaptiveState(), emptyList(), historical(), 53 * day)
+        val expired = AdaptiveSchedule.observe(seed, historical(), historical(), 64 * day)
+        assertEquals(null, expired.historical)
+        assertEquals(null, AdaptiveSchedule.observe(expired, historical(), historical(), 65 * day).historical)
+    }
+
+    @Test fun resetSuppressesExistingHistoryAndOldJsonHasSafeDefaults() {
+        val old =
+            kotlinx.serialization.json.Json
+                .decodeFromString<AdaptiveState>("""{"lastCheck":123}""")
+        assertEquals(null, old.historical)
+        assertEquals(null, old.historicalAttemptHigh)
+        val reset = AdaptiveSchedule.observe(AdaptiveState(historicalDisabled = true), historical(), historical(), 53 * day)
+        assertEquals(null, reset.historical)
+        assertEquals(6f, reset.historicalAttemptHigh)
+        assertEquals(null, AdaptiveSchedule.observe(reset, historical(), historical(), 54 * day).historical)
+    }
+
+    @Test fun historicalGroupingAndRecencyBoundaries() {
+        val history = historical()
+        val latest = 52 * day
+        val tolerance = 7 * day / 5
+        assertTrue(AdaptiveSchedule.historicalCandidate(history, latest + 7 * day + tolerance) != null)
+        assertEquals(null, AdaptiveSchedule.historicalCandidate(history, latest + 7 * day + tolerance + 1))
+        assertEquals(null, AdaptiveSchedule.historicalCandidate(history, latest - 1))
+        assertTrue(AdaptiveSchedule.historicalCandidate(history + chapter(6, latest + day / 2, "other"), latest + day) != null)
+        assertEquals(null, AdaptiveSchedule.historicalCandidate(history + chapter(6, latest + day / 2 + 1, "other"), latest + day))
+        val pairs = (1..12).map { number -> chapter(number, (10L + (number - 1) / 2 * 7) * day + (number - 1) % 2 * day) }
+        assertTrue(AdaptiveSchedule.historicalCandidate(pairs, 53 * day) != null)
+        val irregular =
+            history.mapIndexed { index, chapter ->
+                if (index ==
+                    3
+                ) {
+                    chapter.copy(uploadDate = chapter.uploadDate + 3 * day)
+                } else {
+                    chapter
+                }
+            }
+        assertEquals(null, AdaptiveSchedule.historicalCandidate(irregular, 53 * day))
+    }
+
+    @Test fun historicalImportsDuplicatesBackfillsAndRepeatedRefreshesNeverConfirm() {
+        val history = historical()
+        var state = AdaptiveSchedule.observe(AdaptiveState(), emptyList(), history, 53 * day)
+        repeat(3) {
+            state = AdaptiveSchedule.observe(state, history, history, 53 * day + it)
+            assertTrue(state.observations.isEmpty())
+            assertEquals(0, state.historical?.confirmations)
+            assertEquals(0L, state.interval)
+        }
+        for (extra in listOf(chapter(6, 52 * day, "scanlator"), chapter(0, 10 * day))) {
+            val refreshed = AdaptiveSchedule.observe(state, history, history + extra, 54 * day)
+            assertTrue(refreshed.observations.isEmpty())
+            assertEquals(0L, refreshed.interval)
+            assertTrue(AdaptiveSchedule.due(refreshed, 54 * day))
+        }
+        val next = history + chapter(7, 59 * day)
+        val first = AdaptiveSchedule.observe(state.copy(lastCheck = 59 * day - day / 2), history, next, 59 * day)
+        val imported = AdaptiveSchedule.observe(first, emptyList(), next, 60 * day)
+        assertTrue(imported.observations.isEmpty())
+        assertEquals(null, imported.historical)
+        assertEquals(0L, imported.interval)
+    }
+
+    @Test fun releaseThatCreatesCandidateDoesNotAlsoConfirmIt() {
+        val old = historical().take(5)
+        val baseline = AdaptiveState(lastCheck = 52 * day - day / 2)
+        val seeded = AdaptiveSchedule.observe(baseline, old, historical(), 52 * day)
+        assertEquals(1, seeded.observations.size)
+        assertEquals(0, seeded.historical?.confirmations)
+        val first =
+            AdaptiveSchedule.observe(
+                seeded.copy(lastCheck = 59 * day - day / 2),
+                historical(),
+                historical() + chapter(7, 59 * day),
+                59 * day,
+            )
+        assertEquals(1, first.historical?.confirmations)
+        assertEquals(0L, first.interval)
+    }
+
+    @Test fun missingHistoryAfterFirstConfirmationFallsBackWithoutDiscardingFreshReleases() {
+        var history = historical()
+        var state = AdaptiveSchedule.observe(AdaptiveState(), emptyList(), history, 53 * day)
+        repeat(4) { index ->
+            val now = (59L + index * 7) * day
+            val next = (history + chapter(7 + index, now)).map { if (index > 0) it.copy(uploadDate = 0) else it }
+            state = AdaptiveSchedule.observe(state.copy(lastCheck = now - day / 2), history, next, now)
+            history = next
+            assertEquals(index + 1, state.observations.size)
+            if (index == 0) assertEquals(1, state.historical?.confirmations)
+            if (index in 1..2) {
+                assertEquals(null, state.historical)
+                assertEquals(0L, state.interval)
+                assertTrue(AdaptiveSchedule.due(state, now))
+            }
+        }
+        assertEquals(7 * day, state.interval)
+    }
+
+    @Test fun conflictingDuplicateDatesCannotConfirmHistoricalSchedule() {
+        val history = historical()
+        val seed = AdaptiveSchedule.observe(AdaptiveState(), emptyList(), history, 53 * day)
+        val next = history + chapter(7, 59 * day) + chapter(7, 56 * day, "scanlator")
+        val result = AdaptiveSchedule.observe(seed.copy(lastCheck = 59 * day - day / 2), history, next, 59 * day)
+        assertEquals(null, result.historical)
+        assertEquals(0L, result.interval)
+        assertEquals(1, result.observations.size)
+    }
+
+    @Test fun shortenedListsCannotLowerRejectedWatermarkEvenAcrossSerialization() {
+        val history = historical()
+        val seed = AdaptiveSchedule.observe(AdaptiveState(), emptyList(), history, 53 * day)
+        val rejected = AdaptiveSchedule.observe(seed, history, history, 64 * day)
+        val shortened = listOf(chapter(1, 17 * day))
+        val duplicate = shortened + chapter(1, 17 * day, "other")
+        val result = AdaptiveSchedule.observe(rejected, shortened, duplicate, 64 * day)
+        assertEquals(6f, result.historicalAttemptHigh)
+        val json = kotlinx.serialization.json.Json
+        val reloaded = json.decodeFromString<AdaptiveState>(json.encodeToString(AdaptiveState.serializer(), result))
+        val restored = AdaptiveSchedule.observe(reloaded, emptyList(), history, 54 * day)
+        assertEquals(null, restored.historical)
+        assertEquals(6f, restored.historicalAttemptHigh)
+        val shrinkDuringConfirmation = AdaptiveSchedule.observe(seed, history, duplicate, 54 * day)
+        assertEquals(6f, shrinkDuringConfirmation.historicalAttemptHigh)
+        assertEquals(null, shrinkDuringConfirmation.historical)
+    }
 }

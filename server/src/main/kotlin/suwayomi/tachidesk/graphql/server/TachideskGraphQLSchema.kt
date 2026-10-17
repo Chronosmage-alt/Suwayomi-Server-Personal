@@ -25,6 +25,7 @@ import suwayomi.tachidesk.graphql.mutations.AdaptiveUpdateMutation
 import suwayomi.tachidesk.graphql.mutations.BackupMutation
 import suwayomi.tachidesk.graphql.mutations.CategoryMutation
 import suwayomi.tachidesk.graphql.mutations.ChapterMutation
+import suwayomi.tachidesk.graphql.mutations.CompletedCategoryMutation
 import suwayomi.tachidesk.graphql.mutations.DownloadMutation
 import suwayomi.tachidesk.graphql.mutations.ExtensionMutation
 import suwayomi.tachidesk.graphql.mutations.ExtensionStoreMutation
@@ -45,6 +46,7 @@ import suwayomi.tachidesk.graphql.queries.AdaptiveUpdateQuery
 import suwayomi.tachidesk.graphql.queries.BackupQuery
 import suwayomi.tachidesk.graphql.queries.CategoryQuery
 import suwayomi.tachidesk.graphql.queries.ChapterQuery
+import suwayomi.tachidesk.graphql.queries.CompletedCategoryQuery
 import suwayomi.tachidesk.graphql.queries.DownloadQuery
 import suwayomi.tachidesk.graphql.queries.ExtensionQuery
 import suwayomi.tachidesk.graphql.queries.ExtensionStoreQuery
@@ -114,6 +116,7 @@ object GraphQLSchemaProvider {
                         TopLevelObject(BackupQuery()),
                         TopLevelObject(AdaptiveUpdateQuery()),
                         TopLevelObject(CategoryQuery()),
+                        TopLevelObject(CompletedCategoryQuery()),
                         TopLevelObject(ChapterQuery()),
                         TopLevelObject(DownloadQuery()),
                         TopLevelObject(ExtensionQuery()),
@@ -135,6 +138,7 @@ object GraphQLSchemaProvider {
                         TopLevelObject(BackupMutation()),
                         TopLevelObject(AdaptiveUpdateMutation()),
                         TopLevelObject(CategoryMutation()),
+                        TopLevelObject(CompletedCategoryMutation()),
                         TopLevelObject(ChapterMutation()),
                         TopLevelObject(DownloadMutation()),
                         TopLevelObject(ExtensionMutation()),

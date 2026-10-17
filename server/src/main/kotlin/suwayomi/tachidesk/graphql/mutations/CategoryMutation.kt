@@ -583,8 +583,12 @@ class CategoryMutation {
         val addToCategoryIds = patch.addToCategories.orEmpty()
         transaction {
             if (patch.clearCategories == true) {
+                suwayomi.tachidesk.manga.impl.CompletedCategories
+                    .respectRemoval(userId, ids)
                 CategoryMangaTable.deleteWhere { CategoryMangaTable.manga inList ids and (CategoryMangaTable.user eq userId) }
             } else if (removeFromCategoryIds.isNotEmpty()) {
+                suwayomi.tachidesk.manga.impl.CompletedCategories
+                    .respectRemoval(userId, ids, removeFromCategoryIds)
                 CategoryMangaTable.deleteWhere {
                     (CategoryMangaTable.manga inList ids) and
                         (CategoryMangaTable.category inList removeFromCategoryIds) and

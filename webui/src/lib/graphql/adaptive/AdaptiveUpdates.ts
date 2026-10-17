@@ -31,6 +31,8 @@ const ADAPTIVE_MANGA_FIELDS = gql`
         effective
         reason
         intervalDays
+        provisionalIntervalDays
+        historicalConfirmations
         observations
         emptyChecks
         lastCheckAt

@@ -42,6 +42,7 @@ export type AdaptiveMangaSchedule = {
     canManage: Scalars['Boolean']['output'];
     effective: Scalars['Boolean']['output'];
     emptyChecks: Scalars['Int']['output'];
+    historicalConfirmations: Scalars['Int']['output'];
     intervalDays?: Maybe<Scalars['Float']['output']>;
     lastCheckAt?: Maybe<Scalars['LongString']['output']>;
     lastDiscoveryAt?: Maybe<Scalars['LongString']['output']>;
@@ -51,6 +52,7 @@ export type AdaptiveMangaSchedule = {
     nextAutomaticCheckAt?: Maybe<Scalars['LongString']['output']>;
     nextEligibleAt?: Maybe<Scalars['LongString']['output']>;
     observations: Scalars['Int']['output'];
+    provisionalIntervalDays?: Maybe<Scalars['Float']['output']>;
     reason: AdaptiveUpdateReason;
     usesPublicationDate?: Maybe<Scalars['Boolean']['output']>;
 };
@@ -441,6 +443,29 @@ export type ClearDownloaderPayload = {
     __typename?: 'ClearDownloaderPayload';
     clientMutationId?: Maybe<Scalars['String']['output']>;
     downloadStatus: DownloadStatus;
+};
+
+export type CompletedCategoryOption = {
+    __typename?: 'CompletedCategoryOption';
+    id: Scalars['Int']['output'];
+    name: Scalars['String']['output'];
+};
+
+export type CompletedCategoryPreview = {
+    __typename?: 'CompletedCategoryPreview';
+    alreadyPresent: Scalars['Int']['output'];
+    categoryId: Scalars['Int']['output'];
+    skipped: Scalars['Int']['output'];
+    toAdd: Scalars['Int']['output'];
+};
+
+export type CompletedCategorySettings = {
+    __typename?: 'CompletedCategorySettings';
+    categories: Array<CompletedCategoryOption>;
+    categoryId?: Maybe<Scalars['Int']['output']>;
+    destinationMissing: Scalars['Boolean']['output'];
+    effective: Scalars['Boolean']['output'];
+    enabled: Scalars['Boolean']['output'];
 };
 
 export type ConnectKoSyncAccountInput = {
@@ -1663,6 +1688,7 @@ export type Mutation = {
     loginTrackerOAuth: LoginTrackerOAuthPayload;
     logoutKoSyncAccount: LogoutKoSyncAccountPayload;
     logoutTracker: LogoutTrackerPayload;
+    organiseCompletedManga: CompletedCategoryPreview;
     pullKoSyncProgress?: Maybe<PullKoSyncProgressPayload>;
     pushKoSyncProgress?: Maybe<PushKoSyncProgressPayload>;
     /** Redeems a recovery code with a self-chosen new password. */
@@ -1688,6 +1714,7 @@ export type Mutation = {
     setCategoryMetas?: Maybe<SetCategoryMetasPayload>;
     setChapterMeta?: Maybe<SetChapterMetaPayload>;
     setChapterMetas?: Maybe<SetChapterMetasPayload>;
+    setCompletedCategorySettings: CompletedCategorySettings;
     setGlobalMeta?: Maybe<SetGlobalMetaPayload>;
     setGlobalMetas?: Maybe<SetGlobalMetasPayload>;
     setMangaMeta?: Maybe<SetMangaMetaPayload>;
@@ -1887,6 +1914,10 @@ export type MutationLogoutTrackerArgs = {
     input: LogoutTrackerInput;
 };
 
+export type MutationOrganiseCompletedMangaArgs = {
+    categoryId: Scalars['Int']['input'];
+};
+
 export type MutationPullKoSyncProgressArgs = {
     input: PullKoSyncProgressInput;
 };
@@ -1971,6 +2002,11 @@ export type MutationSetChapterMetaArgs = {
 
 export type MutationSetChapterMetasArgs = {
     input: SetChapterMetasInput;
+};
+
+export type MutationSetCompletedCategorySettingsArgs = {
+    categoryId?: InputMaybe<Scalars['Int']['input']>;
+    enabled: Scalars['Boolean']['input'];
 };
 
 export type MutationSetGlobalMetaArgs = {
@@ -2595,6 +2631,8 @@ export type Query = {
     chapters: ChapterNodeList;
     checkForServerUpdates: Array<CheckForServerUpdatesPayload>;
     checkForWebUIUpdate: WebUiUpdateCheck;
+    completedCategoryPreview: CompletedCategoryPreview;
+    completedCategorySettings: CompletedCategorySettings;
     downloadStatus: DownloadStatus;
     extension: ExtensionType;
     extensionStore: ExtensionStoreType;
@@ -2664,6 +2702,10 @@ export type QueryChaptersArgs = {
     order?: InputMaybe<Array<ChapterOrderInput>>;
     orderBy?: InputMaybe<ChapterOrderBy>;
     orderByType?: InputMaybe<SortOrder>;
+};
+
+export type QueryCompletedCategoryPreviewArgs = {
+    categoryId: Scalars['Int']['input'];
 };
 
 export type QueryExtensionArgs = {

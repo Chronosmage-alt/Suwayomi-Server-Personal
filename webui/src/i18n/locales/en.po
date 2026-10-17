@@ -139,6 +139,10 @@ msgstr "{0} / {1}{2}"
 msgid "{0}% | Updating…"
 msgstr "{0}% | Updating…"
 
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "{additions} titles will be added. {present} are already present. {skipped} will be skipped because they were previously handled or manually removed."
+msgstr "{additions} titles will be added. {present} are already present. {skipped} will be skipped because they were previously handled or manually removed."
+
 #: src/features/navigation-bar/NavigationBar.constants.ts
 msgid "{availableUpdates, plural, one {# update available} other {# updates available}}"
 msgstr "{availableUpdates, plural, one {# update available} other {# updates available}}"
@@ -469,6 +473,10 @@ msgstr "Add To Library"
 msgid "Add tracking"
 msgstr "Add tracking"
 
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "Added {added} titles to the destination category."
+msgstr "Added {added} titles to the destination category."
+
 #: src/features/manga/hooks/useManageMangaLibraryState.tsx
 msgid "Added manga to library!"
 msgstr "Added manga to library!"
@@ -480,6 +488,10 @@ msgstr "Advanced"
 #: src/features/migration/components/MigrationBulkSearchOptionsDialog.tsx
 msgid "Advanced search mode"
 msgstr "Advanced search mode"
+
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "After a successful metadata refresh reports Completed, this adds library manga to the selected category once and keeps all other categories. It never removes titles when their status changes."
+msgstr "After a successful metadata refresh reports Completed, this adds library manga to the selected category once and keeps all other categories. It never removes titles when their status changes."
 
 #: src/features/settings/Settings.constants.ts
 msgid "After changing this setting go to the \"About\" page and check for a webUI update and install it"
@@ -529,6 +541,10 @@ msgstr "and"
 #: src/features/settings/screens/Settings.tsx
 msgid "Appearance"
 msgstr "Appearance"
+
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "Apply organisation"
+msgstr "Apply organisation"
 
 #: src/features/reader/settings/general/components/ReaderSettingSafeAreaInset.tsx
 msgid "Apply safe area padding"
@@ -623,6 +639,10 @@ msgstr "Automatic update schedule"
 #: src/features/settings/components/globalUpdate/GlobalUpdateSettingsInterval.tsx
 msgid "Automatic updates"
 msgstr "Automatic updates"
+
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "Automatically categorise completed manga"
+msgstr "Automatically categorise completed manga"
 
 #: src/features/settings/components/webUI/WebUIUpdateIntervalSetting.tsx
 msgid "Automatically download the latest version"
@@ -832,6 +852,7 @@ msgstr "Can't migrate an entry to itself"
 #: src/features/category/components/CategorySelect.tsx
 #: src/features/category/components/CreateOrEditCategoryDialog.tsx
 #: src/features/downloads/components/DownloadQueueChapterCard.tsx
+#: src/features/library/components/CompletedCategorySettings.tsx
 #: src/features/manga/components/details/MangaNotes.tsx
 #: src/features/migration/components/MigrationBulkSearchOptionsDialog.tsx
 #: src/features/migration/components/MigrationOptionsDialog.tsx
@@ -1046,6 +1067,14 @@ msgstr "Compatible"
 #: src/features/manga/Manga.constants.ts
 msgid "Completed"
 msgstr "Completed"
+
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "Completed category"
+msgstr "Completed category"
+
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "Completed category settings could not be loaded."
+msgstr "Completed category settings could not be loaded."
 
 #: src/features/settings/components/images/Processing.tsx
 msgid "Compression level"
@@ -1535,6 +1564,10 @@ msgstr "Desktop"
 #: src/features/migration/components/migration-entry/MigrationDestinationEntry.tsx
 msgid "Destination — {0}"
 msgstr "Destination — {0}"
+
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "Destination category"
+msgstr "Destination category"
 
 #: src/features/device/screens/DeviceSetting.tsx
 #: src/features/settings/screens/Settings.tsx
@@ -3083,6 +3116,10 @@ msgstr "or"
 msgid "Orange Juice"
 msgstr "Orange Juice"
 
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "Organise existing completed manga"
+msgstr "Organise existing completed manga"
+
 #: src/features/reader/settings/ReaderSettings.constants.tsx
 msgid "Original size"
 msgstr "Original size"
@@ -3202,6 +3239,10 @@ msgstr "Progress bar style"
 #: src/features/settings/Settings.constants.ts
 msgid "Prompt"
 msgstr "Prompt"
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Provisional release interval: about {provisionalDays} days. {confirmations} of 2 new releases confirmed; normal automatic updates continue."
+msgstr "Provisional release interval: about {provisionalDays} days. {confirmations} of 2 new releases confirmed; normal automatic updates continue."
 
 #: src/features/manga/Manga.constants.ts
 msgid "Publishing finished"
@@ -3340,6 +3381,10 @@ msgstr "Remove selected from the library"
 #: src/features/library/screens/LibrarySettings.tsx
 msgid "Removed non library manga from categories"
 msgstr "Removed non library manga from categories"
+
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "Removing a title manually from the destination category prevents it from being automatically re-added or added by Organise. Turning the rule off and on does not reset this. Selecting a different destination allows one addition there."
+msgstr "Removing a title manually from the destination category prevents it from being automatically re-added or added by Organise. Turning the rule off and on does not reset this. Selecting a different destination allows one addition there."
 
 #: src/base/components/buttons/ResetButton.tsx
 #: src/base/components/settings/CheckboxListSetting.tsx
@@ -3551,6 +3596,10 @@ msgstr "See the official <0>MUI documentation</0> for how to customize the theme
 #: src/features/migration/components/migration-entry/MigrationMatchedEntry.tsx
 msgid "Select"
 msgstr "Select"
+
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "Select a category"
+msgstr "Select a category"
 
 #: src/features/device/screens/DeviceSetting.tsx
 msgid "Select a device to use its server stored UI settings"
@@ -4042,6 +4091,10 @@ msgstr "The cache of the client (browser, electron) should get cleared alongside
 msgid "The category is empty"
 msgstr "The category is empty"
 
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "The destination category is unavailable. Automatic categorisation is inactive. Select another category."
+msgstr "The destination category is unavailable. Automatic categorisation is inactive. Select another category."
+
 #: src/features/backup/component/BackupValidationDialog.tsx
 msgid "The following sources are not installed:"
 msgstr "The following sources are not installed:"
@@ -4073,6 +4126,10 @@ msgid "The next chapter has a different scanlator than the current one.\n"
 msgstr "The next chapter has a different scanlator than the current one.\n"
 "Current: {currentScanlator}\n"
 "Next: {nextScanlator}"
+
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "The operation failed or the destination changed. Review the category and try again."
+msgstr "The operation failed or the destination changed. Review the category and try again."
 
 #: src/features/backup/screens/Backup.tsx
 msgid "The path to the directory on the server where automated backups should get saved in"
@@ -4135,6 +4192,10 @@ msgstr "This does not prevent unofficial or potentially incorrectly flagged exte
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "This icon will be shown on the system that is running the server"
 msgstr "This icon will be shown on the system that is running the server"
+
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "This is independent of Exclude Completed. It does not refresh sources, change reading progress or manage downloads. Existing category update and download rules still apply."
+msgstr "This is independent of Exclude Completed. It does not refresh sources, change reading progress or manage downloads. Existing category update and download rules still apply."
 
 #: src/features/app-updates/components/VersionInfo.tsx
 msgid "This is the latest version"
@@ -4447,6 +4508,10 @@ msgstr "Username"
 #: src/features/settings/components/globalUpdate/AdaptiveUpdateSettings.tsx
 msgid "Uses Browse's enabled languages and sources. Hidden sources keep their adaptive preferences."
 msgstr "Uses Browse's enabled languages and sources. Hidden sources keep their adaptive preferences."
+
+#: src/features/library/components/CompletedCategorySettings.tsx
+msgid "Uses stored library statuses only, without contacting sources. Existing categories are preserved. Counts are checked again when applying."
+msgstr "Uses stored library statuses only, without contacting sources. Existing categories are preserved. Counts are checked again when applying."
 
 #: src/features/settings/components/images/KeyValueItem.tsx
 msgid "Value"

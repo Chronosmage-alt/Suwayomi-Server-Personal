@@ -116,7 +116,7 @@ jobs:
           ready=false
           for attempt in $(seq 1 120); do
             if curl -fsS -H 'Content-Type: application/json' \
-              --data '{"query":"query { adaptiveUpdateSettings { enabled maxBackoffDays } }"}' \
+              --data '{"query":"query { adaptiveUpdateSettings { enabled maxBackoffDays } completedCategorySettings { enabled effective destinationMissing categoryId } __type(name: \"AdaptiveMangaSchedule\") { fields { name } } }"}' \
               http://127.0.0.1:14568/api/graphql > smoke-response.json; then
               ready=true
               break
@@ -130,10 +130,19 @@ jobs:
               result = json.load(response)
           assert not result.get('errors'), result
           assert result['data']['adaptiveUpdateSettings'] == {'enabled': False, 'maxBackoffDays': 14}, result
+          assert result['data']['completedCategorySettings'] == {
+              'enabled': False, 'effective': False, 'destinationMissing': False, 'categoryId': None,
+          }, result
+          fields = {field['name'] for field in result['data']['__type']['fields']}
+          assert {'provisionalIntervalDays', 'historicalConfirmations'} <= fields, fields
           PY
           curl -fsS http://127.0.0.1:14568/ -o smoke-ui.html
           grep -q 'assets/' smoke-ui.html
-          docker exec adaptive-smoke sh -c 'grep -R -q setAdaptiveUpdatesEnabled /home/suwayomi/.local/share/Tachidesk/webUI/assets'
+          docker exec adaptive-smoke sh -ec '
+            for feature in setAdaptiveUpdatesEnabled provisionalIntervalDays historicalConfirmations setCompletedCategorySettings organiseCompletedManga; do
+              grep -R -q "$feature" /home/suwayomi/.local/share/Tachidesk/webUI/assets
+            done
+          '
 
       - name: Collect container logs
         if: always()

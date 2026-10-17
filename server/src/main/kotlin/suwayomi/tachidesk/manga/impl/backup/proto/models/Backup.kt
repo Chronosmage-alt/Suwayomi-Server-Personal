@@ -18,6 +18,7 @@ data class Backup(
     @ProtoNumber(9001) var serverSettings: BackupServerSettings? = null,
     @ProtoNumber(9002) var userSettings: BackupUserSettings? = null,
     @ProtoNumber(9003) var adaptiveSources: List<BackupAdaptiveSource> = emptyList(),
+    @ProtoNumber(9004) var completedCategoryRule: BackupCompletedCategoryRule? = null,
 ) {
     fun getSourceMap(): Map<Long, String> =
         backupSources
@@ -45,4 +46,11 @@ data class BackupAdaptiveSource(
     @ProtoNumber(1) val sourceId: Long,
     @ProtoNumber(2) val providerPackage: String,
     @ProtoNumber(3) val enabled: Boolean,
+)
+
+@Serializable
+data class BackupCompletedCategoryRule(
+    @ProtoNumber(1) val enabled: Boolean = false,
+    @ProtoNumber(2) val categoryOrder: Int? = null,
+    @ProtoNumber(3) val hadDestination: Boolean = false,
 )

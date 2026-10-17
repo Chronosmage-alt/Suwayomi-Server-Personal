@@ -53,4 +53,5 @@ data class BackupManga(
     // suwayomi
     @ProtoNumber(9000) var meta: Map<String, String> = emptyMap(),
     @ProtoNumber(9001) var adaptiveOverride: String? = null,
+    @ProtoNumber(9002) var completedCategoryHandled: List<Int> = emptyList(),
 )

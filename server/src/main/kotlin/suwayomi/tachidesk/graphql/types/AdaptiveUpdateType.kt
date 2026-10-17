@@ -44,6 +44,8 @@ data class AdaptiveMangaSchedule(
     val effective: Boolean,
     val reason: AdaptiveUpdateReason,
     val intervalDays: Double?,
+    val provisionalIntervalDays: Double?,
+    val historicalConfirmations: Int,
     val observations: Int,
     val emptyChecks: Int,
     val lastCheckAt: Long?,
@@ -136,6 +138,11 @@ object AdaptiveUpdateInfo {
                 .takeIf { it > 0 }
                 ?.toDouble()
                 ?.div(AdaptiveSchedule.DAY),
+            state.historical
+                ?.interval
+                ?.toDouble()
+                ?.div(AdaptiveSchedule.DAY),
+            state.historical?.confirmations ?: 0,
             state.observations.size.coerceAtMost(4),
             state.emptyChecks,
             state.lastCheck.takeIf { it > 0 },

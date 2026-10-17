@@ -67,11 +67,15 @@ export const AdaptiveMangaSchedule = ({ mangaId }: { mangaId: number }) => {
     }
     const count = schedule.observations;
     const intervalDays = schedule.intervalDays?.toLocaleString(undefined, { maximumFractionDigits: 1 });
+    const provisionalDays = schedule.provisionalIntervalDays?.toLocaleString(undefined, { maximumFractionDigits: 1 });
+    const confirmations = schedule.historicalConfirmations;
     const explanation = {
         MASTER_DISABLED: t`Adaptive updates are disabled globally. Normal automatic updates apply.`,
         TITLE_NORMAL: t`This title uses normal automatic updates.`,
         SOURCE_DISABLED: t`Adaptive updates are disabled for this source.`,
-        LEARNING: t`Learning: ${count} recent qualifying releases. Four consistent observations are required; normal automatic updates continue.`,
+        LEARNING: provisionalDays
+            ? t`Provisional release interval: about ${provisionalDays} days. ${confirmations} of 2 new releases confirmed; normal automatic updates continue.`
+            : t`Learning: ${count} recent qualifying releases. Four consistent observations are required; normal automatic updates continue.`,
         FREQUENT_RELEASE: t`Releases are frequent. Normal automatic updates continue.`,
         SCHEDULED: t`Learned release interval: about ${intervalDays} days. Checks between releases are reduced.`,
         BACKOFF: t`Expected release missed. Checks are backed off, with a maximum interval of 14 days.`,
@@ -124,7 +128,7 @@ export const AdaptiveMangaSchedule = ({ mangaId }: { mangaId: number }) => {
             {schedule.canManage && (
                 <Button
                     size="small"
-                    disabled={saving || !schedule.observations}
+                    disabled={saving || (!schedule.observations && !schedule.provisionalIntervalDays)}
                     onClick={() => {
                         void save(() => reset({ variables: { mangaId } }));
                     }}

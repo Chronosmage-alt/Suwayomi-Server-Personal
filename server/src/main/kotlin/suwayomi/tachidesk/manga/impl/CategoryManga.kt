@@ -96,6 +96,7 @@ object CategoryManga {
     ) {
         if (categoryId == Category.getDefaultCategoryId(userId)) return
         transaction {
+            CompletedCategories.respectRemoval(userId, listOf(mangaId), listOf(categoryId))
             CategoryMangaTable.deleteWhere {
                 (CategoryMangaTable.category eq categoryId) and
                     (CategoryMangaTable.manga eq mangaId) and
@@ -107,8 +108,10 @@ object CategoryManga {
     fun removeMangaFromAllCategories(
         userId: Int,
         mangaId: Int,
+        recordManualRemoval: Boolean = true,
     ) {
         transaction {
+            if (recordManualRemoval) CompletedCategories.respectRemoval(userId, listOf(mangaId))
             CategoryMangaTable.deleteWhere { (CategoryMangaTable.user eq userId) and (CategoryMangaTable.manga eq mangaId) }
         }
     }

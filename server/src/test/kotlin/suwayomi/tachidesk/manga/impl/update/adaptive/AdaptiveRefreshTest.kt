@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -29,6 +30,7 @@ import suwayomi.tachidesk.manga.impl.update.JobStatus
 import suwayomi.tachidesk.manga.impl.update.Updater
 import suwayomi.tachidesk.manga.impl.util.source.GetSource
 import suwayomi.tachidesk.manga.impl.util.source.StubSource
+import suwayomi.tachidesk.manga.model.table.AdaptiveMangaStateTable
 import suwayomi.tachidesk.manga.model.table.ChapterTable
 import suwayomi.tachidesk.manga.model.table.MangaTable
 import suwayomi.tachidesk.manga.model.table.MangaUserTable
@@ -47,6 +49,7 @@ import kotlin.test.assertTrue
 class AdaptiveRefreshTest : ApplicationTest() {
     private val source =
         object : StubSource(87654321L) {
+            var response: List<SChapter>? = null
             var calls = 0
             var fail = false
             var latency = 30L
@@ -66,7 +69,7 @@ class AdaptiveRefreshTest : ApplicationTest() {
                 if (fail) throw IOException("Source cooldown")
                 return SMangaUpdate(
                     manga,
-                    chapters.ifEmpty {
+                    response ?: chapters.ifEmpty {
                         listOf(
                             SChapter.create().apply {
                                 url = "/1"
@@ -95,6 +98,176 @@ class AdaptiveRefreshTest : ApplicationTest() {
         AdaptiveUpdates.setMode(id, AdaptiveOverride.SMART)
         return id
     }
+
+    @Test fun rawHistoricalDatesSeedButDatabaseFallbacksDoNot() =
+        runBlocking {
+            val id = manga()
+            val now = System.currentTimeMillis()
+            source.response =
+                (1..6).map { number ->
+                    SChapter.create().apply {
+                        url = "/$number"
+                        name = "Chapter $number"
+                        chapter_number = number.toFloat()
+                        date_upload = now - (6 - number) * 7 * AdaptiveSchedule.DAY
+                    }
+                }
+            Manga.updateMangaAndChapters(id, updateManga = false)
+            assertEquals(
+                7 * AdaptiveSchedule.DAY,
+                AdaptiveUpdates
+                    .entries(listOf(id))[id]
+                    ?.state
+                    ?.historical
+                    ?.interval,
+            )
+            val undated = manga()
+            source.response =
+                source.response!!.map { chapter ->
+                    SChapter.create().apply {
+                        url = chapter.url
+                        name = chapter.name
+                        chapter_number = chapter.chapter_number
+                    }
+                }
+            Manga.updateMangaAndChapters(undated, updateManga = false)
+            assertEquals(null, AdaptiveUpdates.entries(listOf(undated))[undated]?.state?.historical)
+            assertTrue(
+                transaction { ChapterTable.selectAll().where { ChapterTable.manga eq undated }.all { it[ChapterTable.date_upload] > 0 } },
+            )
+        }
+
+    @Test fun manualRefreshConfirmsOnceWithoutExtraRequestsAndResetSuppressesHistory() =
+        runBlocking {
+            val id = manga()
+            val now = System.currentTimeMillis()
+            source.response =
+                (1..6).map { number ->
+                    SChapter.create().apply {
+                        url = "/$number"
+                        name = "Chapter $number"
+                        chapter_number = number.toFloat()
+                        date_upload = now - (7 - number) * 7 * AdaptiveSchedule.DAY
+                    }
+                }
+            Manga.updateMangaAndChapters(id, updateManga = false)
+            assertEquals(1, source.calls)
+            assertEquals(
+                0,
+                AdaptiveUpdates
+                    .entries(listOf(id))[id]
+                    ?.state
+                    ?.historical
+                    ?.confirmations,
+            )
+            repeat(3) { assertTrue(AdaptiveUpdates.due(id)) }
+            assertEquals(1, source.calls)
+            source.response = source.response!! +
+                SChapter.create().apply {
+                    url = "/7"
+                    name = "Chapter 7"
+                    chapter_number = 7f
+                    date_upload = now
+                }
+            Manga.updateMangaAndChapters(id, updateManga = false)
+            val first = AdaptiveUpdates.entries(listOf(id)).getValue(id).state
+            assertEquals(2, source.calls)
+            assertEquals(1, first.historical?.confirmations)
+            assertEquals(1, first.observations.size)
+            assertTrue(AdaptiveUpdates.due(id))
+            Manga.updateMangaAndChapters(id, updateManga = false)
+            assertEquals(3, source.calls)
+            assertEquals(
+                1,
+                AdaptiveUpdates
+                    .entries(listOf(id))[id]
+                    ?.state
+                    ?.historical
+                    ?.confirmations,
+            )
+            source.fail = true
+            assertFailsWith<IOException> { Manga.updateMangaAndChapters(id, updateManga = false) }
+            assertEquals(4, source.calls)
+            assertEquals(
+                1,
+                AdaptiveUpdates
+                    .entries(listOf(id))[id]
+                    ?.state
+                    ?.historical
+                    ?.confirmations,
+            )
+            source.fail = false
+            AdaptiveUpdates.resetHistory(id)
+            assertEquals(4, source.calls)
+            Manga.updateMangaAndChapters(id, updateManga = false)
+            assertEquals(5, source.calls)
+            val reset = AdaptiveUpdates.entries(listOf(id)).getValue(id).state
+            assertEquals(null, reset.historical)
+            assertTrue(reset.observations.isEmpty())
+            assertEquals(7f, reset.historicalAttemptHigh)
+        }
+
+    @Test fun backupChapterRestoreWithoutStateRowSuppressesOldSourceHistory() =
+        runBlocking {
+            val id = manga()
+            transaction {
+                AdaptiveMangaStateTable.deleteWhere { manga eq id }
+                MangaUserTable.upsert(MangaUserTable.user, MangaUserTable.manga) {
+                    it[user] = 1
+                    it[manga] = id
+                    it[inLibrary] = true
+                }
+            }
+            val now = System.currentTimeMillis()
+            val chapters =
+                (1..6).map { number ->
+                    BackupChapter(
+                        url = "/$number",
+                        name = "Chapter $number",
+                        chapterNumber = number.toFloat(),
+                        dateUpload = now - (6 - number) * 7 * AdaptiveSchedule.DAY,
+                    )
+                }
+            val errors = mutableListOf<Pair<java.util.Date, String>>()
+            BackupMangaHandler.restore(
+                1,
+                BackupManga(
+                    source = source.id,
+                    url = transaction { MangaTable.selectAll().where { MangaTable.id eq id }.single()[MangaTable.url] },
+                    title = "Restored history",
+                    chapters = chapters,
+                ),
+                emptyMap(),
+                emptyMap(),
+                errors,
+                BackupFlags.DEFAULT.copy(includeTracking = false),
+            )
+            assertTrue(errors.isEmpty(), errors.toString())
+            assertEquals(0, source.calls)
+            assertTrue(
+                AdaptiveUpdates
+                    .entries(listOf(id))
+                    .getValue(id)
+                    .state.historicalDisabled,
+            )
+            AdaptiveUpdates.setMode(id, AdaptiveOverride.SMART)
+            source.response =
+                chapters.map { chapter ->
+                    SChapter.create().apply {
+                        url = chapter.url
+                        name = chapter.name
+                        chapter_number = chapter.chapterNumber
+                        date_upload = chapter.dateUpload
+                    }
+                }
+            Manga.updateMangaAndChapters(id, updateManga = false)
+            val restored = AdaptiveUpdates.entries(listOf(id)).getValue(id).state
+            assertEquals(1, source.calls)
+            assertEquals(null, restored.historical)
+            assertTrue(restored.observations.isEmpty())
+            assertEquals(6f, restored.historicalAttemptHigh)
+            assertTrue(AdaptiveUpdates.due(id))
+        }
 
     private fun futureState() =
         AdaptiveState(
@@ -220,7 +393,10 @@ class AdaptiveRefreshTest : ApplicationTest() {
             source.release!!.complete(Unit)
             fetch.await()
             reset.await()
-            assertEquals(AdaptiveEntry(AdaptiveOverride.SMART), AdaptiveUpdates.entries(listOf(id))[id])
+            assertEquals(
+                AdaptiveEntry(AdaptiveOverride.SMART, AdaptiveState(historicalDisabled = true)),
+                AdaptiveUpdates.entries(listOf(id))[id],
+            )
         }
 
     @Test fun chapterRestoreWaitsForFetchThenResetsHistoryAndRetainsOverride() =
@@ -265,7 +441,10 @@ class AdaptiveRefreshTest : ApplicationTest() {
             fetch.await()
             restore.await()
             assertTrue(errors.isEmpty(), errors.toString())
-            assertEquals(AdaptiveEntry(AdaptiveOverride.SMART), AdaptiveUpdates.entries(listOf(id))[id])
+            assertEquals(
+                AdaptiveEntry(AdaptiveOverride.SMART, AdaptiveState(historicalDisabled = true)),
+                AdaptiveUpdates.entries(listOf(id))[id],
+            )
             assertTrue(
                 transaction { ChapterTable.selectAll().where { ChapterTable.manga eq id }.any { it[ChapterTable.chapter_number] == 42f } },
             )

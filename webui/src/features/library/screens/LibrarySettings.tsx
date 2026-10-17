@@ -6,6 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import { CompletedCategorySettings } from '@/features/library/components/CompletedCategorySettings.tsx';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -191,6 +192,9 @@ export function LibrarySettings() {
                     />
                 </ListItem>
             </List>
+            <CompletedCategorySettings
+                categoryRevision={JSON.stringify(categories.data!.categories.nodes.map(({ id, name }) => [id, name]))}
+            />
             <GlobalUpdateSettings
                 serverSettings={serverSettings.data!.settings}
                 categories={categories.data!.categories.nodes}

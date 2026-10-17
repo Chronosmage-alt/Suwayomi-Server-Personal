@@ -27,6 +27,8 @@ export type AdaptiveMangaFieldsFragment = {
     effective: boolean;
     reason: Types.AdaptiveUpdateReason;
     intervalDays: number | null;
+    provisionalIntervalDays: number | null;
+    historicalConfirmations: number;
     observations: number;
     emptyChecks: number;
     lastCheckAt: string | null;
@@ -116,6 +118,8 @@ export type GetAdaptiveMangaQuery = {
         effective: boolean;
         reason: Types.AdaptiveUpdateReason;
         intervalDays: number | null;
+        provisionalIntervalDays: number | null;
+        historicalConfirmations: number;
         observations: number;
         emptyChecks: number;
         lastCheckAt: string | null;
@@ -142,6 +146,8 @@ export type SetAdaptiveMangaModeMutation = {
         effective: boolean;
         reason: Types.AdaptiveUpdateReason;
         intervalDays: number | null;
+        provisionalIntervalDays: number | null;
+        historicalConfirmations: number;
         observations: number;
         emptyChecks: number;
         lastCheckAt: string | null;
@@ -167,6 +173,8 @@ export type ResetAdaptiveMangaMutation = {
         effective: boolean;
         reason: Types.AdaptiveUpdateReason;
         intervalDays: number | null;
+        provisionalIntervalDays: number | null;
+        historicalConfirmations: number;
         observations: number;
         emptyChecks: number;
         lastCheckAt: string | null;
@@ -1114,6 +1122,67 @@ export type PageInfoFragment = {
 };
 
 export type GlobalMetadataFragment = { __typename: 'GlobalMetaType'; key: string; value: string };
+
+export type CompletedCategorySettingsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type CompletedCategorySettingsQuery = {
+    __typename: 'Query';
+    completedCategorySettings: {
+        __typename: 'CompletedCategorySettings';
+        enabled: boolean;
+        categoryId: number | null;
+        effective: boolean;
+        destinationMissing: boolean;
+        categories: Array<{ __typename: 'CompletedCategoryOption'; id: number; name: string }>;
+    };
+};
+
+export type SaveCompletedCategorySettingsMutationVariables = Exact<{
+    enabled: boolean;
+    categoryId?: number | null | undefined;
+}>;
+
+export type SaveCompletedCategorySettingsMutation = {
+    __typename: 'Mutation';
+    setCompletedCategorySettings: {
+        __typename: 'CompletedCategorySettings';
+        enabled: boolean;
+        categoryId: number | null;
+        effective: boolean;
+        destinationMissing: boolean;
+        categories: Array<{ __typename: 'CompletedCategoryOption'; id: number; name: string }>;
+    };
+};
+
+export type CompletedCategoryPreviewQueryVariables = Exact<{
+    categoryId: number;
+}>;
+
+export type CompletedCategoryPreviewQuery = {
+    __typename: 'Query';
+    completedCategoryPreview: {
+        __typename: 'CompletedCategoryPreview';
+        categoryId: number;
+        toAdd: number;
+        alreadyPresent: number;
+        skipped: number;
+    };
+};
+
+export type OrganiseCompletedMangaMutationVariables = Exact<{
+    categoryId: number;
+}>;
+
+export type OrganiseCompletedMangaMutation = {
+    __typename: 'Mutation';
+    organiseCompletedManga: {
+        __typename: 'CompletedCategoryPreview';
+        categoryId: number;
+        toAdd: number;
+        alreadyPresent: number;
+        skipped: number;
+    };
+};
 
 export type DownloadTypeFieldsFragment = {
     __typename: 'DownloadType';

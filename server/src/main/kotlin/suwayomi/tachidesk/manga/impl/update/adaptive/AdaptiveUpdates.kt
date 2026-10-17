@@ -84,7 +84,16 @@ object AdaptiveUpdates {
         state: AdaptiveState,
         now: Long,
     ): AdaptiveState =
-        if (state.lastCheck > 0 && now - state.lastCheck > maxOf(28 * AdaptiveSchedule.DAY, 3 * state.interval)) AdaptiveState() else state
+        if (state.lastCheck > 0 &&
+            now - state.lastCheck > maxOf(28 * AdaptiveSchedule.DAY, 3 * state.interval)
+        ) {
+            AdaptiveState(
+                historicalAttemptHigh = listOfNotNull(state.historicalAttemptHigh, state.historical?.highNumber).maxOrNull(),
+                historicalDisabled = state.historicalDisabled,
+            )
+        } else {
+            state
+        }
 
     fun due(
         mangaId: Int,
@@ -141,8 +150,11 @@ object AdaptiveUpdates {
     // Caller owns the title fetch lock, or is creating a title in an uncommitted transaction.
     internal fun resetHistoryLocked(mangaId: Int) =
         transaction {
-            val row = States.selectAll().where { States.manga eq mangaId }.firstOrNull()
-            if (row != null) saveState(mangaId, AdaptiveState())
+            // Keep the known chapter horizon even when the next source response is truncated.
+            // Restored/new titles may not have a state row yet; suppression must still persist.
+            val old = decode(States.selectAll().where { States.manga eq mangaId }.firstOrNull()).state
+            val watermark = listOfNotNull(old.historicalAttemptHigh, old.historical?.highNumber).maxOrNull()
+            saveState(mangaId, AdaptiveState(historicalDisabled = true, historicalAttemptHigh = watermark))
         }
 
     fun setSource(

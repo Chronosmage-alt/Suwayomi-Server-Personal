@@ -21,7 +21,7 @@ legitimate larger batches do not receive adaptive savings in this version.
 Initial lists, URL replacements, duplicate numbered scanlators, and backfills do
 not become release events. Raw incoming dates are inspected before Suwayomi adds
 fallback dates. Discovery-only observations require a preceding check within a
-day. Four consistent observations are required; no seven-day default is used.
+day. Four consistent observations are required unless a reliable historical candidate is confirmed by two new releases; no seven-day default is used.
 
 ## Delivery and operations
 
@@ -164,10 +164,84 @@ default-user and permission architecture; no account special case was introduced
    The master switch defaults off; title overrides can follow source policy,
    request adaptive updates, or retain normal updates. Shared controls require
    manage-settings permission.
-4. Allow normal checks to establish four qualifying observations. Existing chapter
-   dates alone do not seed a prediction. Manual refresh remains available but
+4. Allow normal checks to establish four qualifying observations, or confirm a
+   provisional historical pattern with two new releases. Historical dates alone
+   never reduce checks. Manual refresh remains available but
    still respects extension pacing/cooldowns and may fail during a cooldown.
 
 Downloads retain their existing dispatch behavior. There is no server-visible
 extension cooldown deadline, so the UI cannot promise when a source cooldown ends.
 All implementation changes remain uncommitted; nothing has been deployed or published.
+
+## Provisional historical learning (local implementation, pending review)
+
+Normal successful chapter refreshes can analyse the raw source dates already
+passed to the learner, before database fallback dates are substituted. No extra
+source requests or database migration are needed. Persisted historical candidates
+are separate from newly observed releases; existing version-1 state reads with
+safe defaults and existing learned schedules are retained.
+
+The classifier inspects at most the latest 24 distinct numbered chapters in number
+order. URLs and chapter numbers are deduplicated. Missing, future or reversed dates
+and duplicate-number date spreads greater than 12 hours reject the window. Chapters
+within 24 hours of a group's first date count as one event, with at most three
+distinct numbers; larger groups reject the window. At least six events are needed.
+The last six must have five intervals consistent with their median, within the
+existing tolerance of one day or 20%, whichever is greater. Candidate intervals
+must exceed two days and be at most 60 days. The latest event must be no older than
+one candidate interval plus tolerance. These conservative boundaries are covered
+by synthetic weekly/monthly, jitter, stale, duplicate, missing-date and bulk tests;
+they are not measurements of live source reliability.
+
+Normal checks continue while two subsequent qualifying forward releases confirm
+the historical anchor and then each other. Each confirmation refresh revalidates
+the current raw historical dates; missing or inconsistent evidence rejects the
+hint even when discovery timing could qualify for ordinary learning. Historical
+entries never inflate the
+fresh observation count. A contradiction, ambiguous change or missed prediction
+(interval plus tolerance plus two days) discards the hint while retaining the
+existing learner's result. Four-observation learning continues independently.
+After rejection, another candidate needs six events beyond the rejection's chapter
+number watermark, which never decreases when source lists shrink. Reset or chapter restoration suppresses the current history on
+the next successful refresh, then permits only newer history. Stale-state expiry
+preserves that suppression. These fields persist in the existing JSON state;
+portable chapter restoration still resets derived learning rather than importing it.
+
+The WebUI shows the provisional interval and zero/one of two confirmations, and
+allows resetting a candidate before any fresh observations. Guard checks, manual
+refresh, controls, exclusions and the 14-day backoff maximum retain existing rules.
+Sources can still provide convincing but incorrect dates, so this feature cannot
+prove original publication timing. Unreliable or unavailable evidence uses normal
+four-observation learning.
+
+Validation on 17 October 2026: full server suite 392 tests, zero failures/errors or
+skips; server ktlint passed. WebUI: eight tests passed, TypeScript, lint,
+changed-file formatting and production Vite build passed. The JCEF download test
+required the documented Windows-ROOT trust configuration; the Kotlin compiler
+required additional local heap. No new live-source, browser visual or NAS test was
+performed for this change. All changes remain local and uncommitted.
+
+### Focused historical-learning review
+
+The review found and fixed three edge cases: raw historical dates becoming
+unreliable during confirmation, suppression watermarks decreasing after shortened
+source responses (or forgetting a confirmed chapter during stale-state expiry),
+and chapter restoration/reset failing to persist suppression when no adaptive row
+existed. Repeated refreshes/imports cannot confirm a candidate; the release that
+first creates a hint is not counted as its first confirmation. Regression tests
+also cover persistence reload between confirmations, independent four-release
+fallback, manual refresh/failure/reset request counts, and actual chapter restore
+without a pre-existing state row. No source request path was added.
+
+Review validation: full server suite 401 tests, zero failures/errors/skips; ktlint
+passed. WebUI eight tests, TypeScript and lint passed again; frontend source and
+GraphQL contract were unchanged by the review. Restart continuity was checked via
+persisted-state reload between releases; no new server-process or NAS restart test
+was performed. Changes remain local and uncommitted.
+
+Final review: reset/chapter restoration now retains the known historical rejection
+watermark while clearing active schedules and observations. A truncated source
+response after reset cannot lower that horizon and revive old history. Ordinary
+four-observation learning continues independently. Source migration behaviour is
+investigated separately in `docs/source-migration-review.md`; no migration changes
+were implemented.

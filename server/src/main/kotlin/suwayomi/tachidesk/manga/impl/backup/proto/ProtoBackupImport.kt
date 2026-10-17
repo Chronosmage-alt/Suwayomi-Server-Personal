@@ -334,6 +334,14 @@ object ProtoBackupImport : ProtoBackupBase() {
             }
         }
 
+        // Enable the restored rule after its handled records, preventing early automatic re-additions.
+        if (flags.includeUserSettings && !syncMode.isSync) {
+            backup.completedCategoryRule?.let {
+                suwayomi.tachidesk.manga.impl.CompletedCategories
+                    .restoreRule(userId, it, categoryMapping)
+            }
+        }
+
         logger.info {
             """
             Restore Errors:

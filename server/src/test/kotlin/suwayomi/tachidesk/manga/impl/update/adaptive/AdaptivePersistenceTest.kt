@@ -27,14 +27,22 @@ class AdaptivePersistenceTest : ApplicationTest() {
                     }.value
             }
         AdaptiveUpdates.setMode(id, AdaptiveOverride.SMART)
-        val state = AdaptiveState(lastCheck = 123, interval = 7 * AdaptiveSchedule.DAY, nextCheck = 999)
+        val state =
+            AdaptiveState(
+                lastCheck = 123,
+                historical = HistoricalCandidate(7 * AdaptiveSchedule.DAY, 100, 6f, 1),
+                historicalAttemptHigh = 6f,
+            )
         AdaptiveUpdates.saveState(id, state)
         assertEquals(AdaptiveOverride.SMART, AdaptiveUpdates.entries(listOf(id))[id]?.mode)
         AdaptiveUpdates.setMode(id, AdaptiveOverride.NORMAL)
         assertEquals(state, AdaptiveUpdates.entries(listOf(id))[id]?.state)
         AdaptiveUpdates.setMode(id, AdaptiveOverride.SMART)
         AdaptiveUpdates.resetHistory(id)
-        assertEquals(AdaptiveEntry(AdaptiveOverride.SMART), AdaptiveUpdates.entries(listOf(id))[id])
+        assertEquals(
+            AdaptiveEntry(AdaptiveOverride.SMART, AdaptiveState(historicalDisabled = true, historicalAttemptHigh = 6f)),
+            AdaptiveUpdates.entries(listOf(id))[id],
+        )
     }
 
     @Test fun sourcePolicyCanSurviveWithoutInstalledSourceRow() {
@@ -66,5 +74,96 @@ class AdaptivePersistenceTest : ApplicationTest() {
         } finally {
             serverConfig.smartLibraryUpdates.value = false
         }
+    }
+
+    @Test fun reloadedFirstConfirmationNeedsAnotherNewReleaseAndStaleStateRetainsWatermark() {
+        val day = AdaptiveSchedule.DAY
+        val history = (1..6).map { ObservedChapter("/$it", it.toFloat(), (10L + 7 * it) * day) }
+        val seeded = AdaptiveSchedule.observe(AdaptiveState(), emptyList(), history, 53 * day)
+        val firstHistory = history + ObservedChapter("/7", 7f, 59 * day)
+        val first = AdaptiveSchedule.observe(seeded.copy(lastCheck = 59 * day - day / 2), history, firstHistory, 59 * day)
+        val id =
+            transaction {
+                MangaTable
+                    .insertAndGetId {
+                        it[url] = "/adaptive-reload-${System.nanoTime()}"
+                        it[title] = "Reload confirmation"
+                        it[sourceReference] = 123L
+                    }.value
+            }
+        AdaptiveUpdates.saveState(id, first)
+        val reloaded = AdaptiveUpdates.entries(listOf(id)).getValue(id).state
+        assertEquals(first, reloaded)
+        assertEquals(1, reloaded.historical?.confirmations)
+        val unchanged = AdaptiveSchedule.observe(reloaded, firstHistory, firstHistory, 60 * day)
+        assertEquals(1, unchanged.historical?.confirmations)
+        assertTrue(AdaptiveSchedule.due(unchanged, 60 * day))
+        val confirmed =
+            AdaptiveSchedule.observe(
+                unchanged.copy(lastCheck = 66 * day - day / 2),
+                firstHistory,
+                firstHistory + ObservedChapter("/8", 8f, 66 * day),
+                66 * day,
+            )
+        assertEquals(7 * day, confirmed.interval)
+        val stale = AdaptiveUpdates.freshState(reloaded, 100 * day)
+        assertEquals(null, stale.historical)
+        assertEquals(7f, stale.historicalAttemptHigh)
+        assertTrue(AdaptiveSchedule.due(stale, 100 * day))
+    }
+
+    @Test fun resetWithoutExistingStateRowStillSuppressesRestoredHistory() {
+        val id =
+            transaction {
+                MangaTable
+                    .insertAndGetId {
+                        it[url] = "/adaptive-reset-new-${System.nanoTime()}"
+                        it[title] = "Restored without state"
+                        it[sourceReference] = 123L
+                    }.value
+            }
+        assertEquals(null, AdaptiveUpdates.entries(listOf(id))[id])
+        AdaptiveUpdates.resetHistory(id)
+        val reset = AdaptiveUpdates.entries(listOf(id)).getValue(id).state
+        assertTrue(reset.historicalDisabled)
+        val day = AdaptiveSchedule.DAY
+        val history = (1..6).map { ObservedChapter("/$it", it.toFloat(), (10L + 7 * it) * day) }
+        val refreshed = AdaptiveSchedule.observe(reset, emptyList(), history, 53 * day)
+        assertEquals(null, refreshed.historical)
+        assertEquals(6f, refreshed.historicalAttemptHigh)
+        assertEquals(0L, refreshed.interval)
+    }
+
+    @Test fun resetPreservesKnownHorizonAcrossTruncatedSourceResponses() {
+        val day = AdaptiveSchedule.DAY
+        val id =
+            transaction {
+                MangaTable
+                    .insertAndGetId {
+                        it[url] = "/adaptive-reset-horizon-${System.nanoTime()}"
+                        it[title] = "Reset horizon"
+                        it[sourceReference] = 123L
+                    }.value
+            }
+        AdaptiveUpdates.setMode(id, AdaptiveOverride.SMART)
+        AdaptiveUpdates.saveState(
+            id,
+            AdaptiveState(
+                historical = HistoricalCandidate(7 * day, 59 * day, 7f, 1),
+                historicalAttemptHigh = 6f,
+            ),
+        )
+        AdaptiveUpdates.resetHistory(id)
+        val reset = AdaptiveUpdates.entries(listOf(id)).getValue(id)
+        assertEquals(AdaptiveOverride.SMART, reset.mode)
+        assertEquals(7f, reset.state.historicalAttemptHigh)
+        assertTrue(reset.state.observations.isEmpty())
+        assertEquals(null, reset.state.historical)
+        val history = (1..7).map { ObservedChapter("/$it", it.toFloat(), (10L + it * 7) * day) }
+        val shortened = AdaptiveSchedule.observe(reset.state, emptyList(), history.take(1), 60 * day)
+        val restored = AdaptiveSchedule.observe(shortened, emptyList(), history, 60 * day)
+        assertEquals(7f, restored.historicalAttemptHigh)
+        assertEquals(null, restored.historical)
+        assertTrue(AdaptiveSchedule.due(restored, 60 * day))
     }
 }

@@ -189,6 +189,14 @@ object ProtoBackupExport : ProtoBackupBase() {
                     BackupGlobalMetaHandler.backup(userId, flags),
                     BackupSettingsHandler.backup(flags),
                     BackupUserSettingsHandler.backup(flags, userId),
+                    completedCategoryRule =
+                        if (flags.includeUserSettings) {
+                            suwayomi.tachidesk.manga.impl.CompletedCategories.backupRule(
+                                userId,
+                            )
+                        } else {
+                            null
+                        },
                     adaptiveSources =
                         if (flags.includeServerSettings) {
                             suwayomi.tachidesk.manga.impl.update.adaptive.AdaptiveUpdates.policies().map {

@@ -42,6 +42,23 @@ class AdaptiveGraphQLTest : GraphQLTest() {
             it.assertNoErrors()
             assertEquals("LEARNING", it.dataPath("setAdaptiveMangaMode", "reason"))
         }
+        AdaptiveUpdates.saveState(
+            id,
+            suwayomi.tachidesk.manga.impl.update.adaptive.AdaptiveState(
+                historical =
+                    suwayomi.tachidesk.manga.impl.update.adaptive
+                        .HistoricalCandidate(604800000, System.currentTimeMillis(), 6f, 1),
+            ),
+        )
+        graphql(
+            "query { adaptiveMangaSchedule(mangaId: $id) { provisionalIntervalDays historicalConfirmations observations nextEligibleAt } }",
+        ).also {
+            it.assertNoErrors()
+            assertEquals(7.0, it.dataPath("adaptiveMangaSchedule", "provisionalIntervalDays"))
+            assertEquals(1, it.dataPath("adaptiveMangaSchedule", "historicalConfirmations"))
+            assertEquals(0, it.dataPath("adaptiveMangaSchedule", "observations"))
+            assertEquals(null, it.dataPath("adaptiveMangaSchedule", "nextEligibleAt"))
+        }
         graphql("mutation { resetAdaptiveMangaHistory(mangaId: $id) { mode observations } }").also {
             it.assertNoErrors()
             assertEquals("SMART", it.dataPath("resetAdaptiveMangaHistory", "mode"))

@@ -185,6 +185,11 @@ object BackupMangaHandler {
                     }
                 }
 
+                if (flags.includeUserSettings && flags.includeCategories) {
+                    backupManga.completedCategoryHandled =
+                        suwayomi.tachidesk.manga.impl.CompletedCategories
+                            .handledOrders(userId, mangaId)
+                }
                 if (flags.includeCategories) {
                     backupManga.categories = CategoryManga.getMangaCategories(userId, mangaId).map { it.order }
                 }
@@ -250,11 +255,11 @@ object BackupMangaHandler {
                         ?.value
                 }
             if (existingId == null) {
-                restoreMangaData(userId, backupManga, chapters, dbCategoryIds, history, tracking, flags, syncMode)
+                restoreMangaData(userId, backupManga, chapters, dbCategoryIds, history, tracking, flags, syncMode, categoryMapping)
             } else {
                 runBlocking {
                     Manga.withMangaLock(existingId) {
-                        restoreMangaData(userId, backupManga, chapters, dbCategoryIds, history, tracking, flags, syncMode)
+                        restoreMangaData(userId, backupManga, chapters, dbCategoryIds, history, tracking, flags, syncMode, categoryMapping)
                     }
                 }
             }
@@ -273,6 +278,7 @@ object BackupMangaHandler {
         tracks: List<BackupTracking>,
         flags: BackupFlags,
         syncMode: SyncRestoreMode,
+        categoryMapping: Map<Int, Int>,
     ) {
         val dbManga =
             transaction {
@@ -400,6 +406,14 @@ object BackupMangaHandler {
                     restoreMangaCategoryData(userId, mangaId, categoryIds, syncMode)
                 }
 
+                if (flags.includeUserSettings && flags.includeCategories && !syncMode.isSync) {
+                    suwayomi.tachidesk.manga.impl.CompletedCategories.restoreHandled(
+                        userId,
+                        mangaId,
+                        manga.completedCategoryHandled,
+                        categoryMapping,
+                    )
+                }
                 mangaId
             }
 
@@ -590,7 +604,7 @@ object BackupMangaHandler {
     ) {
         // CONVERGE keeps the union so a local-only link survives and wins the next upload
         if (syncMode != SyncRestoreMode.CONVERGE) {
-            CategoryManga.removeMangaFromAllCategories(userId, mangaId)
+            CategoryManga.removeMangaFromAllCategories(userId, mangaId, recordManualRemoval = false)
         }
         CategoryManga.addMangaToCategories(userId, mangaId, categoryIds)
     }

@@ -284,6 +284,7 @@ object Manga {
                 it[MangaTable.updateStrategy] = sManga.update_strategy.name
                 it[MangaTable.memo] = sManga.memo
             }
+            if (sManga.status == SManga.COMPLETED) CompletedCategories.metadataCompleted(mangaId)
         }
 
         return sManga
