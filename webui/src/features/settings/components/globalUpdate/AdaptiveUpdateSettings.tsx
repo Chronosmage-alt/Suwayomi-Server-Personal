@@ -7,9 +7,14 @@
  */
 
 import { useQuery, useMutation } from '@apollo/client/react';
+import { useState } from 'react';
 import { useLingui } from '@lingui/react/macro';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import { Sources } from '@/features/source/services/Sources.ts';
+import { useMetadataServerSettings } from '@/features/settings/services/ServerSettingsMetadata.ts';
+import { translateExtensionLanguage } from '@/features/extension/Extensions.utils.ts';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Switch from '@mui/material/Switch';
@@ -30,8 +35,16 @@ import type {
 import { makeToast } from '@/base/utils/Toast.ts';
 import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 
+const sourceKey = (sourceId: string, providerPackage: string) => `${sourceId}:${providerPackage}`;
+
 export const AdaptiveUpdateSettings = () => {
     const { t } = useLingui();
+    const [showAllLanguages, setShowAllLanguages] = useState(false);
+    const { languages } = Sources.useLanguages();
+    const {
+        settings: { showNsfw },
+    } = useMetadataServerSettings();
+    const sourceList = requestManager.useGetSourceList();
     const { client } = requestManager.graphQLClient;
     const { data, error, loading, refetch } = useQuery<GetAdaptiveSettingsQuery>(GET_ADAPTIVE_SETTINGS, {
         client,
@@ -68,6 +81,30 @@ export const AdaptiveUpdateSettings = () => {
         );
     }
     const maxDays = settings.maxBackoffDays;
+    const installedSources = sourceList.data?.sources.nodes ?? [];
+    const visibleSources = Sources.filter(installedSources, {
+        languages: showAllLanguages ? undefined : languages,
+        isNsfw: showNsfw ? undefined : false,
+        keepLocalSource: true,
+        enabled: true,
+    });
+    const metadata = new Map(
+        installedSources.map((source) => [sourceKey(source.id, source.extension.pkgName), source]),
+    );
+    const visibleIds = new Set(visibleSources.map((source) => sourceKey(source.id, source.extension.pkgName)));
+    const displayed = settings.sources.filter((source) =>
+        source.installed ? visibleIds.has(sourceKey(source.sourceId, source.providerPackage)) : showAllLanguages,
+    );
+    const groups = Object.entries(Object.groupBy(displayed, (source) => source.providerPackage))
+        .map(([pkg, rows]) => {
+            const sources = rows ?? [];
+            const name =
+                sources.map((source) => metadata.get(sourceKey(source.sourceId, pkg))?.extension.name).find(Boolean) ??
+                pkg;
+            return { pkg, name, sources };
+        })
+        .toSorted((a, b) => a.name.localeCompare(b.name));
+    const hiddenCount = settings.sources.length - displayed.length;
     return (
         <Box>
             <ListItem>
@@ -95,29 +132,79 @@ export const AdaptiveUpdateSettings = () => {
                     sx={{ px: 2 }}
                 >{t`An administrator controls these shared settings.`}</Typography>
             )}
-            {settings.canManage &&
-                settings.sources.map((source) => (
-                    <ListItem key={`${source.sourceId}:${source.providerPackage}`} sx={{ pl: 4 }}>
-                        <ListItemText
-                            primary={source.name}
-                            secondary={
-                                source.installed
-                                    ? t`Use adaptive updates for this source`
-                                    : t`Not installed. Preference retained for reinstall.`
-                            }
-                        />
-                        <Switch
-                            checked={source.enabled}
-                            disabled={!settings.enabled || !source.installed || saving}
-                            onChange={(e) => {
-                                void save(() =>
-                                    setSource({ variables: { sourceId: source.sourceId, enabled: e.target.checked } }),
+            {settings.canManage && (
+                <>
+                    <FormControlLabel
+                        sx={{ px: 2 }}
+                        label={t`Show all languages`}
+                        control={
+                            <Switch
+                                checked={showAllLanguages}
+                                slotProps={{ input: { 'aria-label': t`Show all languages` } }}
+                                onChange={(e) => setShowAllLanguages(e.target.checked)}
+                            />
+                        }
+                    />
+                    <Typography variant="caption" component="p" sx={{ px: 2, pb: 1 }}>
+                        {t`Uses Browse's enabled languages and sources. Hidden sources keep their adaptive preferences.`}
+                    </Typography>
+                    {!!hiddenCount && !sourceList.loading && !sourceList.error && (
+                        <Typography variant="caption" component="p" sx={{ px: 2, pb: 1 }}>
+                            {t`Sources hidden by display filters: ${hiddenCount}.`}
+                        </Typography>
+                    )}
+                    {sourceList.error && (
+                        <Alert severity="warning">{t`Source language information could not be loaded.`}</Alert>
+                    )}
+                    {sourceList.loading && !sourceList.data && (
+                        <Typography sx={{ px: 2 }}>{t`Loading source languages…`}</Typography>
+                    )}
+                    {!displayed.length && !sourceList.loading && !sourceList.error && (
+                        <Typography sx={{ px: 2 }}>{t`No sources match your Browse display settings.`}</Typography>
+                    )}
+                    {groups.map((group) => (
+                        <Box component="section" key={group.pkg} aria-label={group.name}>
+                            <Typography component="h3" variant="subtitle2" sx={{ px: 2, pt: 1 }}>
+                                {group.name}
+                            </Typography>
+                            {group.sources.map((source) => {
+                                const info = metadata.get(sourceKey(source.sourceId, source.providerPackage));
+                                const language = info
+                                    ? translateExtensionLanguage(Sources.getLanguage(info))
+                                    : t`Language unavailable`;
+                                const label = `${source.name} (${language})`;
+                                return (
+                                    <ListItem key={sourceKey(source.sourceId, source.providerPackage)} sx={{ pl: 4 }}>
+                                        <ListItemText
+                                            primary={label}
+                                            secondary={
+                                                source.installed
+                                                    ? t`Use adaptive updates for this source`
+                                                    : t`Not installed. Preference retained for reinstall.`
+                                            }
+                                        />
+                                        <Switch
+                                            checked={source.enabled}
+                                            disabled={!settings.enabled || !source.installed || saving}
+                                            onChange={(e) => {
+                                                void save(() =>
+                                                    setSource({
+                                                        variables: {
+                                                            sourceId: source.sourceId,
+                                                            enabled: e.target.checked,
+                                                        },
+                                                    }),
+                                                );
+                                            }}
+                                            slotProps={{ input: { 'aria-label': t`Adaptive updates for ${label}` } }}
+                                        />
+                                    </ListItem>
                                 );
-                            }}
-                            slotProps={{ input: { 'aria-label': t`Adaptive updates for ${source.name}` } }}
-                        />
-                    </ListItem>
-                ))}
+                            })}
+                        </Box>
+                    ))}
+                </>
+            )}
         </Box>
     );
 };

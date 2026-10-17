@@ -45,6 +45,7 @@ export const SOURCE_LIST_FIELDS = gql`
 
         extension {
             pkgName
+            name
             storeIndexUrl
             extensionStore {
                 indexUrl

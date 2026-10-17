@@ -76,6 +76,7 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm tsc
           pnpm lint
+          pnpm test:ui
           pnpm exec vite build
           printf 'r3518\n' > build/revision
           cp -R build ../docker/adaptive/webui

@@ -3744,6 +3744,7 @@ export type SourceListFieldsFragment = {
     extension: {
         __typename: 'ExtensionType';
         pkgName: string;
+        name: string;
         storeIndexUrl: string | null;
         extensionStore: { __typename: 'ExtensionStoreType'; indexUrl: string; name: string } | null;
     };
@@ -4462,6 +4463,7 @@ export type GetSourcesListQuery = {
             extension: {
                 __typename: 'ExtensionType';
                 pkgName: string;
+                name: string;
                 storeIndexUrl: string | null;
                 extensionStore: { __typename: 'ExtensionStoreType'; indexUrl: string; name: string } | null;
             };

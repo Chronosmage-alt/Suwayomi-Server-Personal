@@ -421,8 +421,12 @@ msgstr "Adaptive updates are disabled globally. Normal automatic updates apply."
 
 #. placeholder {0}: source.name
 #: src/features/settings/components/globalUpdate/AdaptiveUpdateSettings.tsx
-msgid "Adaptive updates for {0}"
-msgstr "Adaptive updates for {0}"
+#~ msgid "Adaptive updates for {0}"
+#~ msgstr "Adaptive updates for {0}"
+
+#: src/features/settings/components/globalUpdate/AdaptiveUpdateSettings.tsx
+msgid "Adaptive updates for {label}"
+msgstr "Adaptive updates for {label}"
 
 #: src/features/settings/components/globalUpdate/AdaptiveUpdateSettings.tsx
 msgid "Adaptive updates unavailable"
@@ -2365,6 +2369,10 @@ msgstr "L-Shape"
 msgid "Language"
 msgstr "Language"
 
+#: src/features/settings/components/globalUpdate/AdaptiveUpdateSettings.tsx
+msgid "Language unavailable"
+msgstr "Language unavailable"
+
 #: src/base/utils/Languages.ts
 msgid "Language with code: {code}"
 msgstr "Language with code: {code}"
@@ -2503,6 +2511,10 @@ msgstr "Loading adaptive updates…"
 #: src/features/updates/components/SkippedUpdateDialog.tsx
 msgid "Loading skipped updates…"
 msgstr "Loading skipped updates…"
+
+#: src/features/settings/components/globalUpdate/AdaptiveUpdateSettings.tsx
+msgid "Loading source languages…"
+msgstr "Loading source languages…"
 
 #: src/features/theme/components/ThemePreview.tsx
 msgid "Loading theme fonts…"
@@ -2893,6 +2905,10 @@ msgstr "No sources found. Install Some extensions first."
 #: src/features/source/components/SourceLanguageSelect.tsx
 msgid "No sources installed"
 msgstr "No sources installed"
+
+#: src/features/settings/components/globalUpdate/AdaptiveUpdateSettings.tsx
+msgid "No sources match your Browse display settings."
+msgstr "No sources match your Browse display settings."
 
 #: src/features/backup/Backup.utils.ts
 #: src/features/category/components/CategoriesInclusionSetting.tsx
@@ -3648,6 +3664,10 @@ msgstr "Show"
 msgid "Show all duplicated entries in your library"
 msgstr "Show all duplicated entries in your library"
 
+#: src/features/settings/components/globalUpdate/AdaptiveUpdateSettings.tsx
+msgid "Show all languages"
+msgstr "Show all languages"
+
 #: src/features/library/components/LibraryOptionsPanel.tsx
 msgid "Show continue reading button"
 msgstr "Show continue reading button"
@@ -3823,6 +3843,10 @@ msgstr "Source Configuration"
 msgid "Source entry — {sourceTitle}"
 msgstr "Source entry — {sourceTitle}"
 
+#: src/features/settings/components/globalUpdate/AdaptiveUpdateSettings.tsx
+msgid "Source language information could not be loaded."
+msgstr "Source language information could not be loaded."
+
 #. placeholder {0}: date(schedule.lastReleaseAt)
 #: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
 msgid "Source publication date: {0}"
@@ -3835,6 +3859,10 @@ msgstr "Source title"
 #: src/features/browse/screens/BrowseSettings.tsx
 msgid "Sources"
 msgstr "Sources"
+
+#: src/features/settings/components/globalUpdate/AdaptiveUpdateSettings.tsx
+msgid "Sources hidden by display filters: {hiddenCount}."
+msgstr "Sources hidden by display filters: {hiddenCount}."
 
 #: src/features/settings/Settings.constants.ts
 msgid "Stable"
@@ -4415,6 +4443,10 @@ msgstr "User settings"
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "Username"
 msgstr "Username"
+
+#: src/features/settings/components/globalUpdate/AdaptiveUpdateSettings.tsx
+msgid "Uses Browse's enabled languages and sources. Hidden sources keep their adaptive preferences."
+msgstr "Uses Browse's enabled languages and sources. Hidden sources keep their adaptive preferences."
 
 #: src/features/settings/components/images/KeyValueItem.tsx
 msgid "Value"
