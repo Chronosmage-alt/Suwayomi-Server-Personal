@@ -12,7 +12,7 @@ class AdaptiveScheduleTest {
         number: Int,
         date: Long = 0,
         suffix: String = "",
-    ) = ObservedChapter("/$number$suffix", number.toFloat(), date)
+    ) = ObservedChapter("/$number$suffix", number.toFloat(), date, ChapterDateOrigin.EXTENSION_REPORTED)
 
     private fun learn(days: List<Int>): AdaptiveState {
         var chapters = listOf(chapter(1))

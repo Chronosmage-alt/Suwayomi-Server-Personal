@@ -32,6 +32,18 @@ const ADAPTIVE_MANGA_FIELDS = gql`
         reason
         intervalDays
         provisionalIntervalDays
+        historicalDiagnostic {
+            reason
+            assessedAt
+            inspectedNumbers
+            missingDates
+            unknownDates
+            fallbackDates
+            eligibleDates
+            events
+            intervalDays
+            latestEventAgeDays
+        }
         historicalConfirmations
         observations
         emptyChecks

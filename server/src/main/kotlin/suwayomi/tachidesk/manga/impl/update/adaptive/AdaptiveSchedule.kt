@@ -36,12 +36,16 @@ data class AdaptiveState(
     val historical: HistoricalCandidate? = null,
     val historicalAttemptHigh: Float? = null,
     val historicalDisabled: Boolean = false,
+    val historicalDiagnostic: HistoricalDiagnostic? = null,
+    val dateEvidence: List<ChapterDateEvidence> = emptyList(),
+    val dateEvidenceThrough: Long = 0,
 )
 
 data class ObservedChapter(
     val url: String,
     val number: Float,
     val uploadDate: Long,
+    val origin: ChapterDateOrigin = ChapterDateOrigin.UNKNOWN,
 )
 
 /** All times are UTC epoch milliseconds. No source or database access. */
@@ -69,7 +73,14 @@ object AdaptiveSchedule {
         now: Long,
     ): AdaptiveState {
         var result = observeFresh(state, previous, fetched, now)
-        if (result.interval > 0) return result.copy(historical = null)
+        val assessment = assessHistory(fetched, now)
+        result = result.copy(historicalDiagnostic = assessment.diagnostic)
+        if (result.interval > 0) {
+            return result.copy(
+                historical = null,
+                historicalDiagnostic = assessment.diagnostic.copy(reason = HistoricalReason.ACTIVE_SCHEDULE),
+            )
+        }
         val high = fetched.map { it.number }.filter { it.isFinite() && it >= 0 }.maxOrNull()
         val watermark = listOfNotNull(high, state.historicalAttemptHigh, state.historical?.highNumber).maxOrNull()
         val oldUrls = previous.map { it.url }.toSet()
@@ -79,7 +90,7 @@ object AdaptiveSchedule {
             val event = result.observations.lastOrNull()?.takeIf { it.discoveredAt == now && it != state.observations.lastOrNull() }
             val ambiguous = added.isNotEmpty() && result.observations.isEmpty()
             // Recheck raw evidence: fallback/discovery dates must not rescue unreliable history.
-            val evidence = historicalCandidate(fetched, now)
+            val evidence = assessment.candidate
             val unreliable = evidence == null || abs(evidence.interval - candidate.interval) > tolerance(candidate.interval)
             val expired = now > candidate.anchor + candidate.interval + tolerance(candidate.interval) + 2 * DAY
             if (ambiguous || unreliable || expired || (
@@ -90,7 +101,32 @@ object AdaptiveSchedule {
                         )
                 )
             ) {
-                return result.copy(historical = null, historicalAttemptHigh = watermark)
+                return result.copy(
+                    historical = null,
+                    historicalAttemptHigh = watermark,
+                    historicalDiagnostic =
+                        assessment.diagnostic.copy(
+                            reason =
+                                when {
+                                    unreliable -> {
+                                        assessment.diagnostic.reason.takeUnless { it == HistoricalReason.PROVISIONAL }
+                                            ?: HistoricalReason.CONTRADICTED
+                                    }
+
+                                    ambiguous -> {
+                                        HistoricalReason.AMBIGUOUS_ADDITIONS
+                                    }
+
+                                    expired -> {
+                                        HistoricalReason.EXPIRED
+                                    }
+
+                                    else -> {
+                                        HistoricalReason.CONTRADICTED
+                                    }
+                                },
+                        ),
+                )
             }
             if (event == null) {
                 return result.copy(historical = candidate.copy(highNumber = watermark!!), historicalAttemptHigh = watermark)
@@ -109,50 +145,104 @@ object AdaptiveSchedule {
                         0
                     },
                 phase = AdaptivePhase.SCHEDULED,
+                historicalDiagnostic = assessment.diagnostic.copy(reason = HistoricalReason.ACTIVE_SCHEDULE),
             )
         }
-        if (state.historicalDisabled) return result.copy(historicalDisabled = watermark == null, historicalAttemptHigh = watermark)
+        if (state.historicalDisabled) {
+            return result.copy(
+                historicalDisabled = watermark == null,
+                historicalAttemptHigh = watermark,
+                historicalDiagnostic = assessment.diagnostic.copy(reason = HistoricalReason.SUPPRESSED),
+            )
+        }
         if (previous.isNotEmpty() && added.isNotEmpty() && result.observations.isEmpty()) {
-            return result.copy(historicalAttemptHigh = watermark)
+            return result.copy(
+                historicalAttemptHigh = watermark,
+                historicalDiagnostic = assessment.diagnostic.copy(reason = HistoricalReason.AMBIGUOUS_ADDITIONS),
+            )
         }
         // After a failed attempt require six entirely newer events, rather than retrying old evidence.
         val eligible = fetched.filter { state.historicalAttemptHigh == null || it.number > state.historicalAttemptHigh }
-        val hint = historicalCandidate(eligible, now) ?: return result
-        result = result.copy(historical = hint, historicalAttemptHigh = high)
+        val eligibleAssessment = if (state.historicalAttemptHigh == null) assessment else assessHistory(eligible, now)
+        val hint =
+            eligibleAssessment.candidate ?: return result.copy(
+                historicalDiagnostic =
+                    eligibleAssessment.diagnostic.let {
+                        if (state.historicalAttemptHigh != null && it.reason == HistoricalReason.INSUFFICIENT_EVENTS) {
+                            it.copy(reason = HistoricalReason.WAITING_FOR_NEW_HISTORY)
+                        } else {
+                            it
+                        }
+                    },
+            )
+        result = result.copy(historical = hint, historicalAttemptHigh = high, historicalDiagnostic = eligibleAssessment.diagnostic)
         return result
     }
+
+    internal data class HistoricalAssessment(
+        val diagnostic: HistoricalDiagnostic,
+        val candidate: HistoricalCandidate? = null,
+    )
 
     internal fun historicalCandidate(
         chapters: List<ObservedChapter>,
         now: Long,
-    ): HistoricalCandidate? {
+    ): HistoricalCandidate? = assessHistory(chapters, now).candidate
+
+    internal fun assessHistory(
+        chapters: List<ObservedChapter>,
+        now: Long,
+    ): HistoricalAssessment {
         // Inspect a contiguous numbered tail, never cherry-pick around unreliable recent chapters.
         val numbered = chapters.distinctBy { it.url }.groupBy { it.number }.toSortedMap()
-        if (numbered.isEmpty() || numbered.keys.any { !it.isFinite() || it < 0 }) return null
         val tail = numbered.entries.toList().takeLast(24)
+        val inspected = tail.flatMap { it.value }
+        var diagnostic =
+            HistoricalDiagnostic(
+                HistoricalReason.INSUFFICIENT_EVENTS,
+                now,
+                tail.size,
+                missingDates = inspected.count { it.uploadDate <= 0 || it.origin == ChapterDateOrigin.MISSING },
+                unknownDates = inspected.count { it.origin == ChapterDateOrigin.UNKNOWN },
+                fallbackDates = inspected.count { it.origin == ChapterDateOrigin.FALLBACK },
+                eligibleDates = inspected.count { it.origin == ChapterDateOrigin.EXTENSION_REPORTED && it.uploadDate in 1..now },
+            )
+
+        fun rejected(reason: HistoricalReason) = HistoricalAssessment(diagnostic.copy(reason = reason))
+        if (numbered.keys.any { !it.isFinite() || it < 0 }) return rejected(HistoricalReason.INVALID_NUMBERS)
+        if (diagnostic.missingDates > 0) return rejected(HistoricalReason.MISSING_DATES)
+        if (diagnostic.fallbackDates > 0) return rejected(HistoricalReason.FALLBACK_DATES)
+        if (diagnostic.unknownDates > 0) return rejected(HistoricalReason.UNKNOWN_DATES)
         val events = mutableListOf<Pair<Long, Int>>()
         for ((_, duplicates) in tail) {
             val dates = duplicates.map { it.uploadDate }
-            if (dates.any { it <= 0 || it > now } || dates.max() - dates.min() > DAY / 2) return null
+            if (dates.any { it > now }) return rejected(HistoricalReason.INVALID_DATES)
+            if (dates.max() - dates.min() > DAY / 2) return rejected(HistoricalReason.DUPLICATE_DATES)
             val date = dates.min()
             val last = events.lastOrNull()
-            if (last != null && date < last.first) return null
+            if (last != null && date < last.first) return rejected(HistoricalReason.REVERSED_DATES)
             if (last != null && date - last.first <= DAY) {
-                if (last.second >= 3) return null
+                if (last.second >= 3) return rejected(HistoricalReason.BULK_HISTORY)
                 events[events.lastIndex] = last.first to last.second + 1
             } else {
                 events.add(date to 1)
             }
+            diagnostic = diagnostic.copy(events = events.size, latestEventAgeDays = (now - events.last().first).toDouble() / DAY)
         }
-        if (events.size < 6) return null
+        if (events.size < 6) return rejected(HistoricalReason.INSUFFICIENT_EVENTS)
         val recent = events.takeLast(6).map { it.first }
         val gaps = recent.zipWithNext { a, b -> b - a }
         val interval = gaps.sorted()[2]
+        diagnostic = diagnostic.copy(intervalDays = interval.toDouble() / DAY)
         // Date-only sources need up to one day of jitter; slower patterns allow 20%.
-        if (interval !in (2 * DAY + 1)..(60 * DAY) || gaps.any { abs(it - interval) > tolerance(interval) }) return null
+        if (interval !in (2 * DAY + 1)..(60 * DAY)) return rejected(HistoricalReason.UNSUPPORTED_INTERVAL)
+        if (gaps.any { abs(it - interval) > tolerance(interval) }) return rejected(HistoricalReason.INCONSISTENT_INTERVALS)
         val anchor = recent.last()
-        if (now - anchor > interval + tolerance(interval)) return null
-        return HistoricalCandidate(interval, anchor, numbered.lastKey())
+        if (now - anchor > interval + tolerance(interval)) return rejected(HistoricalReason.STALE_HISTORY)
+        return HistoricalAssessment(
+            diagnostic.copy(reason = HistoricalReason.PROVISIONAL),
+            HistoricalCandidate(interval, anchor, numbered.lastKey()),
+        )
     }
 
     private fun observeFresh(

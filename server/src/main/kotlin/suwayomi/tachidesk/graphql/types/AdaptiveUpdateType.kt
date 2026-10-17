@@ -37,6 +37,41 @@ data class AdaptiveUpdateSettings(
     val sources: List<AdaptiveSourceSetting>,
 )
 
+enum class HistoricalLearningReason {
+    PROVISIONAL,
+    ACTIVE_SCHEDULE,
+    MISSING_DATES,
+    UNKNOWN_DATES,
+    FALLBACK_DATES,
+    INVALID_NUMBERS,
+    INVALID_DATES,
+    DUPLICATE_DATES,
+    REVERSED_DATES,
+    BULK_HISTORY,
+    INSUFFICIENT_EVENTS,
+    UNSUPPORTED_INTERVAL,
+    INCONSISTENT_INTERVALS,
+    STALE_HISTORY,
+    SUPPRESSED,
+    WAITING_FOR_NEW_HISTORY,
+    AMBIGUOUS_ADDITIONS,
+    CONTRADICTED,
+    EXPIRED,
+}
+
+data class HistoricalLearningDiagnostic(
+    val reason: HistoricalLearningReason,
+    val assessedAt: Long?,
+    val inspectedNumbers: Int,
+    val missingDates: Int,
+    val unknownDates: Int,
+    val fallbackDates: Int,
+    val eligibleDates: Int,
+    val events: Int,
+    val intervalDays: Double?,
+    val latestEventAgeDays: Double?,
+)
+
 data class AdaptiveMangaSchedule(
     val mangaId: Int,
     val mode: AdaptiveUpdateMode,
@@ -54,6 +89,7 @@ data class AdaptiveMangaSchedule(
     val usesPublicationDate: Boolean?,
     val nextEligibleAt: Long?,
     val nextAutomaticCheckAt: Long?,
+    val historicalDiagnostic: HistoricalLearningDiagnostic?,
 )
 
 object AdaptiveUpdateInfo {
@@ -151,6 +187,20 @@ object AdaptiveUpdateInfo {
             observation?.sourceDate,
             eligible.takeIf { effective && state.interval > 2 * AdaptiveSchedule.DAY },
             nextAutomatic,
+            state.historicalDiagnostic?.let {
+                HistoricalLearningDiagnostic(
+                    HistoricalLearningReason.valueOf(it.reason.name),
+                    it.assessedAt,
+                    it.inspectedNumbers,
+                    it.missingDates,
+                    it.unknownDates,
+                    it.fallbackDates,
+                    it.eligibleDates,
+                    it.events,
+                    it.intervalDays,
+                    it.latestEventAgeDays,
+                )
+            },
         )
     }
 }

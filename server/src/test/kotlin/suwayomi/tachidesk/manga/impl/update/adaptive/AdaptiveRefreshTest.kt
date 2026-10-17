@@ -137,6 +137,130 @@ class AdaptiveRefreshTest : ApplicationTest() {
             )
         }
 
+    @Test fun returnedStoredFallbackDatesAreNotNewSourceEvidenceAndDoNotAddRequests() =
+        runBlocking {
+            val id = manga()
+            source.response =
+                (1..6).map { number ->
+                    SChapter.create().apply {
+                        url = "/$number"
+                        name = "Chapter $number"
+                        chapter_number = number.toFloat()
+                    }
+                }
+            Manga.updateMangaAndChapters(id, updateManga = false)
+            assertEquals(1, source.calls)
+            assertEquals(
+                HistoricalReason.MISSING_DATES,
+                AdaptiveUpdates
+                    .entries(listOf(id))
+                    .getValue(id)
+                    .state.historicalDiagnostic
+                    ?.reason,
+            )
+            // Model Comix's unchanged branch: return exactly the database chapters supplied to it.
+            source.response = null
+            Manga.updateMangaAndChapters(id, updateManga = false)
+            assertEquals(2, source.calls)
+            val state = AdaptiveUpdates.entries(listOf(id)).getValue(id).state
+            assertEquals(HistoricalReason.FALLBACK_DATES, state.historicalDiagnostic?.reason)
+            assertEquals(6, state.historicalDiagnostic?.fallbackDates)
+            assertEquals(null, state.historical)
+            Manga.updateMangaAndChapters(id, updateManga = false)
+            assertEquals(3, source.calls)
+            assertEquals(
+                HistoricalReason.FALLBACK_DATES,
+                AdaptiveUpdates
+                    .entries(listOf(id))
+                    .getValue(id)
+                    .state.historicalDiagnostic
+                    ?.reason,
+            )
+        }
+
+    @Test fun unchangedLegacyHistoryRemainsUnknownAfterDatabaseReload() =
+        runBlocking {
+            val id = manga()
+            val now = System.currentTimeMillis()
+            serverConfig.smartLibraryUpdates.value = false
+            source.response =
+                (1..6).map { number ->
+                    SChapter.create().apply {
+                        url = "/$number"
+                        name = "Chapter $number"
+                        chapter_number = number.toFloat()
+                        date_upload = now - (6 - number) * 7 * AdaptiveSchedule.DAY
+                    }
+                }
+            Manga.updateMangaAndChapters(id, updateManga = false)
+            assertEquals(
+                null,
+                AdaptiveUpdates
+                    .entries(listOf(id))
+                    .getValue(id)
+                    .state.historicalDiagnostic,
+            )
+            serverConfig.smartLibraryUpdates.value = true
+            source.response = null
+            repeat(2) {
+                Manga.updateMangaAndChapters(id, updateManga = false)
+                val state = AdaptiveUpdates.entries(listOf(id)).getValue(id).state
+                assertEquals(HistoricalReason.UNKNOWN_DATES, state.historicalDiagnostic?.reason)
+                assertEquals(6, state.historicalDiagnostic?.unknownDates)
+                assertEquals(null, state.historical)
+            }
+            assertEquals(3, source.calls)
+        }
+
+    @Test fun deletedLegacyChaptersReuploadedWithNewUrlsStayUnknownWithoutExtraRequests() =
+        runBlocking {
+            val id = manga()
+            val now = System.currentTimeMillis()
+            val original =
+                (1..6).map { number ->
+                    SChapter.create().apply {
+                        url = "/$number"
+                        name = "Chapter $number"
+                        chapter_number = number.toFloat()
+                        date_upload = now - (5 - number) * 7 * AdaptiveSchedule.DAY
+                    }
+                }
+            serverConfig.smartLibraryUpdates.value = false
+            source.response = original
+            Manga.updateMangaAndChapters(id, updateManga = false)
+            serverConfig.smartLibraryUpdates.value = true
+            Manga.updateMangaAndChapters(id, updateManga = false)
+            val assessed = AdaptiveUpdates.entries(listOf(id)).getValue(id).state
+            assertEquals(6, assessed.historicalDiagnostic?.unknownDates)
+            assertTrue(assessed.dateEvidenceThrough >= original.maxOf { it.date_upload })
+            source.response = original.take(1)
+            Manga.updateMangaAndChapters(id, updateManga = false)
+            assertEquals(
+                1,
+                AdaptiveUpdates
+                    .entries(listOf(id))
+                    .getValue(id)
+                    .state.dateEvidence.size,
+            )
+            source.response =
+                original
+                    .map { old ->
+                        SChapter.create().apply {
+                            url = old.url + "-reupload"
+                            name = old.name
+                            chapter_number = old.chapter_number
+                            date_upload = old.date_upload
+                        }
+                    }.reversed()
+            Manga.updateMangaAndChapters(id, updateManga = false)
+            val returned = AdaptiveUpdates.entries(listOf(id)).getValue(id).state
+            assertTrue(returned.dateEvidence.all { it.origin == ChapterDateOrigin.UNKNOWN })
+            assertEquals(6, returned.historicalDiagnostic?.unknownDates)
+            assertEquals(null, returned.historical)
+            assertEquals(4, source.calls)
+            assertTrue(returned.dateEvidenceThrough >= assessed.dateEvidenceThrough)
+        }
+
     @Test fun manualRefreshConfirmsOnceWithoutExtraRequestsAndResetSuppressesHistory() =
         runBlocking {
             val id = manga()
@@ -167,7 +291,7 @@ class AdaptiveRefreshTest : ApplicationTest() {
                     url = "/7"
                     name = "Chapter 7"
                     chapter_number = 7f
-                    date_upload = now
+                    date_upload = System.currentTimeMillis()
                 }
             Manga.updateMangaAndChapters(id, updateManga = false)
             val first = AdaptiveUpdates.entries(listOf(id)).getValue(id).state
@@ -244,6 +368,10 @@ class AdaptiveRefreshTest : ApplicationTest() {
             )
             assertTrue(errors.isEmpty(), errors.toString())
             assertEquals(0, source.calls)
+            val resetState = AdaptiveUpdates.entries(listOf(id)).getValue(id).state
+            assertEquals(HistoricalReason.SUPPRESSED, resetState.historicalDiagnostic?.reason)
+            assertEquals(null, resetState.historicalDiagnostic?.assessedAt)
+            assertTrue(resetState.dateEvidence.isEmpty())
             assertTrue(
                 AdaptiveUpdates
                     .entries(listOf(id))
@@ -266,6 +394,8 @@ class AdaptiveRefreshTest : ApplicationTest() {
             assertEquals(null, restored.historical)
             assertTrue(restored.observations.isEmpty())
             assertEquals(6f, restored.historicalAttemptHigh)
+            assertEquals(HistoricalReason.SUPPRESSED, restored.historicalDiagnostic?.reason)
+            assertEquals(6, restored.historicalDiagnostic?.unknownDates)
             assertTrue(AdaptiveUpdates.due(id))
         }
 
@@ -393,8 +523,25 @@ class AdaptiveRefreshTest : ApplicationTest() {
             source.release!!.complete(Unit)
             fetch.await()
             reset.await()
+            assertTrue(
+                AdaptiveUpdates
+                    .entries(listOf(id))
+                    .getValue(id)
+                    .state.dateEvidenceThrough > 0,
+            )
             assertEquals(
-                AdaptiveEntry(AdaptiveOverride.SMART, AdaptiveState(historicalDisabled = true)),
+                AdaptiveEntry(
+                    AdaptiveOverride.SMART,
+                    AdaptiveState(
+                        historicalDisabled = true,
+                        historicalDiagnostic = HistoricalDiagnostic(HistoricalReason.SUPPRESSED),
+                        dateEvidenceThrough =
+                            AdaptiveUpdates
+                                .entries(listOf(id))
+                                .getValue(id)
+                                .state.dateEvidenceThrough,
+                    ),
+                ),
                 AdaptiveUpdates.entries(listOf(id))[id],
             )
         }
@@ -440,9 +587,26 @@ class AdaptiveRefreshTest : ApplicationTest() {
             source.release!!.complete(Unit)
             fetch.await()
             restore.await()
+            assertTrue(
+                AdaptiveUpdates
+                    .entries(listOf(id))
+                    .getValue(id)
+                    .state.dateEvidenceThrough > 0,
+            )
             assertTrue(errors.isEmpty(), errors.toString())
             assertEquals(
-                AdaptiveEntry(AdaptiveOverride.SMART, AdaptiveState(historicalDisabled = true)),
+                AdaptiveEntry(
+                    AdaptiveOverride.SMART,
+                    AdaptiveState(
+                        historicalDisabled = true,
+                        historicalDiagnostic = HistoricalDiagnostic(HistoricalReason.SUPPRESSED),
+                        dateEvidenceThrough =
+                            AdaptiveUpdates
+                                .entries(listOf(id))
+                                .getValue(id)
+                                .state.dateEvidenceThrough,
+                    ),
+                ),
                 AdaptiveUpdates.entries(listOf(id))[id],
             )
             assertTrue(

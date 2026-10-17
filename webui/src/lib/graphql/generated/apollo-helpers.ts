@@ -31,6 +31,7 @@ export type AdaptiveMangaScheduleKeySpecifier = (
     | 'effective'
     | 'emptyChecks'
     | 'historicalConfirmations'
+    | 'historicalDiagnostic'
     | 'intervalDays'
     | 'lastCheckAt'
     | 'lastDiscoveryAt'
@@ -50,6 +51,7 @@ export type AdaptiveMangaScheduleFieldPolicy = {
     effective?: FieldPolicy<any> | FieldReadFunction<any>;
     emptyChecks?: FieldPolicy<any> | FieldReadFunction<any>;
     historicalConfirmations?: FieldPolicy<any> | FieldReadFunction<any>;
+    historicalDiagnostic?: FieldPolicy<any> | FieldReadFunction<any>;
     intervalDays?: FieldPolicy<any> | FieldReadFunction<any>;
     lastCheckAt?: FieldPolicy<any> | FieldReadFunction<any>;
     lastDiscoveryAt?: FieldPolicy<any> | FieldReadFunction<any>;
@@ -841,6 +843,31 @@ export type GroupFilterFieldPolicy = {
 export type HeaderFilterKeySpecifier = ('name' | HeaderFilterKeySpecifier)[];
 export type HeaderFilterFieldPolicy = {
     name?: FieldPolicy<any> | FieldReadFunction<any>;
+};
+export type HistoricalLearningDiagnosticKeySpecifier = (
+    | 'assessedAt'
+    | 'eligibleDates'
+    | 'events'
+    | 'fallbackDates'
+    | 'inspectedNumbers'
+    | 'intervalDays'
+    | 'latestEventAgeDays'
+    | 'missingDates'
+    | 'reason'
+    | 'unknownDates'
+    | HistoricalLearningDiagnosticKeySpecifier
+)[];
+export type HistoricalLearningDiagnosticFieldPolicy = {
+    assessedAt?: FieldPolicy<any> | FieldReadFunction<any>;
+    eligibleDates?: FieldPolicy<any> | FieldReadFunction<any>;
+    events?: FieldPolicy<any> | FieldReadFunction<any>;
+    fallbackDates?: FieldPolicy<any> | FieldReadFunction<any>;
+    inspectedNumbers?: FieldPolicy<any> | FieldReadFunction<any>;
+    intervalDays?: FieldPolicy<any> | FieldReadFunction<any>;
+    latestEventAgeDays?: FieldPolicy<any> | FieldReadFunction<any>;
+    missingDates?: FieldPolicy<any> | FieldReadFunction<any>;
+    reason?: FieldPolicy<any> | FieldReadFunction<any>;
+    unknownDates?: FieldPolicy<any> | FieldReadFunction<any>;
 };
 export type InstallExternalExtensionPayloadKeySpecifier = (
     | 'clientMutationId'
@@ -3508,6 +3535,13 @@ export type StrictTypedTypePolicies = {
     HeaderFilter?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
         keyFields?: false | HeaderFilterKeySpecifier | (() => undefined | HeaderFilterKeySpecifier);
         fields?: HeaderFilterFieldPolicy;
+    };
+    HistoricalLearningDiagnostic?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
+        keyFields?:
+            | false
+            | HistoricalLearningDiagnosticKeySpecifier
+            | (() => undefined | HistoricalLearningDiagnosticKeySpecifier);
+        fields?: HistoricalLearningDiagnosticFieldPolicy;
     };
     InstallExternalExtensionPayload?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
         keyFields?:

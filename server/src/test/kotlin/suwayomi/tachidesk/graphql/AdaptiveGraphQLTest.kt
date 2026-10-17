@@ -38,9 +38,12 @@ class AdaptiveGraphQLTest : GraphQLTest() {
             assertEquals(true, it.dataPath("setAdaptiveUpdatesEnabled", "enabled"))
             assertEquals(14, it.dataPath("setAdaptiveUpdatesEnabled", "maxBackoffDays"))
         }
-        graphql("mutation { setAdaptiveMangaMode(mangaId: $id, mode: SMART) { mode reason observations nextAutomaticCheckAt } }").also {
+        graphql(
+            "mutation { setAdaptiveMangaMode(mangaId: $id, mode: SMART) { mode reason observations nextAutomaticCheckAt historicalDiagnostic { reason assessedAt } } }",
+        ).also {
             it.assertNoErrors()
             assertEquals("LEARNING", it.dataPath("setAdaptiveMangaMode", "reason"))
+            assertEquals(null, it.dataPath("setAdaptiveMangaMode", "historicalDiagnostic"))
         }
         AdaptiveUpdates.saveState(
             id,
@@ -59,9 +62,13 @@ class AdaptiveGraphQLTest : GraphQLTest() {
             assertEquals(0, it.dataPath("adaptiveMangaSchedule", "observations"))
             assertEquals(null, it.dataPath("adaptiveMangaSchedule", "nextEligibleAt"))
         }
-        graphql("mutation { resetAdaptiveMangaHistory(mangaId: $id) { mode observations } }").also {
+        graphql(
+            "mutation { resetAdaptiveMangaHistory(mangaId: $id) { mode observations historicalDiagnostic { reason assessedAt } } }",
+        ).also {
             it.assertNoErrors()
             assertEquals("SMART", it.dataPath("resetAdaptiveMangaHistory", "mode"))
+            assertEquals("SUPPRESSED", it.dataPath("resetAdaptiveMangaHistory", "historicalDiagnostic", "reason"))
+            assertEquals(null, it.dataPath("resetAdaptiveMangaHistory", "historicalDiagnostic", "assessedAt"))
         }
         assertEquals(AdaptiveOverride.SMART, AdaptiveUpdates.entries(listOf(id))[id]!!.mode)
         // Schema artifact for the matching WebUI's normal GraphQL code generator.

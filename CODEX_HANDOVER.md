@@ -2,6 +2,85 @@
 
 Updated 17 October 2026. This document is context for a fresh Codex conversation.
 
+## Current release: historical diagnostics and date provenance
+
+User approved implementation, final review and push/publication on 17 October 2026.
+This commit contains the reviewed changes; the existing branch workflow builds the
+new image with a `sha-<first 12 commit characters>` tag. Verify its completed CI run
+and registry digest before using it. No NAS deployment or master merge is authorised.
+This section supersedes older implementation/publication status further below.
+The preceding published revision was `f00743015bc6298606c7e8095f943da0e39ae914`
+(`sha-f00743015bc6`, digest
+`sha256:3d4ce89e352a551f05dd60647bfde636c774aa03aba307e932f48bca2a72cb4c`).
+
+- Historical assessments now persist one reason/count/time summary in adaptive
+  state JSON and expose it through GraphQL and the bundled WebUI. Messages distinguish
+  missing/unknown/fallback dates, duplicate conflicts, backwards dates, bulk uploads,
+  insufficient events, unsupported/inconsistent intervals, stale history, suppression,
+  contradictions, expiry, provisional hints and active schedules. Fresh observations
+  and provisional confirmations remain separate. Legacy state without an assessment
+  explicitly says it has not been assessed since this update.
+- New `HistoricalEvidence.kt` classifies extension output before server fallback
+  substitution. A bounded ledger (at most 96 URL/date SHA-256 fingerprints and origin
+  enums, no plaintext URLs or chapter lists) preserves evidence origins across refreshes
+  and restarts. It retains the newest chapter numbers; eviction loses proof safely.
+  Unchanged legacy dates remain UNKNOWN and known fallback dates remain FALLBACK,
+  including date matches on changed URLs. Dates missing in output are assessed as
+  missing; newly generated substitutions are recorded as fallback. Retaining an
+  existing DB date preserves its known origin (otherwise unknown).
+- This is server-boundary provenance, not proof of fresh parsing or date precision.
+  Comix accepts stored chapter dates and may preserve them, merge stored chapters, or
+  return the supplied list unchanged. It parses relative site dates. Existing records
+  cannot be retroactively certified. New/changed values not matching stored evidence and newer than the retained
+  evidence horizon are called EXTENSION_REPORTED, never "freshly parsed". No extension files changed.
+- Only historical seeding/revalidation uses these origin restrictions. Four fresh
+  observations and discovery-time learning retain their existing rules. Six reliable
+  historical events, two genuinely new confirmations, grouping/recency thresholds,
+  manual refreshes, guard checks, controls and 14-day backoff are unchanged. No new
+  source calls, jobs or logging were introduced; Comix protections remain untouched.
+- Additive defaulted JSON fields need no database migration. Normal DB backups include
+  diagnostics/ledger. Portable chapter restoration and reset clear provenance and old
+  assessments, retain existing history suppression/watermark semantics, and explicitly
+  report suppression without claiming a source assessment. Restored dates are unknown
+  on later refresh. State expiry retains bounded origins but expires the old hint.
+- Main files: adaptive `HistoricalEvidence.kt`, `AdaptiveSchedule.kt`,
+  `AdaptiveUpdates.kt`; `Chapter.kt` passes the actual persisted dates alongside raw
+  output; GraphQL `AdaptiveUpdateType.kt`; WebUI `AdaptiveMangaSchedule.tsx`, adaptive
+  fragment/generated types, English catalogue; targeted evidence/refresh/persistence/
+  GraphQL/UI tests. Further details in `docs/adaptive-library-updates.md`.
+- No live NAS/Comix chapter evidence for The Extra's Academy Survival Guide was captured.
+  Its exact rejection cause remains unverified until this diagnostic build passes CI,
+  is published, and is run against that title. Do not relax thresholds to force
+  qualification. Source migration and Completed-category behaviour are unchanged.
+
+Focused final review added a monotonic `dateEvidenceThrough` timestamp to the same
+JSON state. A deleted/evicted chapter must not return as newly sourced proof just
+because its fingerprint disappeared: unmatched dates at or before this horizon stay
+UNKNOWN. It captures successful-check time and the largest observed date (including
+future/invalid dates), survives resets and expiry, and uses legacy lastCheck as an
+initial lower bound. This also protects previously future-dated unknown values when
+wall time catches up. Missing provenance can lose specificity (fallback becomes
+unknown after deletion), but cannot gain trust. An erroneous far-future source date
+can conservatively block historical shortcuts until fresh learning establishes a
+schedule; normal four-observation learning is independent. Tests cover deletion,
+changed-URL reuploads, reordering, eviction, restart/reset/expiry, two provenance-
+checked new confirmations, repeated lists, and unchanged per-refresh source calls.
+The unknown-date UI explanation and timestamp-count label were clarified accordingly.
+Completed-category implementation/hooks and Comix extension/protections are unchanged.
+
+Final local validation: **428 server tests**, zero failures/errors/skips; server
+ktlint passed. **21 WebUI tests**, TypeScript, lint, changed-file formatting and Vite
+production build passed. Generated GraphQL types came from the tested server schema.
+Regression coverage includes unknown legacy dates, weekly-looking reused fallbacks,
+changed URLs, omitted dates retaining their original origin, provisional revalidation,
+independent four-observation learning, bounded evidence, reset/restore, persistence
+round-trips and one source call per manual refresh. The final focused review and
+full rerun passed: 428 server tests (including all 10 Completed-category server tests),
+ktlint, 21 UI tests, TypeScript, lint, formatting and production build. No live
+source/NAS validation. Publication is now authorised through the existing workflow;
+NAS deployment remains the user's responsibility.
+
+
 ## Workspace and Git
 
 - Canonical repository: `D:\Git\Suwayomi-Server-Personal`, origin https://github.com/Chronosmage-alt/Suwayomi-Server-Personal.

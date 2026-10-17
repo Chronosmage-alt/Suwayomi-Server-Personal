@@ -37,6 +37,19 @@ export type AdaptiveMangaFieldsFragment = {
     usesPublicationDate: boolean | null;
     nextEligibleAt: string | null;
     nextAutomaticCheckAt: string | null;
+    historicalDiagnostic: {
+        __typename: 'HistoricalLearningDiagnostic';
+        reason: Types.HistoricalLearningReason;
+        assessedAt: string | null;
+        inspectedNumbers: number;
+        missingDates: number;
+        unknownDates: number;
+        fallbackDates: number;
+        eligibleDates: number;
+        events: number;
+        intervalDays: number | null;
+        latestEventAgeDays: number | null;
+    } | null;
 };
 
 export type GetAdaptiveSettingsQueryVariables = Exact<{ [key: string]: never }>;
@@ -128,6 +141,19 @@ export type GetAdaptiveMangaQuery = {
         usesPublicationDate: boolean | null;
         nextEligibleAt: string | null;
         nextAutomaticCheckAt: string | null;
+        historicalDiagnostic: {
+            __typename: 'HistoricalLearningDiagnostic';
+            reason: Types.HistoricalLearningReason;
+            assessedAt: string | null;
+            inspectedNumbers: number;
+            missingDates: number;
+            unknownDates: number;
+            fallbackDates: number;
+            eligibleDates: number;
+            events: number;
+            intervalDays: number | null;
+            latestEventAgeDays: number | null;
+        } | null;
     };
 };
 
@@ -156,6 +182,19 @@ export type SetAdaptiveMangaModeMutation = {
         usesPublicationDate: boolean | null;
         nextEligibleAt: string | null;
         nextAutomaticCheckAt: string | null;
+        historicalDiagnostic: {
+            __typename: 'HistoricalLearningDiagnostic';
+            reason: Types.HistoricalLearningReason;
+            assessedAt: string | null;
+            inspectedNumbers: number;
+            missingDates: number;
+            unknownDates: number;
+            fallbackDates: number;
+            eligibleDates: number;
+            events: number;
+            intervalDays: number | null;
+            latestEventAgeDays: number | null;
+        } | null;
     };
 };
 
@@ -183,6 +222,19 @@ export type ResetAdaptiveMangaMutation = {
         usesPublicationDate: boolean | null;
         nextEligibleAt: string | null;
         nextAutomaticCheckAt: string | null;
+        historicalDiagnostic: {
+            __typename: 'HistoricalLearningDiagnostic';
+            reason: Types.HistoricalLearningReason;
+            assessedAt: string | null;
+            inspectedNumbers: number;
+            missingDates: number;
+            unknownDates: number;
+            fallbackDates: number;
+            eligibleDates: number;
+            events: number;
+            intervalDays: number | null;
+            latestEventAgeDays: number | null;
+        } | null;
     };
 };
 

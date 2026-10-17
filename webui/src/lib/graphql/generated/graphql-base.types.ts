@@ -43,6 +43,7 @@ export type AdaptiveMangaSchedule = {
     effective: Scalars['Boolean']['output'];
     emptyChecks: Scalars['Int']['output'];
     historicalConfirmations: Scalars['Int']['output'];
+    historicalDiagnostic?: Maybe<HistoricalLearningDiagnostic>;
     intervalDays?: Maybe<Scalars['Float']['output']>;
     lastCheckAt?: Maybe<Scalars['LongString']['output']>;
     lastDiscoveryAt?: Maybe<Scalars['LongString']['output']>;
@@ -1208,6 +1209,42 @@ export type HeaderFilter = {
     __typename?: 'HeaderFilter';
     name: Scalars['String']['output'];
 };
+
+export type HistoricalLearningDiagnostic = {
+    __typename?: 'HistoricalLearningDiagnostic';
+    assessedAt?: Maybe<Scalars['LongString']['output']>;
+    eligibleDates: Scalars['Int']['output'];
+    events: Scalars['Int']['output'];
+    fallbackDates: Scalars['Int']['output'];
+    inspectedNumbers: Scalars['Int']['output'];
+    intervalDays?: Maybe<Scalars['Float']['output']>;
+    latestEventAgeDays?: Maybe<Scalars['Float']['output']>;
+    missingDates: Scalars['Int']['output'];
+    reason: HistoricalLearningReason;
+    unknownDates: Scalars['Int']['output'];
+};
+
+export enum HistoricalLearningReason {
+    ActiveSchedule = 'ACTIVE_SCHEDULE',
+    AmbiguousAdditions = 'AMBIGUOUS_ADDITIONS',
+    BulkHistory = 'BULK_HISTORY',
+    Contradicted = 'CONTRADICTED',
+    DuplicateDates = 'DUPLICATE_DATES',
+    Expired = 'EXPIRED',
+    FallbackDates = 'FALLBACK_DATES',
+    InconsistentIntervals = 'INCONSISTENT_INTERVALS',
+    InsufficientEvents = 'INSUFFICIENT_EVENTS',
+    InvalidDates = 'INVALID_DATES',
+    InvalidNumbers = 'INVALID_NUMBERS',
+    MissingDates = 'MISSING_DATES',
+    Provisional = 'PROVISIONAL',
+    ReversedDates = 'REVERSED_DATES',
+    StaleHistory = 'STALE_HISTORY',
+    Suppressed = 'SUPPRESSED',
+    UnknownDates = 'UNKNOWN_DATES',
+    UnsupportedInterval = 'UNSUPPORTED_INTERVAL',
+    WaitingForNewHistory = 'WAITING_FOR_NEW_HISTORY',
+}
 
 export enum IncludeOrExclude {
     Exclude = 'EXCLUDE',

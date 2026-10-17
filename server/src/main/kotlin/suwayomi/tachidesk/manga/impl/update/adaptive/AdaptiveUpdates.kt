@@ -90,6 +90,9 @@ object AdaptiveUpdates {
             AdaptiveState(
                 historicalAttemptHigh = listOfNotNull(state.historicalAttemptHigh, state.historical?.highNumber).maxOrNull(),
                 historicalDisabled = state.historicalDisabled,
+                dateEvidence = state.dateEvidence,
+                dateEvidenceThrough = maxOf(state.dateEvidenceThrough, state.lastCheck),
+                historicalDiagnostic = state.historicalDiagnostic?.copy(reason = HistoricalReason.EXPIRED),
             )
         } else {
             state
@@ -110,12 +113,36 @@ object AdaptiveUpdates {
         sourceId: Long,
         previous: List<ObservedChapter>,
         fetched: List<ObservedChapter>,
+        stored: List<ObservedChapter>,
     ) {
         if (!serverConfig.smartLibraryUpdates.value) return
         val entry = entries(listOf(mangaId))[mangaId] ?: AdaptiveEntry()
         if (!effective(entry, sourceId, policies(), providers())) return
         val now = System.currentTimeMillis()
-        saveState(mangaId, AdaptiveSchedule.observe(freshState(entry.state, now), previous, fetched, now))
+        val state = freshState(entry.state, now)
+        val classified =
+            HistoricalEvidence.classify(
+                state.dateEvidence,
+                previous,
+                fetched,
+                maxOf(state.dateEvidenceThrough, state.lastCheck),
+            )
+        saveState(
+            mangaId,
+            AdaptiveSchedule.observe(state, previous, classified, now).copy(
+                dateEvidence = HistoricalEvidence.retain(classified, stored, previous, state.dateEvidence),
+                // Include future/invalid source timestamps too: deleting one must not later
+                // certify it merely because wall time caught up and its ledger entry vanished.
+                dateEvidenceThrough =
+                    maxOf(
+                        state.dateEvidenceThrough,
+                        state.lastCheck,
+                        now,
+                        previous.maxOfOrNull { it.uploadDate } ?: 0,
+                        fetched.maxOfOrNull { it.uploadDate } ?: 0,
+                    ),
+            ),
+        )
     }
 
     internal fun saveState(
@@ -154,7 +181,15 @@ object AdaptiveUpdates {
             // Restored/new titles may not have a state row yet; suppression must still persist.
             val old = decode(States.selectAll().where { States.manga eq mangaId }.firstOrNull()).state
             val watermark = listOfNotNull(old.historicalAttemptHigh, old.historical?.highNumber).maxOrNull()
-            saveState(mangaId, AdaptiveState(historicalDisabled = true, historicalAttemptHigh = watermark))
+            saveState(
+                mangaId,
+                AdaptiveState(
+                    historicalDisabled = true,
+                    historicalAttemptHigh = watermark,
+                    historicalDiagnostic = HistoricalDiagnostic(HistoricalReason.SUPPRESSED),
+                    dateEvidenceThrough = maxOf(old.dateEvidenceThrough, old.lastCheck),
+                ),
+            )
         }
 
     fun setSource(

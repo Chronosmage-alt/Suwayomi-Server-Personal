@@ -245,3 +245,75 @@ response after reset cannot lower that horizon and revive old history. Ordinary
 four-observation learning continues independently. Source migration behaviour is
 investigated separately in `docs/source-migration-review.md`; no migration changes
 were implemented.
+
+
+## Historical diagnostics and conservative date provenance (local, pending review)
+
+Each enabled successful chapter refresh records one bounded assessment. It exposes
+reason, assessment time, inspected-number/date-origin counts, grouped events, and
+where available an interval and latest-event age. It does not store or log chapter
+lists, titles, scanlators or plaintext URLs for diagnostics. The UI displays human
+explanations independently of fresh-observation counts and provisional confirmations.
+A null assessment means "not assessed since this update", including legacy databases;
+source errors do not overwrite the last successful assessment.
+
+The classifier still inspects a contiguous tail of at most 24 distinct chapter
+numbers, without selecting only convenient dates. The first decisive rejection is
+reported. Group counts can be partial when assessment stops at unreliable evidence.
+Missing, unknown-origin and fallback dates cannot seed or revalidate a historical
+hint. Existing duplicate/date grouping, six-event, two-confirmation, consistency,
+recency and bulk/backfill safeguards are unchanged.
+
+Server-owned adaptive JSON also retains at most 96 opaque SHA-256 fingerprints of
+chapter URL plus persisted date and their origins. No new SQL tables or columns are
+needed. The refresh integration supplies both extension output and actual dates
+stored after reconciliation. Zero/missing output remains missing for that assessment;
+a newly generated substitution is recorded as fallback for later refreshes. Retaining
+an existing database date preserves its recorded origin, or unknown if no proof exists. Unchanged
+legacy values remain unknown, even when an extension returns them with nonzero dates.
+Same-date replacements under changed URLs also inherit conservative stored origins.
+Evicted evidence becomes unknown when subsequently reused. Enabling adaptive mode
+later does not retroactively certify dates collected while it was disabled.
+
+"Extension-reported" means the server observed a nonzero value not matching unknown
+or fallback stored evidence and newer than the retained evidence horizon, or preserved an already recorded extension-reported
+origin. It does not prove fresh network parsing, exact publication timing, or absolute
+source correctness. Comix can preserve stored dates, return unchanged input, and parse
+coarse relative dates. Without extension cooperation those limitations cannot be
+eliminated. Conservative handling may prevent historical acceleration for an existing
+library; normal four-observation learning remains available and independent.
+
+The summary and ledger survive ordinary restarts and full database backup/restore.
+Manual reset and portable chapter restoration clear date proof and stale assessments,
+retain existing suppression/watermark rules, and show a reset/restoration suppression
+message with no fabricated assessment timestamp. A later refresh assesses restored
+dates as unknown. Expiring stale adaptive state retains date origins, but drops the
+old provisional hint and exposes expiry only when an assessment previously existed.
+Existing active schedules are not retrospectively invalidated; historical hints are
+revalidated at the next enabled chapter refresh. No new source requests, polling,
+background jobs, extension changes, or changes to Comix request protections are added.
+
+
+Diagnostics/provenance validation: 428 server tests passed with zero failures, errors
+or skips; ktlint passed. All 21 WebUI tests, TypeScript, lint, changed-file formatting
+and production build passed. Tests use synthetic source responses and isolated test
+databases; they do not establish this manga's actual live Comix rejection reason.
+
+
+### Focused provenance review
+
+A monotonic `dateEvidenceThrough` watermark prevents forgotten evidence from gaining
+trust: a returned date not matched to retained evidence/current stored chapters is
+UNKNOWN when at or before this watermark. Successful-check time and the largest
+observed timestamp advance it, including malformed future dates. The scalar survives
+reset and state expiry even when detailed fingerprints are cleared; legacy lastCheck
+provides a lower bound. Thus deleted, reuploaded or evicted unknown/fallback dates
+cannot be newly certified merely because their old entry vanished or wall time
+caught up. Known origins follow unchanged dates through reordering/replacements;
+losing a specific fallback record can yield UNKNOWN, never new trust.
+
+This is deliberately conservative: changed older dates or an erroneous future date
+may prevent a historical shortcut. The independent four-observation learner remains
+available. A genuinely new timestamp beyond the horizon is still only an extension
+assertion; the server cannot prove fresh parsing or publication accuracy. All existing
+historical reliability thresholds and source request protections remain in place.

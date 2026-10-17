@@ -363,6 +363,10 @@ msgstr "A migration is already in progress"
 msgid "A preview focused web frontend built with svelte"
 msgstr "A preview focused web frontend built with svelte"
 
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "A release schedule is active. Historical hints are no longer needed while it remains active."
+msgstr "A release schedule is active. Historical hints are no longer needed while it remains active."
+
 #: src/features/library/components/LibraryOptionsPanel.tsx
 msgid "A—Z"
 msgstr "A—Z"
@@ -1464,6 +1468,20 @@ msgstr "Database"
 msgid "Database url"
 msgstr "Database url"
 
+#. placeholder {0}: diagnostic.eligibleDates
+#. placeholder {1}: diagnostic.unknownDates
+#. placeholder {2}: diagnostic.fallbackDates
+#. placeholder {3}: diagnostic.missingDates
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+
+#. placeholder {0}: diagnostic.eligibleDates
+#. placeholder {1}: diagnostic.unknownDates
+#. placeholder {2}: diagnostic.fallbackDates
+#. placeholder {3}: diagnostic.missingDates
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Dates: {0} passing origin/time checks, {1} unknown, {2} fallback, {3} missing."
+msgstr "Dates: {0} passing origin/time checks, {1} unknown, {2} fallback, {3} missing."
+
 #: src/features/backup/screens/Backup.tsx
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "Day"
@@ -1891,6 +1909,10 @@ msgstr "Extension installed"
 msgid "Extension stores"
 msgstr "Extension stores"
 
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Extension-reported dates may be approximate or reused; they are not proof of a freshly parsed publication timestamp. Historical rejection does not stop normal four-observation learning."
+msgstr "Extension-reported dates may be approximate or reused; they are not proof of a freshly parsed publication timestamp. Historical rejection does not stop normal four-observation learning."
+
 #: src/features/settings/components/koreaderSync/KoreaderSyncSettings.tsx
 msgid "Failed to connect to KOReader Sync server."
 msgstr "Failed to connect to KOReader Sync server."
@@ -2149,6 +2171,80 @@ msgstr "Hide history"
 msgid "Hikari connection pool"
 msgstr "Hikari connection pool"
 
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning has not been assessed since this update."
+msgstr "Historical learning has not been assessed since this update."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: chapter additions cannot safely be treated as new releases. Normal learning continues."
+msgstr "Historical learning: chapter additions cannot safely be treated as new releases. Normal learning continues."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: chapter numbers are missing or invalid."
+msgstr "Historical learning: chapter numbers are missing or invalid."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: dates run backwards as chapter numbers increase."
+msgstr "Historical learning: dates run backwards as chapter numbers increase."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: duplicate chapter editions have conflicting dates."
+msgstr "Historical learning: duplicate chapter editions have conflicting dates."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: fewer than six reliable release events are available."
+msgstr "Historical learning: fewer than six reliable release events are available."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: new evidence contradicted the provisional prediction. Normal learning continues."
+msgstr "Historical learning: new evidence contradicted the provisional prediction. Normal learning continues."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: recent chapter dates are in the future."
+msgstr "Historical learning: recent chapter dates are in the future."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: recent chapters have missing dates."
+msgstr "Historical learning: recent chapters have missing dates."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: recent dates include server-generated fallback timestamps."
+msgstr "Historical learning: recent dates include server-generated fallback timestamps."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: recent dates suggest an ambiguous bulk upload."
+msgstr "Historical learning: recent dates suggest an ambiguous bulk upload."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: recent release intervals are inconsistent."
+msgstr "Historical learning: recent release intervals are inconsistent."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: reuse of existing history is suppressed after a reset or chapter restoration. Newer history is required."
+msgstr "Historical learning: reuse of existing history is suppressed after a reset or chapter restoration. Newer history is required."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: the estimated interval is outside the supported range of more than 2 days and at most 60 days."
+msgstr "Historical learning: the estimated interval is outside the supported range of more than 2 days and at most 60 days."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: the latest historical release event is too old."
+msgstr "Historical learning: the latest historical release event is too old."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: the origin of recent chapter dates is unknown. Unchanged or older dates without recorded proof cannot establish their origin."
+msgstr "Historical learning: the origin of recent chapter dates is unknown. Unchanged or older dates without recorded proof cannot establish their origin."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: the provisional prediction or learning state expired. Newer reliable history is required."
+msgstr "Historical learning: the provisional prediction or learning state expired. Newer reliable history is required."
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Historical learning: unchanged history cannot be retried. At least six entirely newer reliable release events are required."
+msgstr "Historical learning: unchanged history cannot be retried. At least six entirely newer reliable release events are required."
+
 #: src/features/backup/Backup.constants.ts
 #: src/features/history/screens/History.tsx
 #: src/features/history/screens/HistorySettings.tsx
@@ -2289,6 +2385,12 @@ msgstr "Inform about version update"
 msgid "Information"
 msgstr "Information"
 
+#. placeholder {0}: diagnostic.inspectedNumbers
+#. placeholder {1}: diagnostic.events
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Inspected chapter numbers: {0}; grouped release events: {1}."
+msgstr "Inspected chapter numbers: {0}; grouped release events: {1}."
+
 #: src/features/backup/component/BackupValidationDialog.tsx
 #: src/features/extension/Extensions.constants.ts
 msgid "Install"
@@ -2413,6 +2515,11 @@ msgstr "Language with code: {code}"
 #: src/features/reader/settings/behaviour/components/ReaderSettingScrollAmount.tsx
 msgid "Large"
 msgstr "Large"
+
+#. placeholder {0}: date(diagnostic.assessedAt)
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Last historical assessment: {0}."
+msgstr "Last historical assessment: {0}."
 
 #. placeholder {0}: date(schedule.lastDiscoveryAt)
 #: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
@@ -3292,6 +3399,10 @@ msgstr "Reading direction"
 msgid "Reading mode"
 msgstr "Reading mode"
 
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Recent qualifying release observations: {count}."
+msgstr "Recent qualifying release observations: {count}."
+
 #: src/base/components/AppbarSearch.tsx
 msgid "Recent searches"
 msgstr "Recent searches"
@@ -3332,6 +3443,10 @@ msgstr "Releases are frequent. Normal automatic updates continue."
 #: src/features/tracker/Tracker.constants.ts
 msgid "Releasing"
 msgstr "Releasing"
+
+#: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
+msgid "Reliable historical evidence supports the provisional schedule. Two new releases must confirm it before checks are reduced."
+msgstr "Reliable historical evidence supports the provisional schedule. Two new releases must confirm it before checks are reduced."
 
 #: src/features/manga/components/MangaToolbarMenu.tsx
 msgid "Reload data from source"

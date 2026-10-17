@@ -412,6 +412,7 @@ object Chapter {
                 mangaEntry[MangaTable.sourceReference],
                 chaptersInDb.map { ObservedChapter(it.url, it.chapterNumber, it.uploadDate) },
                 uniqueChapters.map { ObservedChapter(it.url, it.chapter_number, it.date_upload) },
+                (chaptersToInsert + chaptersToUpdate).map { ObservedChapter(it.url, it.chapterNumber, it.uploadDate) },
             )
         }
 

@@ -10,9 +10,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { I18nProvider } from '@lingui/react';
 import { i18n } from '@lingui/core';
+import {
+    HistoricalLearningReason,
+    type HistoricalLearningDiagnostic,
+} from '@/lib/graphql/generated/graphql-base.types.ts';
 import { AdaptiveMangaSchedule } from '@/features/manga/components/details/AdaptiveMangaSchedule.tsx';
 
-const controls = vi.hoisted(() => ({ confirmations: 0, provisional: 7 as number | null }));
+const controls = vi.hoisted(() => ({
+    confirmations: 0,
+    provisional: 7 as number | null,
+    diagnostic: null as HistoricalLearningDiagnostic | null,
+}));
 vi.mock('@/lib/requests/RequestManager.ts', () => ({ requestManager: { graphQLClient: { client: {} } } }));
 vi.mock('@apollo/client/react', () => ({
     useQuery: () => ({
@@ -22,6 +30,7 @@ vi.mock('@apollo/client/react', () => ({
                 canManage: true,
                 reason: 'LEARNING',
                 observations: 0,
+                historicalDiagnostic: controls.diagnostic,
                 provisionalIntervalDays: controls.provisional,
                 historicalConfirmations: controls.confirmations,
             },
@@ -33,7 +42,12 @@ vi.mock('@/base/utils/Toast.ts', () => ({ makeToast: vi.fn() }));
 vi.mock('@/lib/HelperFunctions.ts', () => ({ getErrorMessage: vi.fn() }));
 i18n.load('en', {});
 i18n.activate('en');
-afterEach(cleanup);
+afterEach(() => {
+    cleanup();
+    controls.confirmations = 0;
+    controls.provisional = 7;
+    controls.diagnostic = null;
+});
 const show = () =>
     render(
         <I18nProvider i18n={i18n}>
@@ -50,6 +64,7 @@ describe('historical release learning', () => {
                 'normal automatic updates continue',
             );
             expect(screen.getByText(/Provisional release interval/).textContent).toContain('7 days');
+            expect(screen.getByText(/Recent qualifying release observations: 0/)).toBeTruthy();
             expect((screen.getByRole('button', { name: 'Reset release learning' }) as HTMLButtonElement).disabled).toBe(
                 false,
             );
@@ -61,5 +76,39 @@ describe('historical release learning', () => {
         show();
         expect(screen.getByText(/Four consistent observations are required/)).toBeTruthy();
         expect(screen.queryByText(/Provisional release interval/)).toBeNull();
+    });
+    it('does not infer a historical assessment for legacy state', () => {
+        controls.provisional = null;
+        show();
+        expect(screen.getByText(/has not been assessed since this update/)).toBeTruthy();
+        expect(screen.queryByText(/Last historical assessment/)).toBeNull();
+    });
+    it.each([
+        [HistoricalLearningReason.MissingDates, /recent chapters have missing dates/],
+        [HistoricalLearningReason.UnknownDates, /origin of recent chapter dates is unknown/],
+        [HistoricalLearningReason.FallbackDates, /server-generated fallback timestamps/],
+        [HistoricalLearningReason.InconsistentIntervals, /recent release intervals are inconsistent/],
+        [HistoricalLearningReason.StaleHistory, /latest historical release event is too old/],
+        [HistoricalLearningReason.Suppressed, /suppressed after a reset or chapter restoration/],
+        [HistoricalLearningReason.WaitingForNewHistory, /unchanged history cannot be retried/],
+    ])('explains %s independently of fresh observations', (reason, message) => {
+        controls.provisional = null;
+        controls.diagnostic = {
+            reason,
+            assessedAt: '1792256762000',
+            inspectedNumbers: 6,
+            events: 0,
+            missingDates: 1,
+            unknownDates: 2,
+            fallbackDates: 3,
+            eligibleDates: 0,
+        };
+        show();
+        expect(screen.getByText(message)).toBeTruthy();
+        expect(screen.getByText(/Learning: 0 recent qualifying releases/)).toBeTruthy();
+        expect(screen.getByText(/Inspected chapter numbers: 6/).textContent).toContain(
+            '2 unknown, 3 fallback, 1 missing',
+        );
+        expect(screen.queryByText(/has not been assessed since this update/)).toBeNull();
     });
 });

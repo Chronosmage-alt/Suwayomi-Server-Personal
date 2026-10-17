@@ -32,6 +32,7 @@ class AdaptivePersistenceTest : ApplicationTest() {
                 lastCheck = 123,
                 historical = HistoricalCandidate(7 * AdaptiveSchedule.DAY, 100, 6f, 1),
                 historicalAttemptHigh = 6f,
+                dateEvidenceThrough = 123,
             )
         AdaptiveUpdates.saveState(id, state)
         assertEquals(AdaptiveOverride.SMART, AdaptiveUpdates.entries(listOf(id))[id]?.mode)
@@ -40,7 +41,15 @@ class AdaptivePersistenceTest : ApplicationTest() {
         AdaptiveUpdates.setMode(id, AdaptiveOverride.SMART)
         AdaptiveUpdates.resetHistory(id)
         assertEquals(
-            AdaptiveEntry(AdaptiveOverride.SMART, AdaptiveState(historicalDisabled = true, historicalAttemptHigh = 6f)),
+            AdaptiveEntry(
+                AdaptiveOverride.SMART,
+                AdaptiveState(
+                    historicalDisabled = true,
+                    historicalAttemptHigh = 6f,
+                    historicalDiagnostic = HistoricalDiagnostic(HistoricalReason.SUPPRESSED),
+                    dateEvidenceThrough = 123,
+                ),
+            ),
             AdaptiveUpdates.entries(listOf(id))[id],
         )
     }
@@ -78,9 +87,9 @@ class AdaptivePersistenceTest : ApplicationTest() {
 
     @Test fun reloadedFirstConfirmationNeedsAnotherNewReleaseAndStaleStateRetainsWatermark() {
         val day = AdaptiveSchedule.DAY
-        val history = (1..6).map { ObservedChapter("/$it", it.toFloat(), (10L + 7 * it) * day) }
+        val history = (1..6).map { ObservedChapter("/$it", it.toFloat(), (10L + 7 * it) * day, ChapterDateOrigin.EXTENSION_REPORTED) }
         val seeded = AdaptiveSchedule.observe(AdaptiveState(), emptyList(), history, 53 * day)
-        val firstHistory = history + ObservedChapter("/7", 7f, 59 * day)
+        val firstHistory = history + ObservedChapter("/7", 7f, 59 * day, ChapterDateOrigin.EXTENSION_REPORTED)
         val first = AdaptiveSchedule.observe(seeded.copy(lastCheck = 59 * day - day / 2), history, firstHistory, 59 * day)
         val id =
             transaction {
@@ -102,7 +111,7 @@ class AdaptivePersistenceTest : ApplicationTest() {
             AdaptiveSchedule.observe(
                 unchanged.copy(lastCheck = 66 * day - day / 2),
                 firstHistory,
-                firstHistory + ObservedChapter("/8", 8f, 66 * day),
+                firstHistory + ObservedChapter("/8", 8f, 66 * day, ChapterDateOrigin.EXTENSION_REPORTED),
                 66 * day,
             )
         assertEquals(7 * day, confirmed.interval)
@@ -110,6 +119,40 @@ class AdaptivePersistenceTest : ApplicationTest() {
         assertEquals(null, stale.historical)
         assertEquals(7f, stale.historicalAttemptHigh)
         assertTrue(AdaptiveSchedule.due(stale, 100 * day))
+    }
+
+    @Test fun evidenceCutoffSurvivesRestartResetAndExpiryWithoutCertifyingDeletedHistory() {
+        val day = AdaptiveSchedule.DAY
+        val id =
+            transaction {
+                MangaTable
+                    .insertAndGetId {
+                        it[url] = "/evidence-cutoff-${System.nanoTime()}"
+                        it[title] = "Evidence cutoff"
+                        it[sourceReference] = 123L
+                    }.value
+            }
+        val original = AdaptiveState(lastCheck = 53 * day, dateEvidenceThrough = 53 * day)
+        AdaptiveUpdates.saveState(id, original)
+        val reloaded = AdaptiveUpdates.entries(listOf(id)).getValue(id).state
+        assertEquals(original, reloaded)
+        val expired = AdaptiveUpdates.freshState(reloaded, 100 * day)
+        assertEquals(53 * day, expired.dateEvidenceThrough)
+        assertEquals(null, expired.historicalDiagnostic)
+        AdaptiveUpdates.resetHistory(id)
+        val reset = AdaptiveUpdates.entries(listOf(id)).getValue(id).state
+        assertEquals(53 * day, reset.dateEvidenceThrough)
+        assertTrue(reset.dateEvidence.isEmpty())
+        val returned = listOf(ObservedChapter("/deleted", 1f, 50 * day))
+        for (state in listOf(reloaded, expired, reset)) {
+            assertEquals(
+                ChapterDateOrigin.UNKNOWN,
+                HistoricalEvidence.classify(state.dateEvidence, emptyList(), returned, state.dateEvidenceThrough).single().origin,
+            )
+        }
+        // A database created before the cutoff field existed still has its successful check horizon.
+        val legacy = original.copy(dateEvidenceThrough = 0)
+        assertEquals(53 * day, AdaptiveUpdates.freshState(legacy, 100 * day).dateEvidenceThrough)
     }
 
     @Test fun resetWithoutExistingStateRowStillSuppressesRestoredHistory() {
@@ -127,7 +170,7 @@ class AdaptivePersistenceTest : ApplicationTest() {
         val reset = AdaptiveUpdates.entries(listOf(id)).getValue(id).state
         assertTrue(reset.historicalDisabled)
         val day = AdaptiveSchedule.DAY
-        val history = (1..6).map { ObservedChapter("/$it", it.toFloat(), (10L + 7 * it) * day) }
+        val history = (1..6).map { ObservedChapter("/$it", it.toFloat(), (10L + 7 * it) * day, ChapterDateOrigin.EXTENSION_REPORTED) }
         val refreshed = AdaptiveSchedule.observe(reset, emptyList(), history, 53 * day)
         assertEquals(null, refreshed.historical)
         assertEquals(6f, refreshed.historicalAttemptHigh)
