@@ -1,0 +1,6 @@
+*
+!Dockerfile
+!start-adaptive.sh
+!server.jar
+!webui/
+!webui/**

@@ -1,0 +1,32 @@
+name: suwa-adaptive-test
+
+services:
+  suwayomi:
+    image: ghcr.io/chronosmage-alt/suwayomi-server-personal:adaptive-test
+    platform: linux/amd64
+    user: "${PUID:-1000}:${PGID:-1000}"
+    environment:
+      TZ: Europe/London
+      BIND_IP: 0.0.0.0
+      BIND_PORT: "4567"
+      AUTH_MODE: none
+      DATABASE_TYPE: H2
+      WEB_UI_ENABLED: "true"
+      WEB_UI_FLAVOR: CUSTOM
+      WEB_UI_UPDATE_INTERVAL: "0"
+      UPDATE_INTERVAL: "0"
+    ports:
+      - "4568:4567"
+    volumes:
+      - type: bind
+        source: ./data
+        target: /home/suwayomi/.local/share/Tachidesk
+        bind:
+          create_host_path: false
+    shm_size: 512m
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"

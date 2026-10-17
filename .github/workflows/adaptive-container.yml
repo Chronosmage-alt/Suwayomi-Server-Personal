@@ -1,0 +1,191 @@
+name: Adaptive NAS test image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - investigate/adaptive-library-updates
+    paths:
+      - '.github/workflows/adaptive-container.yml'
+      - '.github/runner-files/ci-gradle.properties'
+      - 'docker/adaptive/**'
+      - 'webui/**'
+      - 'server/**'
+      - 'AndroidCompat/**'
+      - 'buildSrc/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'gradlew*'
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: adaptive-container-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-test-publish:
+    if: github.repository == 'Chronosmage-alt/Suwayomi-Server-Personal'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      HUSKY: '0'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Prepare Gradle and Linux WebView tests
+        run: |
+          mkdir -p ~/.gradle
+          cp .github/runner-files/ci-gradle.properties ~/.gradle/gradle.properties
+          chmod +x gradlew
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            xvfb xauth libnss3 libxss1 libasound2t64 libatk-bridge2.0-0 libgbm1 \
+            libxext6 libxrender1 libxcomposite1 libxdamage1 libxkbcommon0 \
+            libxtst6 libxcursor1 libglib2.0-0t64 libdbus-1-3 libpango-1.0-0 \
+            libcairo2 libcups2t64 libdrm2 libegl1
+
+      - name: Test and build server
+        run: |
+          xvfb-run -a ./gradlew -I docker/adaptive/build.init.gradle \
+            :server:test :server:ktlintCheck :server:shadowJar \
+            --no-daemon --max-workers=2 --console=plain
+          cp server/build/Suwayomi-Server-*.jar docker/adaptive/server.jar
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - name: Install pnpm
+        run: npm install --global pnpm@11.1.2
+
+      - name: Validate and build modified WebUI
+        working-directory: webui
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm tsc
+          pnpm lint
+          pnpm exec vite build
+          printf 'r3518\n' > build/revision
+          cp -R build ../docker/adaptive/webui
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Resolve image names and runtime digest
+        id: image
+        shell: bash
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          docker pull ghcr.io/suwayomi/suwayomi-server:preview
+          runtime=$(docker image inspect ghcr.io/suwayomi/suwayomi-server:preview --format '{{index .RepoDigests 0}}')
+          echo "name=$image" >> "$GITHUB_OUTPUT"
+          echo "runtime=$runtime" >> "$GITHUB_OUTPUT"
+          echo "tag=sha-${GITHUB_SHA:0:12}" >> "$GITHUB_OUTPUT"
+
+      - name: Build image for Linux smoke test
+        uses: docker/build-push-action@v7
+        with:
+          context: docker/adaptive
+          platforms: linux/amd64
+          load: true
+          tags: suwayomi-adaptive:ci
+          build-args: |
+            RUNTIME_IMAGE=${{ steps.image.outputs.runtime }}
+            SOURCE_REVISION=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test packaged server and custom WebUI
+        shell: bash
+        run: |
+          docker run -d --name adaptive-smoke -p 127.0.0.1:14568:4567 \
+            --shm-size=512m -e BIND_IP=0.0.0.0 -e UPDATE_INTERVAL=0 \
+            -e AUTH_MODE=none suwayomi-adaptive:ci
+          ready=false
+          for attempt in $(seq 1 120); do
+            if curl -fsS -H 'Content-Type: application/json' \
+              --data '{"query":"query { adaptiveUpdateSettings { enabled maxBackoffDays } }"}' \
+              http://127.0.0.1:14568/api/graphql > smoke-response.json; then
+              ready=true
+              break
+            fi
+            sleep 2
+          done
+          test "$ready" = true
+          python3 - <<'PY'
+          import json
+          with open('smoke-response.json') as response:
+              result = json.load(response)
+          assert not result.get('errors'), result
+          assert result['data']['adaptiveUpdateSettings'] == {'enabled': False, 'maxBackoffDays': 14}, result
+          PY
+          curl -fsS http://127.0.0.1:14568/ -o smoke-ui.html
+          grep -q 'assets/' smoke-ui.html
+          docker exec adaptive-smoke sh -c 'grep -R -q setAdaptiveUpdatesEnabled /home/suwayomi/.local/share/Tachidesk/webUI/assets'
+
+      - name: Collect container logs
+        if: always()
+        run: |
+          docker logs adaptive-smoke > adaptive-smoke.log 2>&1 || true
+          docker rm -f adaptive-smoke || true
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: adaptive-validation-${{ github.sha }}
+          path: |
+            server/build/reports/tests/test/
+            server/build/test-results/test/
+            adaptive-smoke.log
+            smoke-response.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish tested image
+        id: publish
+        uses: docker/build-push-action@v7
+        with:
+          context: docker/adaptive
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ steps.image.outputs.name }}:adaptive-test
+            ${{ steps.image.outputs.name }}:${{ steps.image.outputs.tag }}
+          build-args: |
+            RUNTIME_IMAGE=${{ steps.image.outputs.runtime }}
+            SOURCE_REVISION=${{ github.sha }}
+          cache-from: type=gha
+
+      - name: Write NAS image details
+        env:
+          IMAGE: ${{ steps.image.outputs.name }}
+          TAG: ${{ steps.image.outputs.tag }}
+          DIGEST: ${{ steps.publish.outputs.digest }}
+          RUNTIME: ${{ steps.image.outputs.runtime }}
+        run: |
+          {
+            echo '## NAS test image'
+            echo "Image: \`$IMAGE:$TAG\`"
+            echo "Pinned image: \`$IMAGE@$DIGEST\`"
+            echo "Runtime: \`$RUNTIME\`"
+            echo 'Compose template: docker/adaptive/compose.yaml'
+            echo 'Fresh test data only; automatic updates start disabled. No NAS deployment was performed.'
+            echo 'New GHCR packages default to private. Make the package public, or authenticate Docker with read:packages before pulling.'
+          } >> "$GITHUB_STEP_SUMMARY"

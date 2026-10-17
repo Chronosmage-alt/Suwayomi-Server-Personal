@@ -1,0 +1,12 @@
+// The upstream compiler depends on ktlintFormat, which reads generated sources.
+// Declare those prerequisites explicitly so a clean CI checkout builds reliably.
+gradle.projectsEvaluated {
+    def serverProject = gradle.rootProject.findProject(':server')
+    if (serverProject != null) {
+        serverProject.tasks.matching {
+            it.name == 'runKtlintFormatOverMainSourceSet'
+        }.configureEach {
+            dependsOn(':server:generateJte', ':server:server-config-generate:generateSettings')
+        }
+    }
+}

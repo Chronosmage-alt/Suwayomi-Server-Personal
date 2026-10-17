@@ -7,6 +7,12 @@ gradle.properties
 !.idea/runConfigurations
 .kotlin
 
+# Locally staged adaptive container artifacts and isolated test data
+/docker/adaptive/server.jar
+/docker/adaptive/webui/
+/docker/adaptive/data/
+/docker/adaptive/.env
+
 # Ignore Gradle build output directory
 build
 server/out
