@@ -21,6 +21,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import suwayomi.tachidesk.graphql.directives.RequireAuthDirectiveWiring
 import suwayomi.tachidesk.graphql.directives.RequirePermissionsDirectiveWiring
+import suwayomi.tachidesk.graphql.mutations.AdaptiveUpdateMutation
 import suwayomi.tachidesk.graphql.mutations.BackupMutation
 import suwayomi.tachidesk.graphql.mutations.CategoryMutation
 import suwayomi.tachidesk.graphql.mutations.ChapterMutation
@@ -40,6 +41,7 @@ import suwayomi.tachidesk.graphql.mutations.UpdateMutation
 import suwayomi.tachidesk.graphql.mutations.UserMutation
 import suwayomi.tachidesk.graphql.mutations.UserSettingsMutation
 import suwayomi.tachidesk.graphql.mutations.WebviewMutation
+import suwayomi.tachidesk.graphql.queries.AdaptiveUpdateQuery
 import suwayomi.tachidesk.graphql.queries.BackupQuery
 import suwayomi.tachidesk.graphql.queries.CategoryQuery
 import suwayomi.tachidesk.graphql.queries.ChapterQuery
@@ -110,6 +112,7 @@ object GraphQLSchemaProvider {
                 queries =
                     listOf(
                         TopLevelObject(BackupQuery()),
+                        TopLevelObject(AdaptiveUpdateQuery()),
                         TopLevelObject(CategoryQuery()),
                         TopLevelObject(ChapterQuery()),
                         TopLevelObject(DownloadQuery()),
@@ -130,6 +133,7 @@ object GraphQLSchemaProvider {
                 mutations =
                     listOf(
                         TopLevelObject(BackupMutation()),
+                        TopLevelObject(AdaptiveUpdateMutation()),
                         TopLevelObject(CategoryMutation()),
                         TopLevelObject(ChapterMutation()),
                         TopLevelObject(DownloadMutation()),

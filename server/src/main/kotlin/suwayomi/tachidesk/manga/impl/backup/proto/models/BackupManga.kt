@@ -52,4 +52,5 @@ data class BackupManga(
     @ProtoNumber(112) var memo: ByteArray = JsonObjectEmptyBytes,
     // suwayomi
     @ProtoNumber(9000) var meta: Map<String, String> = emptyMap(),
+    @ProtoNumber(9001) var adaptiveOverride: String? = null,
 )

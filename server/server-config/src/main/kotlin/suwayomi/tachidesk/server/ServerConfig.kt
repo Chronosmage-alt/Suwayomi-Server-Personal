@@ -360,6 +360,14 @@ class ServerConfig(
         deprecated = userSettingDeprecated,
     )
 
+    val smartLibraryUpdates: MutableStateFlow<Boolean> by BooleanSetting(
+        protoNumber = 101,
+        group = SettingGroup.LIBRARY_UPDATES,
+        privacySafe = true,
+        defaultValue = false,
+        description = "Enable adaptive automatic library updates for opted-in sources and titles",
+    )
+
     val globalUpdateInterval: MutableStateFlow<Double> by DisableableDoubleSetting(
         protoNumber = 27,
         group = SettingGroup.LIBRARY_UPDATES,

@@ -189,6 +189,18 @@ object ProtoBackupExport : ProtoBackupBase() {
                     BackupGlobalMetaHandler.backup(userId, flags),
                     BackupSettingsHandler.backup(flags),
                     BackupUserSettingsHandler.backup(flags, userId),
+                    adaptiveSources =
+                        if (flags.includeServerSettings) {
+                            suwayomi.tachidesk.manga.impl.update.adaptive.AdaptiveUpdates.policies().map {
+                                suwayomi.tachidesk.manga.impl.backup.proto.models.BackupAdaptiveSource(
+                                    it.sourceId,
+                                    it.providerPackage,
+                                    it.enabled,
+                                )
+                            }
+                        } else {
+                            emptyList()
+                        },
                 )
             }
 

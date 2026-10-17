@@ -137,6 +137,8 @@ class MangaUpdateType(
     @get:GraphQLIgnore
     val mangaId: Int,
     val status: MangaJobStatus,
+    val skipReason: String? = null,
+    val nextCheckAt: Long? = null,
 ) {
     constructor(job: UpdateJob) : this(
         job.manga.id,
@@ -147,6 +149,8 @@ class MangaUpdateType(
             JobStatus.FAILED -> MangaJobStatus.FAILED
             JobStatus.SKIPPED -> MangaJobStatus.SKIPPED
         },
+        job.skipReason,
+        job.nextCheckAt,
     )
 
     fun manga(dataFetchingEnvironment: DataFetchingEnvironment): CompletableFuture<MangaType> {

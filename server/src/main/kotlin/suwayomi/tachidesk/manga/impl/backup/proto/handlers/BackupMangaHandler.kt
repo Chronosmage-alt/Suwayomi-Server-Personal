@@ -8,6 +8,7 @@ package suwayomi.tachidesk.manga.impl.backup.proto.handlers
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import org.jetbrains.exposed.v1.core.Op
@@ -42,6 +43,7 @@ import suwayomi.tachidesk.manga.impl.backup.proto.models.BackupTracking
 import suwayomi.tachidesk.manga.impl.track.tracker.TrackerManager
 import suwayomi.tachidesk.manga.impl.track.tracker.model.toTrack
 import suwayomi.tachidesk.manga.impl.track.tracker.model.toTrackRecordDataClass
+import suwayomi.tachidesk.manga.impl.update.adaptive.AdaptiveUpdates
 import suwayomi.tachidesk.manga.model.dataclass.TrackRecordDataClass
 import suwayomi.tachidesk.manga.model.table.ChapterTable
 import suwayomi.tachidesk.manga.model.table.ChapterUserTable
@@ -89,6 +91,14 @@ object BackupMangaHandler {
                     .where { (MangaUserTable.inLibrary eq true) and changed }
                     .toList()
 
+            val adaptiveEntries =
+                if (flags.includeServerSettings) {
+                    AdaptiveUpdates.entries(
+                        manga.map { it[MangaTable.id].value },
+                    )
+                } else {
+                    emptyMap()
+                }
             manga.map { mangaRow ->
                 val backupManga =
                     BackupManga(
@@ -113,6 +123,9 @@ object BackupMangaHandler {
                     )
 
                 val mangaId = mangaRow[MangaTable.id].value
+                if (flags.includeServerSettings) {
+                    backupManga.adaptiveOverride = adaptiveEntries[mangaId]?.mode?.name
+                }
 
                 if (flags.includeClientData) {
                     backupManga.meta = Manga.getMangaMetaMap(userId, mangaId)
@@ -225,7 +238,26 @@ object BackupMangaHandler {
         val dbCategoryIds = categories.mapNotNull { categoryMapping[it] }
 
         try {
-            restoreMangaData(userId, backupManga, chapters, dbCategoryIds, history, tracking, flags, syncMode)
+            // Resolve before opening the restore transaction; never hold a DB connection while waiting for a fetch.
+            val existingId =
+                transaction {
+                    MangaTable
+                        .selectAll()
+                        .where {
+                            (MangaTable.url eq backupManga.url) and (MangaTable.sourceReference eq backupManga.source)
+                        }.firstOrNull()
+                        ?.get(MangaTable.id)
+                        ?.value
+                }
+            if (existingId == null) {
+                restoreMangaData(userId, backupManga, chapters, dbCategoryIds, history, tracking, flags, syncMode)
+            } else {
+                runBlocking {
+                    Manga.withMangaLock(existingId) {
+                        restoreMangaData(userId, backupManga, chapters, dbCategoryIds, history, tracking, flags, syncMode)
+                    }
+                }
+            }
         } catch (e: Exception) {
             val sourceName = sourceMapping[backupManga.source] ?: backupManga.source.toString()
             errors.add(Date() to "${backupManga.title} [$sourceName]: ${e.message}")
@@ -345,6 +377,22 @@ object BackupMangaHandler {
                 // merge chapter data
                 if (flags.includeChapters || flags.includeHistory) {
                     restoreMangaChapterData(userId, mangaId, restoreMode, chapters, history, flags, syncMode)
+                    if (flags.includeChapters && !syncMode.isSync) AdaptiveUpdates.resetHistoryLocked(mangaId)
+                }
+
+                if (flags.includeServerSettings &&
+                    suwayomi.tachidesk.server.user
+                        .hasPermission(userId, suwayomi.tachidesk.server.user.UserPermission.MANAGE_SETTINGS)
+                ) {
+                    manga.adaptiveOverride?.let { value ->
+                        val mode =
+                            suwayomi.tachidesk.manga.impl.update.adaptive.AdaptiveOverride.entries
+                                .firstOrNull { it.name == value }
+                        if (mode != null) {
+                            suwayomi.tachidesk.manga.impl.update.adaptive.AdaptiveUpdates
+                                .setMode(mangaId, mode)
+                        }
+                    }
                 }
 
                 // update categories

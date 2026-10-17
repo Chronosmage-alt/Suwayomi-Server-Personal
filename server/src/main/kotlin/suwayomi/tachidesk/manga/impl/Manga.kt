@@ -43,6 +43,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import suwayomi.tachidesk.manga.impl.download.fileProvider.impl.MissingThumbnailException
+import suwayomi.tachidesk.manga.impl.update.adaptive.AdaptiveUpdates
 import suwayomi.tachidesk.manga.impl.util.network.await
 import suwayomi.tachidesk.manga.impl.util.network.isHostUnreachable
 import suwayomi.tachidesk.manga.impl.util.source.GetSource.getSourceOrNull
@@ -63,6 +64,8 @@ import suwayomi.tachidesk.manga.model.table.MangaUserTable
 import suwayomi.tachidesk.manga.model.table.getWithUserData
 import suwayomi.tachidesk.manga.model.table.toDataClass
 import suwayomi.tachidesk.server.ApplicationDirs
+import suwayomi.tachidesk.server.serverConfig
+import suwayomi.tachidesk.server.settings.value
 import uy.kohesive.injekt.injectLazy
 import java.io.File
 import java.io.IOException
@@ -73,11 +76,31 @@ import kotlin.time.Duration.Companion.minutes
 private val logger = KotlinLogging.logger { }
 
 object Manga {
-    val mangaInfoMutex: Cache<Int, Mutex> =
-        Cache
-            .Builder<Int, Mutex>()
-            .expireAfterAccess(10.minutes)
-            .build()
+    private val completedChapterChecks = Cache.Builder<Int, Long>().expireAfterAccess(10.minutes).build()
+
+    private class FetchLock(
+        val mutex: Mutex = Mutex(),
+        var users: Int = 0,
+    )
+
+    private val fetchLocks = mutableMapOf<Int, FetchLock>()
+
+    internal suspend fun <T> withMangaLock(
+        mangaId: Int,
+        block: suspend () -> T,
+    ): T {
+        val lock =
+            synchronized(fetchLocks) {
+                fetchLocks.getOrPut(mangaId) { FetchLock() }.also { it.users++ }
+            }
+        try {
+            return lock.mutex.withLock { block() }
+        } finally {
+            synchronized(fetchLocks) {
+                if (--lock.users == 0) fetchLocks.remove(mangaId)
+            }
+        }
+    }
 
     suspend fun getManga(
         mangaId: Int,
@@ -143,10 +166,10 @@ object Manga {
     }
 
     suspend fun fetchManga(mangaId: Int): SManga? {
-        return mangaInfoMutex.get(mangaId) { Mutex() }.withLock {
+        return withMangaLock(mangaId) {
             val mangaEntry =
                 transaction { MangaTable.selectAll().where { MangaTable.id eq mangaId }.first() }
-            val source = getSourceOrNull(mangaEntry[MangaTable.sourceReference]) ?: return null
+            val source = getSourceOrNull(mangaEntry[MangaTable.sourceReference]) ?: return@withMangaLock null
             val sManga =
                 fetchMangaAndChapters(
                     mangaEntry,
@@ -163,10 +186,18 @@ object Manga {
         mangaId: Int,
         updateManga: Boolean = true,
         updateChapters: Boolean = true,
-    ) {
-        mangaInfoMutex.get(mangaId) { Mutex() }.withLock {
+        automated: Boolean = false,
+        queuedAt: Long = System.nanoTime(),
+    ): Boolean =
+        withMangaLock(mangaId) {
             var mangaEntry =
                 transaction { MangaTable.selectAll().where { MangaTable.id eq mangaId }.first() }
+            // Re-evaluate after acquiring the lock: a manual or another queued refresh may have just succeeded.
+            if (automated && serverConfig.smartLibraryUpdates.value && updateChapters && mangaEntry[MangaTable.chaptersLastFetchedAt] > 0 &&
+                ((completedChapterChecks.get(mangaId) ?: Long.MIN_VALUE) >= queuedAt || !AdaptiveUpdates.due(mangaId))
+            ) {
+                return@withMangaLock false
+            }
             val source =
                 getSourceOrNull(mangaEntry[MangaTable.sourceReference])
                     ?: throw NullPointerException("Missing source ${mangaEntry[MangaTable.sourceReference]}")
@@ -187,9 +218,10 @@ object Manga {
             }
             if (updateChapters) {
                 Chapter.updateChapterListDatabase(mangaEntry, mangaUpdate.chapters, source)
+                completedChapterChecks.put(mangaId, System.nanoTime())
             }
+            true
         }
-    }
 
     suspend fun updateMangaDatabase(
         mangaEntry: ResultRow,

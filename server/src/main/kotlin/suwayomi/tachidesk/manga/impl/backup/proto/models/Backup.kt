@@ -17,6 +17,7 @@ data class Backup(
     @ProtoNumber(9000) var meta: Map<String, String> = emptyMap(),
     @ProtoNumber(9001) var serverSettings: BackupServerSettings? = null,
     @ProtoNumber(9002) var userSettings: BackupUserSettings? = null,
+    @ProtoNumber(9003) var adaptiveSources: List<BackupAdaptiveSource> = emptyList(),
 ) {
     fun getSourceMap(): Map<Long, String> =
         backupSources
@@ -38,3 +39,10 @@ data class Backup(
         }
     }
 }
+
+@Serializable
+data class BackupAdaptiveSource(
+    @ProtoNumber(1) val sourceId: Long,
+    @ProtoNumber(2) val providerPackage: String,
+    @ProtoNumber(3) val enabled: Boolean,
+)

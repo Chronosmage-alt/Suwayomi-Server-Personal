@@ -268,6 +268,12 @@ object ProtoBackupImport : ProtoBackupBase() {
             )
 
             BackupSettingsHandler.restore(backup.serverSettings)
+            backup.adaptiveSources.forEach {
+                suwayomi.tachidesk.manga.impl.update.adaptive.AdaptiveUpdates.restorePolicy(
+                    suwayomi.tachidesk.manga.impl.update.adaptive
+                        .AdaptivePolicy(it.sourceId, it.providerPackage, it.enabled),
+                )
+            }
         }
 
         if (flags.includeUserSettings) {

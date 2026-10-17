@@ -23,9 +23,14 @@ data class UpdateStatus(
                 .groupBy { it.status }
                 .mapValues { entry ->
                     entry.value.map { it.manga }
-                }.plus(Pair(JobStatus.SKIPPED, skippedMangas)),
+                }.plus(
+                    Pair(
+                        JobStatus.SKIPPED,
+                        (skippedMangas + jobs.filter { it.status == JobStatus.SKIPPED }.map { it.manga }).distinctBy { it.id },
+                    ),
+                ),
         running = running,
-        numberOfJobs = jobs.size,
+        numberOfJobs = jobs.count { it.status != JobStatus.SKIPPED },
     )
 }
 

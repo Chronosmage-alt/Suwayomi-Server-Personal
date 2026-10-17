@@ -39,6 +39,8 @@ import org.jetbrains.exposed.v1.jdbc.upsert
 import suwayomi.tachidesk.global.model.table.UserAccountTable
 import suwayomi.tachidesk.manga.impl.download.DownloadManager
 import suwayomi.tachidesk.manga.impl.track.Track
+import suwayomi.tachidesk.manga.impl.update.adaptive.AdaptiveUpdates
+import suwayomi.tachidesk.manga.impl.update.adaptive.ObservedChapter
 import suwayomi.tachidesk.manga.impl.util.updateChapterDownloadDir
 import suwayomi.tachidesk.manga.model.dataclass.ChapterDataClass
 import suwayomi.tachidesk.manga.model.dataclass.MangaChapterDataClass
@@ -405,6 +407,12 @@ object Chapter {
             MangaTable.update({ MangaTable.id eq mangaEntry[MangaTable.id].value }) {
                 it[chaptersLastFetchedAt] = Instant.now().epochSecond
             }
+            AdaptiveUpdates.record(
+                mangaEntry[MangaTable.id].value,
+                mangaEntry[MangaTable.sourceReference],
+                chaptersInDb.map { ObservedChapter(it.url, it.chapterNumber, it.uploadDate) },
+                uniqueChapters.map { ObservedChapter(it.url, it.chapter_number, it.date_upload) },
+            )
         }
 
         val inLibraryUserIds =
