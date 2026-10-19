@@ -17,8 +17,8 @@ there too. Neither this workflow nor this image deploys to the NAS.
 ## Running the build
 
 Pushes affecting the server, UI or container build on
-`investigate/adaptive-library-updates` trigger the workflow. This permits the initial
-test build without merging into master. `workflow_dispatch` is also configured;
+`dev` trigger the workflow. This is the permanent development branch for the
+custom server and bundled WebUI; no master merge is required. `workflow_dispatch` is also configured;
 GitHub only makes manual dispatch available once the workflow is on the default
 branch. Existing upstream release workflows are unchanged.
 

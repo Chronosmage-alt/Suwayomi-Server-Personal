@@ -1,7 +1,7 @@
 # Bundled WebUI r3549 integration
 
 Phase 1, approved 19 October 2026. Development stays on
-`investigate/adaptive-library-updates`. No upstream server changes, Komga work,
+`dev`, the permanent custom-server and bundled-WebUI development branch. No upstream server changes, Komga work,
 extension edits, publication or NAS deployment are included.
 
 ## Reproducible upstream comparison

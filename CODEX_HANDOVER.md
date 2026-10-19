@@ -2,6 +2,28 @@
 
 Updated 19 October 2026. This document is context for a fresh Codex conversation.
 
+## Current branch: dev (permanent development branch)
+
+The user requested renaming investigate/adaptive-library-updates to dev for all
+future custom Suwayomi Server and bundled WebUI work. Starting tree was clean;
+local and remote old branch both pointed to 6a063c71ab5f0df13a515b02473bf87914cea0f4,
+and neither a local nor remote dev branch existed. Local rename preserves every
+commit, tree and reflog; no history rewrite is involved. All r3549, adaptive,
+historical provenance, Completed-category, Komga and PostgreSQL work is retained.
+
+The active GitHub Actions branch trigger is now dev. Image names/tags remain
+ghcr.io/chronosmage-alt/suwayomi-server-personal:adaptive-test and sha-<12-char-SHA>.
+Active build/integration documentation uses dev and the bundled webui/ source.
+Historical snapshots below deliberately retain their original branch names,
+commit IDs and permissions; they are records, not instructions to switch back.
+The separate historical WebUI checkout and extension repository are untouched.
+
+In progress: validate branch-trigger/docs-only changes, commit them, push dev with
+upstream origin/dev, and verify the workflow starts on dev. The old remote branch
+is retained as an archive; deleting it was not requested. No default-branch change,
+master merge, force push, NAS access or deployment is authorized or performed.
+Next session must inspect this top section and git status/branch before resuming.
+
 ## Publication complete: combined r3549 and Komga Linux image
 
 The identity repair and publication succeeded. GitHub privacy remains enabled.

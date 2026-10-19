@@ -1,8 +1,10 @@
 # Adaptive library updates
 
-Development branches: `investigate/adaptive-library-updates` in the server and
-`D:/Git/Suwayomi-WebUI-Personal`. The UI baseline is commit `41443eab`, the exact
-source revision for the configured r3518 bundle, not current master.
+The permanent development branch is `dev` in this server repository. The custom
+WebUI is built from the bundled `webui/` directory, pinned to official r3549
+(`8ab2f3385d643f36a415bc8df0c414f86c8a97b1`). Its original comparison ancestor
+was r3518 (`41443eaba44bcbdf45d666fe27471b50d41fd994`). The separate historical
+`D:/Git/Suwayomi-WebUI-Personal` checkout is not the build source and is unchanged.
 
 ## Chapter evidence
 

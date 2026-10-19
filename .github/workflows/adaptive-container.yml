@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - investigate/adaptive-library-updates
+      - dev
     paths:
       - '.github/workflows/adaptive-container.yml'
       - '.github/runner-files/ci-gradle.properties'
