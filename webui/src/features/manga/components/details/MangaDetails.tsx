@@ -7,6 +7,7 @@
  */
 
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import { KomgaCard } from '@/features/komga/KomgaCard.tsx';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { styled } from '@mui/material/styles';
 import type { ComponentProps, ReactNode } from 'react';
@@ -294,6 +295,7 @@ export const MangaDetails = ({
                 </MangaButtonsContainer>
             </TopContentWrapper>
             {manga.inLibrary && <AdaptiveMangaSchedule mangaId={manga.id} />}
+            <KomgaCard mangaId={manga.id} title={manga.title} />
             <DescriptionGenre manga={manga} mode={mode} />
         </DetailsWrapper>
     );

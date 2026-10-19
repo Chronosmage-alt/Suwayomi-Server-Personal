@@ -7,6 +7,7 @@
  */
 
 import List from '@mui/material/List';
+import { KomgaSettings } from '@/features/komga/KomgaSettings.tsx';
 import { ListSubheader } from '@/base/components/lists/ListSubheader.tsx';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
@@ -82,6 +83,7 @@ export const TrackingSettings = () => {
 
     return (
         <>
+            <KomgaSettings />
             <List sx={{ pt: 0 }}>
                 <ListItem>
                     <ListItemText primary={t`Update progress after reading`} />

@@ -7,6 +7,7 @@
  */
 
 import { useNavigate } from 'react-router-dom';
+import { useKomgaSettings } from '@/features/komga/KomgaSettings.tsx';
 import SyncIcon from '@mui/icons-material/Sync';
 import PopupState, { bindDialog, bindTrigger } from 'material-ui-popup-state';
 import Dialog from '@mui/material/Dialog';
@@ -28,6 +29,7 @@ import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
 export const TrackMangaButton = ({ manga }: { manga: MangaTrackRecordInfo & MangaTitleInfo }) => {
     const { t } = useLingui();
     const navigate = useNavigate();
+    const komga = useKomgaSettings();
     const isMobileWidth = MediaQuery.useIsMobileWidth();
 
     const trackerList = requestManager.useGetTrackerList<GetTrackersSettingsQuery>(GET_TRACKERS_SETTINGS);
@@ -43,7 +45,7 @@ export const TrackMangaButton = ({ manga }: { manga: MangaTrackRecordInfo & Mang
             return;
         }
 
-        if (!loggedInTrackers.length) {
+        if (!loggedInTrackers.length && !komga.data?.komgaSettings.enabled) {
             navigate(AppRoutes.settings.children.tracking.path);
             return;
         }
@@ -58,7 +60,7 @@ export const TrackMangaButton = ({ manga }: { manga: MangaTrackRecordInfo & Mang
                     <FlexWrapButton
                         {...bindTrigger(popupState)}
                         size={isMobileWidth ? 'small' : 'medium'}
-                        disabled={trackerList.loading || !!trackerList.error}
+                        disabled={trackerList.loading || komga.loading || !!trackerList.error}
                         onClick={() => handleClick(popupState.open)}
                         variant={trackersInUse.length ? 'contained' : 'outlined'}
                     >

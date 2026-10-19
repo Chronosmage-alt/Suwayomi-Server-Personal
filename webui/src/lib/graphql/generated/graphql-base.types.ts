@@ -1303,6 +1303,83 @@ export type KoSyncStatusPayload = {
     username?: Maybe<Scalars['String']['output']>;
 };
 
+export type KomgaBookInfo = {
+    __typename?: 'KomgaBookInfo';
+    confirmedNumbers: Array<Scalars['String']['output']>;
+    id: Scalars['String']['output'];
+    lastProgressAt?: Maybe<Scalars['String']['output']>;
+    numberHint?: Maybe<Scalars['String']['output']>;
+    page?: Maybe<Scalars['Int']['output']>;
+    pages?: Maybe<Scalars['Int']['output']>;
+    read?: Maybe<Scalars['Boolean']['output']>;
+    title: Scalars['String']['output'];
+};
+
+export type KomgaConnectionResult = {
+    __typename?: 'KomgaConnectionResult';
+    code: Scalars['String']['output'];
+    message: Scalars['String']['output'];
+    success: Scalars['Boolean']['output'];
+};
+
+export type KomgaMangaInfo = {
+    __typename?: 'KomgaMangaInfo';
+    ambiguousBooks: Scalars['Int']['output'];
+    bookCount?: Maybe<Scalars['Int']['output']>;
+    books: Array<KomgaBookInfo>;
+    code: Scalars['String']['output'];
+    confirmedButNotDownloaded: Array<Scalars['String']['output']>;
+    confirmedNumbers: Array<Scalars['String']['output']>;
+    downloadedButNotMatched: Array<Scalars['String']['output']>;
+    duplicateSourceEntries: Scalars['Int']['output'];
+    enabled: Scalars['Boolean']['output'];
+    extraNumberHints: Array<Scalars['String']['output']>;
+    fetchedAt?: Maybe<Scalars['LongString']['output']>;
+    inProgressBooks?: Maybe<Scalars['Int']['output']>;
+    inventoryComplete: Scalars['Boolean']['output'];
+    lastProgressAt?: Maybe<Scalars['String']['output']>;
+    linked: Scalars['Boolean']['output'];
+    message: Scalars['String']['output'];
+    missingCount?: Maybe<Scalars['Int']['output']>;
+    numberHints: Array<Scalars['String']['output']>;
+    openUrl?: Maybe<Scalars['String']['output']>;
+    readBooks?: Maybe<Scalars['Int']['output']>;
+    seriesId?: Maybe<Scalars['String']['output']>;
+    sourceEntries: Scalars['Int']['output'];
+    stale: Scalars['Boolean']['output'];
+    suwayomiDownloaded: Scalars['Int']['output'];
+    title?: Maybe<Scalars['String']['output']>;
+    unknownSourceEntries: Scalars['Int']['output'];
+    unmatchedSourceNumbers: Array<Scalars['String']['output']>;
+    unreadBooks?: Maybe<Scalars['Int']['output']>;
+};
+
+export type KomgaSearchPage = {
+    __typename?: 'KomgaSearchPage';
+    code: Scalars['String']['output'];
+    hasNextPage: Scalars['Boolean']['output'];
+    items: Array<KomgaSeriesOption>;
+    message: Scalars['String']['output'];
+    page: Scalars['Int']['output'];
+};
+
+export type KomgaSeriesOption = {
+    __typename?: 'KomgaSeriesOption';
+    alternateTitles: Array<Scalars['String']['output']>;
+    bookCount?: Maybe<Scalars['Int']['output']>;
+    id: Scalars['String']['output'];
+    title: Scalars['String']['output'];
+};
+
+export type KomgaSettings = {
+    __typename?: 'KomgaSettings';
+    apiUrl: Scalars['String']['output'];
+    browserUrl: Scalars['String']['output'];
+    canManage: Scalars['Boolean']['output'];
+    credentialConfigured: Scalars['Boolean']['output'];
+    enabled: Scalars['Boolean']['output'];
+};
+
 export enum KoreaderSyncChecksumMethod {
     Binary = 'BINARY',
     Filename = 'FILENAME',
@@ -1720,6 +1797,7 @@ export type Mutation = {
     fetchSourceManga?: Maybe<FetchSourceMangaPayload>;
     fetchTrack: FetchTrackPayload;
     installExternalExtension?: Maybe<InstallExternalExtensionPayload>;
+    linkKomgaSeries: KomgaMangaInfo;
     login: LoginPayload;
     loginTrackerCredentials: LoginTrackerCredentialsPayload;
     loginTrackerOAuth: LoginTrackerOAuthPayload;
@@ -1732,6 +1810,7 @@ export type Mutation = {
     redeemRecoveryCode: RedeemRecoveryCodePayload;
     /** Redeems a registration code with a username and a self-chosen password. */
     redeemRegistrationCode: RedeemRegistrationCodePayload;
+    refreshKomgaManga: KomgaMangaInfo;
     refreshToken: RefreshTokenPayload;
     register: RegisterPayload;
     removeExtensionStore?: Maybe<RemoveExtensionStorePayload>;
@@ -1754,6 +1833,7 @@ export type Mutation = {
     setCompletedCategorySettings: CompletedCategorySettings;
     setGlobalMeta?: Maybe<SetGlobalMetaPayload>;
     setGlobalMetas?: Maybe<SetGlobalMetasPayload>;
+    setKomgaSettings: KomgaSettings;
     setMangaMeta?: Maybe<SetMangaMetaPayload>;
     setMangaMetas?: Maybe<SetMangaMetasPayload>;
     setPassword: SetPasswordPayload;
@@ -1764,8 +1844,10 @@ export type Mutation = {
     startDownloader?: Maybe<StartDownloaderPayload>;
     startSync: StartSyncPayload;
     stopDownloader?: Maybe<StopDownloaderPayload>;
+    testKomgaConnection: KomgaConnectionResult;
     trackProgress?: Maybe<TrackProgressPayload>;
     unbindTrack: UnbindTrackPayload;
+    unlinkKomgaSeries: KomgaMangaInfo;
     updateCategories?: Maybe<UpdateCategoriesPayload>;
     updateCategory?: Maybe<UpdateCategoryPayload>;
     updateCategoryManga?: Maybe<UpdateCategoryMangaPayload>;
@@ -1931,6 +2013,11 @@ export type MutationInstallExternalExtensionArgs = {
     input: InstallExternalExtensionInput;
 };
 
+export type MutationLinkKomgaSeriesArgs = {
+    mangaId: Scalars['Int']['input'];
+    seriesId: Scalars['String']['input'];
+};
+
 export type MutationLoginArgs = {
     input: LoginInput;
 };
@@ -1969,6 +2056,10 @@ export type MutationRedeemRecoveryCodeArgs = {
 
 export type MutationRedeemRegistrationCodeArgs = {
     input: RedeemRegistrationCodeInput;
+};
+
+export type MutationRefreshKomgaMangaArgs = {
+    mangaId: Scalars['Int']['input'];
 };
 
 export type MutationRefreshTokenArgs = {
@@ -2054,6 +2145,12 @@ export type MutationSetGlobalMetasArgs = {
     input: SetGlobalMetasInput;
 };
 
+export type MutationSetKomgaSettingsArgs = {
+    apiUrl: Scalars['String']['input'];
+    browserUrl: Scalars['String']['input'];
+    enabled: Scalars['Boolean']['input'];
+};
+
 export type MutationSetMangaMetaArgs = {
     input: SetMangaMetaInput;
 };
@@ -2100,6 +2197,10 @@ export type MutationTrackProgressArgs = {
 
 export type MutationUnbindTrackArgs = {
     input: UnbindTrackInput;
+};
+
+export type MutationUnlinkKomgaSeriesArgs = {
+    mangaId: Scalars['Int']['input'];
 };
 
 export type MutationUpdateCategoriesArgs = {
@@ -2677,6 +2778,9 @@ export type Query = {
     extensions: ExtensionNodeList;
     getWebUIUpdateStatus: WebUiUpdateStatus;
     koSyncStatus: KoSyncStatusPayload;
+    komgaManga: KomgaMangaInfo;
+    komgaSearch: KomgaSearchPage;
+    komgaSettings: KomgaSettings;
     lastSyncStatus?: Maybe<SyncStatus>;
     lastUpdateTimestamp: LastUpdateTimestampPayload;
     libraryUpdateStatus: LibraryUpdateStatus;
@@ -2775,6 +2879,15 @@ export type QueryExtensionsArgs = {
     order?: InputMaybe<Array<ExtensionOrderInput>>;
     orderBy?: InputMaybe<ExtensionOrderBy>;
     orderByType?: InputMaybe<SortOrder>;
+};
+
+export type QueryKomgaMangaArgs = {
+    mangaId: Scalars['Int']['input'];
+};
+
+export type QueryKomgaSearchArgs = {
+    page: Scalars['Int']['input'];
+    query: Scalars['String']['input'];
 };
 
 export type QueryMangaArgs = {

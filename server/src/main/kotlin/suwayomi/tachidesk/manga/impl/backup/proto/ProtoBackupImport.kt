@@ -287,6 +287,12 @@ object ProtoBackupImport : ProtoBackupBase() {
                 backup.userSettings,
                 backup.serverSettings,
             )
+            if (!syncMode.isSync) {
+                backup.komgaConnection?.let {
+                    suwayomi.tachidesk.manga.impl.komga.Komga
+                        .restoreConnection(userId, it)
+                }
+            }
         }
 
         val categoryMapping =

@@ -31,6 +31,7 @@ import suwayomi.tachidesk.graphql.mutations.ExtensionMutation
 import suwayomi.tachidesk.graphql.mutations.ExtensionStoreMutation
 import suwayomi.tachidesk.graphql.mutations.ImageMutation
 import suwayomi.tachidesk.graphql.mutations.InfoMutation
+import suwayomi.tachidesk.graphql.mutations.KomgaMutation
 import suwayomi.tachidesk.graphql.mutations.KoreaderSyncMutation
 import suwayomi.tachidesk.graphql.mutations.MangaMutation
 import suwayomi.tachidesk.graphql.mutations.MetaMutation
@@ -51,6 +52,7 @@ import suwayomi.tachidesk.graphql.queries.DownloadQuery
 import suwayomi.tachidesk.graphql.queries.ExtensionQuery
 import suwayomi.tachidesk.graphql.queries.ExtensionStoreQuery
 import suwayomi.tachidesk.graphql.queries.InfoQuery
+import suwayomi.tachidesk.graphql.queries.KomgaQuery
 import suwayomi.tachidesk.graphql.queries.KoreaderSyncQuery
 import suwayomi.tachidesk.graphql.queries.MangaQuery
 import suwayomi.tachidesk.graphql.queries.MetaQuery
@@ -117,6 +119,7 @@ object GraphQLSchemaProvider {
                         TopLevelObject(AdaptiveUpdateQuery()),
                         TopLevelObject(CategoryQuery()),
                         TopLevelObject(CompletedCategoryQuery()),
+                        TopLevelObject(KomgaQuery()),
                         TopLevelObject(ChapterQuery()),
                         TopLevelObject(DownloadQuery()),
                         TopLevelObject(ExtensionQuery()),
@@ -139,6 +142,7 @@ object GraphQLSchemaProvider {
                         TopLevelObject(AdaptiveUpdateMutation()),
                         TopLevelObject(CategoryMutation()),
                         TopLevelObject(CompletedCategoryMutation()),
+                        TopLevelObject(KomgaMutation()),
                         TopLevelObject(ChapterMutation()),
                         TopLevelObject(DownloadMutation()),
                         TopLevelObject(ExtensionMutation()),

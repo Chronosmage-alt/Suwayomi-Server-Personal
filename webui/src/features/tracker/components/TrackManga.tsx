@@ -7,6 +7,8 @@
  */
 
 import { useNavigate } from 'react-router-dom';
+import { KomgaCard } from '@/features/komga/KomgaCard.tsx';
+import { useKomgaSettings } from '@/features/komga/KomgaSettings.tsx';
 import Box from '@mui/material/Box';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import DialogContent from '@mui/material/DialogContent';
@@ -41,6 +43,7 @@ const getTrackerMode = (id: number, trackersInUse: number[], searchModeForTracke
 export const TrackManga = ({ manga }: { manga: MangaIdInfo & MangaTitleInfo }) => {
     const { t } = useLingui();
     const navigate = useNavigate();
+    const komga = useKomgaSettings();
 
     const [searchModeForTracker, setSearchModeForTracker] = useState<number>();
 
@@ -64,10 +67,17 @@ export const TrackManga = ({ manga }: { manga: MangaIdInfo & MangaTitleInfo }) =
     const error = trackerList.error ?? mangaTrackRecordsList.error;
 
     useEffect(() => {
-        if (!loading && !error && !trackersInUse.length && !loggedInTrackers.length) {
+        if (
+            !loading &&
+            !error &&
+            !komga.loading &&
+            !komga.data?.komgaSettings.enabled &&
+            !trackersInUse.length &&
+            !loggedInTrackers.length
+        ) {
             navigate(AppRoutes.settings.children.tracking.path);
         }
-    }, [loading]);
+    }, [loading, komga.loading, komga.data?.komgaSettings.enabled]);
 
     const fetchedLatestTrackDataRef = useRef(false);
     useEffect(() => {
@@ -143,6 +153,7 @@ export const TrackManga = ({ manga }: { manga: MangaIdInfo & MangaTitleInfo }) =
                 }}
             >
                 {trackerComponents}
+                <KomgaCard mangaId={manga.id} title={manga.title} />
             </OptionalDialogContent>
         );
     }

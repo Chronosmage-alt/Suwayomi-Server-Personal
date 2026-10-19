@@ -2236,6 +2236,316 @@ export type ClearServerCacheMutation = {
     };
 };
 
+export type KomgaSettingsFragment = {
+    __typename: 'KomgaSettings';
+    enabled: boolean;
+    apiUrl: string;
+    browserUrl: string;
+    credentialConfigured: boolean;
+    canManage: boolean;
+};
+
+export type KomgaInfoFragment = {
+    __typename: 'KomgaMangaInfo';
+    enabled: boolean;
+    linked: boolean;
+    code: string;
+    message: string;
+    seriesId: string | null;
+    title: string | null;
+    openUrl: string | null;
+    fetchedAt: string | null;
+    stale: boolean;
+    inventoryComplete: boolean;
+    sourceEntries: number;
+    suwayomiDownloaded: number;
+    bookCount: number | null;
+    readBooks: number | null;
+    unreadBooks: number | null;
+    inProgressBooks: number | null;
+    lastProgressAt: string | null;
+    confirmedNumbers: Array<string>;
+    numberHints: Array<string>;
+    unmatchedSourceNumbers: Array<string>;
+    extraNumberHints: Array<string>;
+    confirmedButNotDownloaded: Array<string>;
+    downloadedButNotMatched: Array<string>;
+    missingCount: number | null;
+    ambiguousBooks: number;
+    unknownSourceEntries: number;
+    duplicateSourceEntries: number;
+    books: Array<{
+        __typename: 'KomgaBookInfo';
+        id: string;
+        title: string;
+        numberHint: string | null;
+        confirmedNumbers: Array<string>;
+        read: boolean | null;
+        page: number | null;
+        pages: number | null;
+        lastProgressAt: string | null;
+    }>;
+};
+
+export type KomgaSettingsQueryVariables = Exact<{ [key: string]: never }>;
+
+export type KomgaSettingsQuery = {
+    __typename: 'Query';
+    komgaSettings: {
+        __typename: 'KomgaSettings';
+        enabled: boolean;
+        apiUrl: string;
+        browserUrl: string;
+        credentialConfigured: boolean;
+        canManage: boolean;
+    };
+};
+
+export type SaveKomgaSettingsMutationVariables = Exact<{
+    enabled: boolean;
+    apiUrl: string;
+    browserUrl: string;
+}>;
+
+export type SaveKomgaSettingsMutation = {
+    __typename: 'Mutation';
+    setKomgaSettings: {
+        __typename: 'KomgaSettings';
+        enabled: boolean;
+        apiUrl: string;
+        browserUrl: string;
+        credentialConfigured: boolean;
+        canManage: boolean;
+    };
+};
+
+export type TestKomgaMutationVariables = Exact<{ [key: string]: never }>;
+
+export type TestKomgaMutation = {
+    __typename: 'Mutation';
+    testKomgaConnection: { __typename: 'KomgaConnectionResult'; success: boolean; code: string; message: string };
+};
+
+export type KomgaSearchQueryVariables = Exact<{
+    query: string;
+    page: number;
+}>;
+
+export type KomgaSearchQuery = {
+    __typename: 'Query';
+    komgaSearch: {
+        __typename: 'KomgaSearchPage';
+        code: string;
+        message: string;
+        page: number;
+        hasNextPage: boolean;
+        items: Array<{
+            __typename: 'KomgaSeriesOption';
+            id: string;
+            title: string;
+            alternateTitles: Array<string>;
+            bookCount: number | null;
+        }>;
+    };
+};
+
+export type KomgaMangaQueryVariables = Exact<{
+    mangaId: number;
+}>;
+
+export type KomgaMangaQuery = {
+    __typename: 'Query';
+    komgaManga: {
+        __typename: 'KomgaMangaInfo';
+        enabled: boolean;
+        linked: boolean;
+        code: string;
+        message: string;
+        seriesId: string | null;
+        title: string | null;
+        openUrl: string | null;
+        fetchedAt: string | null;
+        stale: boolean;
+        inventoryComplete: boolean;
+        sourceEntries: number;
+        suwayomiDownloaded: number;
+        bookCount: number | null;
+        readBooks: number | null;
+        unreadBooks: number | null;
+        inProgressBooks: number | null;
+        lastProgressAt: string | null;
+        confirmedNumbers: Array<string>;
+        numberHints: Array<string>;
+        unmatchedSourceNumbers: Array<string>;
+        extraNumberHints: Array<string>;
+        confirmedButNotDownloaded: Array<string>;
+        downloadedButNotMatched: Array<string>;
+        missingCount: number | null;
+        ambiguousBooks: number;
+        unknownSourceEntries: number;
+        duplicateSourceEntries: number;
+        books: Array<{
+            __typename: 'KomgaBookInfo';
+            id: string;
+            title: string;
+            numberHint: string | null;
+            confirmedNumbers: Array<string>;
+            read: boolean | null;
+            page: number | null;
+            pages: number | null;
+            lastProgressAt: string | null;
+        }>;
+    };
+};
+
+export type LinkKomgaMutationVariables = Exact<{
+    mangaId: number;
+    seriesId: string;
+}>;
+
+export type LinkKomgaMutation = {
+    __typename: 'Mutation';
+    linkKomgaSeries: {
+        __typename: 'KomgaMangaInfo';
+        enabled: boolean;
+        linked: boolean;
+        code: string;
+        message: string;
+        seriesId: string | null;
+        title: string | null;
+        openUrl: string | null;
+        fetchedAt: string | null;
+        stale: boolean;
+        inventoryComplete: boolean;
+        sourceEntries: number;
+        suwayomiDownloaded: number;
+        bookCount: number | null;
+        readBooks: number | null;
+        unreadBooks: number | null;
+        inProgressBooks: number | null;
+        lastProgressAt: string | null;
+        confirmedNumbers: Array<string>;
+        numberHints: Array<string>;
+        unmatchedSourceNumbers: Array<string>;
+        extraNumberHints: Array<string>;
+        confirmedButNotDownloaded: Array<string>;
+        downloadedButNotMatched: Array<string>;
+        missingCount: number | null;
+        ambiguousBooks: number;
+        unknownSourceEntries: number;
+        duplicateSourceEntries: number;
+        books: Array<{
+            __typename: 'KomgaBookInfo';
+            id: string;
+            title: string;
+            numberHint: string | null;
+            confirmedNumbers: Array<string>;
+            read: boolean | null;
+            page: number | null;
+            pages: number | null;
+            lastProgressAt: string | null;
+        }>;
+    };
+};
+
+export type UnlinkKomgaMutationVariables = Exact<{
+    mangaId: number;
+}>;
+
+export type UnlinkKomgaMutation = {
+    __typename: 'Mutation';
+    unlinkKomgaSeries: {
+        __typename: 'KomgaMangaInfo';
+        enabled: boolean;
+        linked: boolean;
+        code: string;
+        message: string;
+        seriesId: string | null;
+        title: string | null;
+        openUrl: string | null;
+        fetchedAt: string | null;
+        stale: boolean;
+        inventoryComplete: boolean;
+        sourceEntries: number;
+        suwayomiDownloaded: number;
+        bookCount: number | null;
+        readBooks: number | null;
+        unreadBooks: number | null;
+        inProgressBooks: number | null;
+        lastProgressAt: string | null;
+        confirmedNumbers: Array<string>;
+        numberHints: Array<string>;
+        unmatchedSourceNumbers: Array<string>;
+        extraNumberHints: Array<string>;
+        confirmedButNotDownloaded: Array<string>;
+        downloadedButNotMatched: Array<string>;
+        missingCount: number | null;
+        ambiguousBooks: number;
+        unknownSourceEntries: number;
+        duplicateSourceEntries: number;
+        books: Array<{
+            __typename: 'KomgaBookInfo';
+            id: string;
+            title: string;
+            numberHint: string | null;
+            confirmedNumbers: Array<string>;
+            read: boolean | null;
+            page: number | null;
+            pages: number | null;
+            lastProgressAt: string | null;
+        }>;
+    };
+};
+
+export type RefreshKomgaMutationVariables = Exact<{
+    mangaId: number;
+}>;
+
+export type RefreshKomgaMutation = {
+    __typename: 'Mutation';
+    refreshKomgaManga: {
+        __typename: 'KomgaMangaInfo';
+        enabled: boolean;
+        linked: boolean;
+        code: string;
+        message: string;
+        seriesId: string | null;
+        title: string | null;
+        openUrl: string | null;
+        fetchedAt: string | null;
+        stale: boolean;
+        inventoryComplete: boolean;
+        sourceEntries: number;
+        suwayomiDownloaded: number;
+        bookCount: number | null;
+        readBooks: number | null;
+        unreadBooks: number | null;
+        inProgressBooks: number | null;
+        lastProgressAt: string | null;
+        confirmedNumbers: Array<string>;
+        numberHints: Array<string>;
+        unmatchedSourceNumbers: Array<string>;
+        extraNumberHints: Array<string>;
+        confirmedButNotDownloaded: Array<string>;
+        downloadedButNotMatched: Array<string>;
+        missingCount: number | null;
+        ambiguousBooks: number;
+        unknownSourceEntries: number;
+        duplicateSourceEntries: number;
+        books: Array<{
+            __typename: 'KomgaBookInfo';
+            id: string;
+            title: string;
+            numberHint: string | null;
+            confirmedNumbers: Array<string>;
+            read: boolean | null;
+            page: number | null;
+            pages: number | null;
+            lastProgressAt: string | null;
+        }>;
+    };
+};
+
 export type KoSyncStatusFragment = {
     __typename: 'KoSyncStatusPayload';
     isLoggedIn: boolean;

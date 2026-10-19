@@ -14,6 +14,10 @@ msgstr ""
 "Plural-Forms: \n"
 "X-Message-Format: ICU\n"
 
+#: src/features/komga/KomgaCard.tsx
+msgid " (cached; Komga is unavailable)"
+msgstr " (cached; Komga is unavailable)"
+
 #. placeholder {0}: t(SYNC_STATE_TRANSLATION[syncState])
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "— State: {0}"
@@ -120,6 +124,12 @@ msgstr "{0, plural, one {Could not reorder download} other {Could not reorder do
 #: src/features/reader/auto-scroll/settings/quick-setting/ReaderNavBarDesktopAutoScroll.tsx
 msgid "{0, plural, one {Second} other {Seconds}}"
 msgstr "{0, plural, one {Second} other {Seconds}}"
+
+#. placeholder {0}: series.alternateTitles.join(' · ')
+#. placeholder {1}: series.bookCount ?? '?'
+#: src/features/komga/KomgaCard.tsx
+msgid "{0} ({1} books)"
+msgstr "{0} ({1} books)"
 
 #. placeholder {0}: searchProgress.completed
 #. placeholder {1}: searchProgress.total
@@ -536,6 +546,13 @@ msgstr "Already refreshed after this request was queued, or no longer due."
 msgid "Also remove from {0}"
 msgstr "Also remove from {0}"
 
+#. placeholder {0}: data.ambiguousBooks
+#. placeholder {1}: data.unknownSourceEntries
+#. placeholder {2}: data.duplicateSourceEntries
+#: src/features/komga/KomgaCard.tsx
+msgid "Ambiguous books: {0}. Unnumbered source entries: {1}. Duplicate source entries: {2}."
+msgstr "Ambiguous books: {0}. Unnumbered source entries: {1}. Duplicate source entries: {2}."
+
 #: src/features/settings/components/globalUpdate/AdaptiveUpdateSettings.tsx
 msgid "An administrator controls these shared settings."
 msgstr "An administrator controls these shared settings."
@@ -551,6 +568,10 @@ msgstr "An entry can not be in the Default category and other categories at the 
 #: src/features/library/components/LibraryOptionsPanel.tsx
 msgid "and"
 msgstr "and"
+
+#: src/features/komga/KomgaSettings.tsx
+msgid "API-key secret is configured on the server."
+msgstr "API-key secret is configured on the server."
 
 #: src/features/settings/screens/Appearance.tsx
 #: src/features/settings/screens/Settings.tsx
@@ -805,6 +826,10 @@ msgstr "Browse"
 msgid "Browser"
 msgstr "Browser"
 
+#: src/features/komga/KomgaSettings.tsx
+msgid "Browser-facing Komga URL"
+msgstr "Browser-facing Komga URL"
+
 #: src/features/settings/screens/About.tsx
 msgid "Build time"
 msgstr "Build time"
@@ -1046,6 +1071,7 @@ msgstr "Client data"
 
 #: src/base/components/feedback/SnackbarWithDescription.tsx
 #: src/features/app-updates/components/VersionUpdateInfoDialog.tsx
+#: src/features/komga/KomgaCard.tsx
 #: src/features/migration/components/migration-entry/MigrationDestinationEntry.tsx
 #: src/features/updates/components/SkippedUpdateDialog.tsx
 msgid "Close"
@@ -1075,6 +1101,10 @@ msgstr "Comic"
 msgid "Compact grid"
 msgstr "Compact grid"
 
+#: src/features/komga/KomgaCard.tsx
+msgid "Compared with the stored source list; this does not refresh sources or verify files on disk. Reading counts are books, not assumed chapter totals."
+msgstr "Compared with the stored source list; this does not refresh sources or verify files on disk. Reading counts are books, not assumed chapter totals."
+
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "Compatible"
 msgstr "Compatible"
@@ -1095,6 +1125,25 @@ msgstr "Completed category settings could not be loaded."
 msgid "Compression level"
 msgstr "Compression level"
 
+#: src/features/komga/KomgaCard.tsx
+msgid "Confirm link"
+msgstr "Confirm link"
+
+#. placeholder {0}: list(data.confirmedNumbers)
+#: src/features/komga/KomgaCard.tsx
+msgid "Confirmed chapter numbers: {0}"
+msgstr "Confirmed chapter numbers: {0}"
+
+#. placeholder {0}: data.confirmedNumbers.length
+#: src/features/komga/KomgaCard.tsx
+msgid "Confirmed distinct chapter numbers: {0}. Missing: {missingLabel}."
+msgstr "Confirmed distinct chapter numbers: {0}. Missing: {missingLabel}."
+
+#. placeholder {0}: list(data.confirmedButNotDownloaded)
+#: src/features/komga/KomgaCard.tsx
+msgid "Confirmed in Komga but not flagged downloaded: {0}"
+msgstr "Confirmed in Komga but not flagged downloaded: {0}"
+
 #: src/features/settings/components/images/Processing.tsx
 msgid "Connect timeout"
 msgstr "Connect timeout"
@@ -1110,6 +1159,10 @@ msgstr "Connected as {currentUsername} to {currentServerAddress}"
 #: src/features/settings/components/koreaderSync/KoreaderSyncSettings.tsx
 msgid "Connected as {initialUsername} to {initialServerAddress}"
 msgstr "Connected as {initialUsername} to {initialServerAddress}"
+
+#: src/features/komga/KomgaSettings.tsx
+msgid "Connection test failed."
+msgstr "Connection test failed."
 
 #: src/features/migration/components/MigrationContinueButton.tsx
 msgid "Continue"
@@ -1158,6 +1211,10 @@ msgstr "Copy"
 #: src/features/extension/store/screens/ExtensionStores.tsx
 msgid "Copy index url"
 msgstr "Copy index url"
+
+#: src/features/komga/KomgaCard.tsx
+msgid "Correct Komga link"
+msgstr "Correct Komga link"
 
 #: src/features/extension/store/screens/ExtensionStores.tsx
 msgid "Could not add extension store"
@@ -1319,6 +1376,10 @@ msgstr "Could not retry failed downloads"
 #: src/features/settings/screens/Appearance.tsx
 msgid "Could not save changes"
 msgstr "Could not save changes"
+
+#: src/features/komga/KomgaSettings.tsx
+msgid "Could not save Komga settings. Check the URLs and permissions."
+msgstr "Could not save Komga settings. Check the URLs and permissions."
 
 #: src/features/manga/components/details/MangaNotes.tsx
 msgid "Could not save notes"
@@ -1792,6 +1853,10 @@ msgstr "Enable auto background color in continuous reading mode"
 msgid "Enable debug logs"
 msgstr "Enable debug logs"
 
+#: src/features/komga/KomgaSettings.tsx
+msgid "Enable Komga integration"
+msgstr "Enable Komga integration"
+
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "Enable page read progress"
 msgstr "Enable page read progress"
@@ -1922,6 +1987,11 @@ msgstr "Extension stores"
 msgid "Extension-reported dates may be approximate or reused; they are not proof of a freshly parsed publication timestamp. Historical rejection does not stop normal four-observation learning."
 msgstr "Extension-reported dates may be approximate or reused; they are not proof of a freshly parsed publication timestamp. Historical rejection does not stop normal four-observation learning."
 
+#. placeholder {0}: list(data.extraNumberHints)
+#: src/features/komga/KomgaCard.tsx
+msgid "Extra number hints outside the stored source list: {0}"
+msgstr "Extra number hints outside the stored source list: {0}"
+
 #: src/features/settings/components/koreaderSync/KoreaderSyncSettings.tsx
 msgid "Failed to connect to KOReader Sync server."
 msgstr "Failed to connect to KOReader Sync server."
@@ -2035,6 +2105,11 @@ msgstr "Fit screen"
 #: src/features/reader/settings/ReaderSettings.constants.tsx
 msgid "Fit width"
 msgstr "Fit width"
+
+#. placeholder {0}: list(data.downloadedButNotMatched)
+#: src/features/komga/KomgaCard.tsx
+msgid "Flagged downloaded but not confirmed in Komga: {0}"
+msgstr "Flagged downloaded but not confirmed in Komga: {0}"
 
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "FlareSolverr enabled"
@@ -2424,6 +2499,10 @@ msgstr "Installing extension file…"
 msgid "Interface"
 msgstr "Interface"
 
+#: src/features/komga/KomgaSettings.tsx
+msgid "Internal Komga API URL"
+msgstr "Internal Komga API URL"
+
 #: src/features/backup/screens/Backup.tsx
 #: src/features/browse/extensions/Extensions.tsx
 msgid "Invalid filetype"
@@ -2442,6 +2521,14 @@ msgstr "Invalid input"
 #: src/features/theme/components/CreateThemeDialog.tsx
 msgid "Invalid json"
 msgstr "Invalid json"
+
+#: src/features/komga/KomgaCard.tsx
+msgid "Inventory comparison and book progress"
+msgstr "Inventory comparison and book progress"
+
+#: src/features/komga/KomgaCard.tsx
+msgid "Inventory is incomplete or changed during pagination. Missing counts are not definitive."
+msgstr "Inventory is incomplete or changed during pagination. Missing counts are not definitive."
 
 #: src/features/reader/filters/settings/components/ReaderSettingInvert.tsx
 msgid "Invert"
@@ -2499,6 +2586,34 @@ msgstr "Keybinds"
 msgid "Kindle"
 msgstr "Kindle"
 
+#. placeholder {0}: data.bookCount ?? '?'
+#. placeholder {1}: data.readBooks ?? '?'
+#. placeholder {2}: data.unreadBooks ?? '?'
+#. placeholder {3}: data.inProgressBooks ?? '?'
+#: src/features/komga/KomgaCard.tsx
+msgid "Komga books: {0}. Read: {1}, unread: {2}, in progress: {3}."
+msgstr "Komga books: {0}. Read: {1}, unread: {2}, in progress: {3}."
+
+#: src/features/komga/KomgaCard.tsx
+msgid "Komga inventory could not be loaded."
+msgstr "Komga inventory could not be loaded."
+
+#: src/features/komga/KomgaCard.tsx
+msgid "Komga request failed. Try again or check the connection settings."
+msgstr "Komga request failed. Try again or check the connection settings."
+
+#: src/features/komga/KomgaCard.tsx
+msgid "Komga search failed."
+msgstr "Komga search failed."
+
+#: src/features/komga/KomgaSettings.tsx
+msgid "Komga settings could not be loaded."
+msgstr "Komga settings could not be loaded."
+
+#: src/features/komga/KomgaSettings.tsx
+msgid "Komga settings saved. Changing the internal URL requires confirming existing links again."
+msgstr "Komga settings saved. Changing the internal URL requires confirming existing links again."
+
 #: src/features/settings/components/koreaderSync/KoreaderSyncSettings.tsx
 msgid "KOReader Sync"
 msgstr "KOReader Sync"
@@ -2524,10 +2639,20 @@ msgstr "Language with code: {code}"
 msgid "Large"
 msgstr "Large"
 
+#. placeholder {0}: new Date(Number(data.fetchedAt)).toLocaleString()
+#: src/features/komga/KomgaCard.tsx
+msgid "Last fetched: {0}"
+msgstr "Last fetched: {0}"
+
 #. placeholder {0}: date(diagnostic.assessedAt)
 #: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
 msgid "Last historical assessment: {0}."
 msgstr "Last historical assessment: {0}."
+
+#. placeholder {0}: data.lastProgressAt
+#: src/features/komga/KomgaCard.tsx
+msgid "Last Komga progress change: {0}"
+msgstr "Last Komga progress change: {0}"
 
 #. placeholder {0}: date(schedule.lastDiscoveryAt)
 #: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
@@ -2643,6 +2768,14 @@ msgstr "Limit reader width"
 msgid "Limit the amount of new chapters that are going to get downloaded."
 msgstr "Limit the amount of new chapters that are going to get downloaded."
 
+#: src/features/komga/KomgaCard.tsx
+msgid "Link a Komga series"
+msgstr "Link a Komga series"
+
+#: src/features/komga/KomgaCard.tsx
+msgid "Link Komga series"
+msgstr "Link Komga series"
+
 #: src/features/settings/screens/About.tsx
 msgid "Links"
 msgstr "Links"
@@ -2655,6 +2788,14 @@ msgstr "List"
 #: src/features/settings/components/globalUpdate/AdaptiveUpdateSettings.tsx
 msgid "Loading adaptive updates…"
 msgstr "Loading adaptive updates…"
+
+#: src/features/komga/KomgaCard.tsx
+msgid "Loading Komga inventory…"
+msgstr "Loading Komga inventory…"
+
+#: src/features/komga/KomgaSettings.tsx
+msgid "Loading Komga settings…"
+msgstr "Loading Komga settings…"
 
 #: src/features/updates/components/SkippedUpdateDialog.tsx
 msgid "Loading skipped updates…"
@@ -2929,6 +3070,10 @@ msgstr "Modern"
 msgid "More"
 msgstr "More"
 
+#: src/features/komga/KomgaSettings.tsx
+msgid "Mount the Komga API-key secret file on the server. No key is stored in this page."
+msgstr "Mount the Komga API-key secret file on the server. No key is stored in this page."
+
 #: src/features/theme/Themes.ts
 msgid "Mountain Sunset"
 msgstr "Mountain Sunset"
@@ -2972,6 +3117,7 @@ msgstr "Never"
 msgid "New category"
 msgstr "New category"
 
+#: src/features/komga/KomgaCard.tsx
 #: src/features/reader/tap-zones/ReaderTapZone.constants.ts
 msgid "Next"
 msgstr "Next"
@@ -2999,6 +3145,10 @@ msgstr "Next page"
 #: src/features/reader/viewer/components/ReaderTransitionPage.tsx
 msgid "Next:"
 msgstr "Next:"
+
+#: src/features/komga/KomgaCard.tsx
+msgid "no"
+msgstr "no"
 
 #: src/features/chapter/components/ChapterList.tsx
 msgid "No chapters found"
@@ -3028,6 +3178,10 @@ msgstr "No manga matches this filter"
 msgid "No match found"
 msgstr "No match found"
 
+#: src/features/komga/KomgaCard.tsx
+msgid "No matching series. Try another title."
+msgstr "No matching series. Try another title."
+
 #: src/features/reader/viewer/ReaderChapterViewer.tsx
 msgid "No pages found"
 msgstr "No pages found"
@@ -3055,6 +3209,7 @@ msgstr "No sources match your Browse display settings."
 #: src/features/backup/Backup.utils.ts
 #: src/features/category/components/CategoriesInclusionSetting.tsx
 #: src/features/downloads/screens/DownloadSettings.tsx
+#: src/features/komga/KomgaCard.tsx
 #: src/features/reader/settings/layout/components/ReaderSettingTapZoneInvertMode.tsx
 #: src/features/settings/components/globalUpdate/GlobalUpdateSettingsEntries.tsx
 #: src/features/settings/Settings.constants.ts
@@ -3108,6 +3263,14 @@ msgstr "Novel"
 #: src/features/browse/screens/BrowseSettings.tsx
 msgid "NSFW (18+) sources"
 msgstr "NSFW (18+) sources"
+
+#. placeholder {0}: book.numberHint ?? '?'
+#. placeholder {1}: readLabel(book.read)
+#. placeholder {2}: book.page ?? '-'
+#. placeholder {3}: book.pages ?? '?'
+#: src/features/komga/KomgaCard.tsx
+msgid "Number hint: {0}. Read: {1}. Page: {2} / {3}."
+msgstr "Number hint: {0}. Read: {1}. Page: {2} / {3}."
 
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "Number of items per page in OPDS feeds (e.g., Library History, Manga Chapters).\n"
@@ -3204,6 +3367,10 @@ msgstr "Open discord"
 msgid "Open in browser"
 msgstr "Open in browser"
 
+#: src/features/komga/KomgaCard.tsx
+msgid "Open in Komga"
+msgstr "Open in Komga"
+
 #: src/features/chapter/components/actions/ChapterActionMenuItems.tsx
 #: src/features/manga/components/details/MangaDetails.tsx
 #: src/features/reader/overlay/mobile/ReaderOverlayHeaderMobile.tsx
@@ -3227,6 +3394,10 @@ msgstr "Open the WebUI when starting the server"
 #: src/features/extension/store/screens/ExtensionStores.tsx
 msgid "Open website"
 msgstr "Open website"
+
+#: src/features/komga/KomgaSettings.tsx
+msgid "Optional. Used only for Open in Komga; it can differ from the internal URL."
+msgstr "Optional. Used only for Open in Komga; it can differ from the internal URL."
 
 #: src/features/chapter/components/cards/ChapterCard.tsx
 #: src/features/manga/components/MangaOptionButton.tsx
@@ -3330,6 +3501,7 @@ msgstr "Prevents content from overlapping device cutouts and screen edges"
 msgid "Preview"
 msgstr "Preview"
 
+#: src/features/komga/KomgaCard.tsx
 #: src/features/reader/settings/behaviour/components/ReaderSettingExitMode.tsx
 #: src/features/reader/tap-zones/ReaderTapZone.constants.ts
 msgid "Previous"
@@ -3394,6 +3566,10 @@ msgstr "Quick settings"
 msgid "Random"
 msgstr "Random"
 
+#: src/features/komga/KomgaSettings.tsx
+msgid "Read-only inventory and reading progress. Komga does not change your downloads or source update schedule."
+msgstr "Read-only inventory and reading progress. Komga does not change your downloads or source update schedule."
+
 #: src/features/reader/settings/screens/GlobalReaderSettings.tsx
 #: src/features/settings/screens/Settings.tsx
 msgid "Reader"
@@ -3449,6 +3625,10 @@ msgstr "Red"
 #: src/features/app-updates/components/WebUIUpdateChecker.tsx
 msgid "Refresh"
 msgstr "Refresh"
+
+#: src/features/komga/KomgaCard.tsx
+msgid "Refresh Komga"
+msgstr "Refresh Komga"
 
 #: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
 msgid "Release timing uses discovery time; no reliable publication date was available."
@@ -3594,6 +3774,7 @@ msgstr "Right to left"
 msgid "Rosegold"
 msgstr "Rosegold"
 
+#: src/features/komga/KomgaSettings.tsx
 #: src/features/manga/components/details/MangaNotes.tsx
 #: src/features/settings/screens/ImageProcessingSetting.tsx
 #: src/features/theme/components/CreateThemeDialog.tsx
@@ -3616,6 +3797,10 @@ msgstr "Save dynamic color theme"
 #: src/features/source/browse/components/SourceOptions.tsx
 msgid "Save search"
 msgstr "Save search"
+
+#: src/features/komga/KomgaSettings.tsx
+msgid "Save settings before testing the connection."
+msgstr "Save settings before testing the connection."
 
 #: src/features/theme/components/CreateThemeDialog.tsx
 msgid "Saved theme changes"
@@ -3679,6 +3864,10 @@ msgid "Search for a ID via \"id:<ID>\" (e.g. \"id:13\")\n"
 msgstr "Search for a ID via \"id:<ID>\" (e.g. \"id:13\")\n"
 "Limit search to your lists via \"my:<Title>\" (e.g. \"my:One Piece\")"
 
+#: src/features/komga/KomgaCard.tsx
+msgid "Search Komga titles or alternative titles"
+msgstr "Search Komga titles or alternative titles"
+
 #: src/features/migration/components/MigrationBulkSearchOptionsDialog.tsx
 msgid "Search options"
 msgstr "Search options"
@@ -3699,6 +3888,10 @@ msgstr "Search results"
 #: src/features/library/screens/LibrarySettings.tsx
 msgid "Search results will include manga that do not match the current filters"
 msgstr "Search results will include manga that do not match the current filters"
+
+#: src/features/komga/KomgaCard.tsx
+msgid "Searching Komga…"
+msgstr "Searching Komga…"
 
 #: src/features/migration/Migration.constants.ts
 msgid "Searching…"
@@ -4017,6 +4210,11 @@ msgstr "Sort"
 msgid "Source"
 msgstr "Source"
 
+#. placeholder {0}: list(data.unmatchedSourceNumbers)
+#: src/features/komga/KomgaCard.tsx
+msgid "Source chapter numbers not matched: {0}"
+msgstr "Source chapter numbers not matched: {0}"
+
 #: src/features/source/configuration/screens/SourceConfigure.tsx
 msgid "Source Configuration"
 msgstr "Source Configuration"
@@ -4131,6 +4329,16 @@ msgstr "Successfully migrated"
 msgid "Successfully migrated manga"
 msgstr "Successfully migrated manga"
 
+#: src/features/komga/KomgaCard.tsx
+msgid "Suggestions are never linked automatically. Confirm the correct series."
+msgstr "Suggestions are never linked automatically. Confirm the correct series."
+
+#. placeholder {0}: data.suwayomiDownloaded
+#. placeholder {1}: data.sourceEntries
+#: src/features/komga/KomgaCard.tsx
+msgid "Suwayomi downloaded entries: {0} / {1}"
+msgstr "Suwayomi downloaded entries: {0} / {1}"
+
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "Sync"
 msgstr "Sync"
@@ -4207,6 +4415,10 @@ msgstr "Tap zones"
 #: src/features/settings/components/images/Processing.tsx
 msgid "Target mode"
 msgstr "Target mode"
+
+#: src/features/komga/KomgaSettings.tsx
+msgid "Test Connection"
+msgstr "Test Connection"
 
 #: src/features/settings/Settings.constants.ts
 msgid "That haven't been started"
@@ -4479,6 +4691,10 @@ msgstr "Unable to load extension stores"
 msgid "Unable to load sources"
 msgstr "Unable to load sources"
 
+#: src/features/komga/KomgaCard.tsx
+msgid "uncertain"
+msgstr "uncertain"
+
 #: src/features/migration/MigrationManager.ts
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "Understood"
@@ -4504,6 +4720,10 @@ msgstr "Unknown"
 msgid "Unknown source"
 msgstr "Unknown source"
 
+#: src/features/komga/KomgaCard.tsx
+msgid "Unlink"
+msgstr "Unlink"
+
 #: src/features/browse/sources/components/SourceCard.tsx
 msgid "Unpin source"
 msgstr "Unpin source"
@@ -4525,6 +4745,11 @@ msgstr "Unread chapters"
 #: src/features/tracker/components/cards/TrackerActiveCard.tsx
 msgid "Untracked manga"
 msgstr "Untracked manga"
+
+#. placeholder {0}: list(data.numberHints)
+#: src/features/komga/KomgaCard.tsx
+msgid "Unverified number hints (may be volumes): {0}"
+msgstr "Unverified number hints (may be volumes): {0}"
 
 #: src/features/app-updates/components/WebUIUpdateChecker.tsx
 #: src/features/extension/Extensions.constants.ts
@@ -4607,6 +4832,10 @@ msgstr "Use adaptive updates for this source"
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "Use SOCKS proxy"
 msgstr "Use SOCKS proxy"
+
+#: src/features/komga/KomgaSettings.tsx
+msgid "Use the base URL reachable from the Suwayomi server, including any subpath. Docker service DNS depends on your network configuration."
+msgstr "Use the base URL reachable from the Suwayomi server, including any subpath. Docker service DNS depends on your network configuration."
 
 #: src/features/settings/Settings.constants.ts
 msgid "Use the default WebUI"
@@ -4745,6 +4974,10 @@ msgstr "With \"Completed\" status"
 #: src/features/settings/Settings.constants.ts
 msgid "With unread chapter(s)"
 msgstr "With unread chapter(s)"
+
+#: src/features/komga/KomgaCard.tsx
+msgid "yes"
+msgstr "yes"
 
 #: src/base/utils/DateHelper.ts
 msgid "Yesterday"

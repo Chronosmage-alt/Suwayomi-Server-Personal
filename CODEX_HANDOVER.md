@@ -2,15 +2,129 @@
 
 Updated 19 October 2026. This document is context for a fresh Codex conversation.
 
-## Current local work: bundled WebUI r3549 integration
+## Current local work: Phase 2 optional read-only Komga integration
+
+User approved the completed Phase 2 work and a local commit on 19 October 2026.
+The commit is named `Add optional read-only Komga library integration`; identify
+its hash with `git log -1`. It includes the five review fixes and documentation.
+No push, merge, publication, NAS access or deployment is authorized. A staged
+PostgreSQL/NAS validation plan is in `docs/komga-integration.md`; it is a future
+plan, not validation already performed.
+
+Pre-commit review follow-up: user authorized fixing all five review findings while
+initially leaving Phase 2 uncommitted for review. Supported `url,asc` sorting replaces unsupported
+`id,asc` on GET and POST book-list routes. New pagination validation rejects
+contradictory metadata, explicitly unsorted responses, changed page totals/sizes
+and duplicate/misassigned books. Encoded URL separators and trailing slashes are
+preserved during chapter matching. Backup links now use atomic insert-if-absent,
+so concurrent restoration cannot overwrite a manual confirmation. The manga card
+resets pagination on manga/series changes and search/dialog state on manga changes.
+New contract tests cover 401 scrambled books with repeated chapter-number hints
+through both API routes; new URL, concurrent restoration, pagination and UI
+regressions cover the remaining fixes. Final follow-up validation is recorded
+here: **452 server tests**, zero failures/errors/skips, server ktlintFormat and
+ktlintCheck passed together in a successful full Gradle run. **50 WebUI tests**,
+TypeScript, lint, whole-WebUI formatting, production Vite/PWA build and
+`git diff --check` passed. The concurrent restoration test races 20 fresh manual
+confirmations against imports; the emitted H2 SQL was also verified to contain
+no matched-row update clause. Exposed insertIgnore is unsupported by H2, so H2
+uses an insert-only MERGE, while PostgreSQL uses ON CONFLICT DO NOTHING. A live
+PostgreSQL instance was not exercised. No schema, migration, credentials or
+packaging change was required by these five fixes. The API still cannot offer
+an atomic snapshot during concurrent Komga library edits; detected inconsistent
+pagination is rejected. No NAS access, push, merge or deployment occurred.
+Phase 2 is based on b952d64e; adaptive/provenance, Completed, language/source settings,
+notifications, dependencies and packaging files remain unchanged from that
+approved Phase 1 baseline. Generated GraphQL changes remain purely additive.
+
+User approved Phase 2 implementation on 19 October 2026 using mock Komga responses
+and disposable data. Work remains on `investigate/adaptive-library-updates`.
+Phase 1 is committed locally as `b952d64ea5ef403ba17e68f1648a4793d4148cb7`.
+Phase 2 is approved for the local commit described above. No push, image publication, master merge,
+extension edits, NAS access or deployment is authorized. This section supersedes
+the older planning-only restriction below. No upstream server merge was needed.
+
+Implementation stages completed:
+
+1. Reused existing default-user authentication, settings permissions, Exposed
+   migrations, backup models, tracker settings/manga cards and Apollo/test setup.
+   M0070 was free and now adds separate connection/link tables. Mounted keys use
+   `KOMGA_API_KEY_FILE` (default `/run/secrets/komga_api_key`), never WebUI inputs,
+   GraphQL key fields, database credentials, portable backups or HTTP error logs.
+2. Added a separate bounded HTTP client, manual title suggestions/confirmed links,
+   connection testing, read-only inventory/progress queries, caching and manual
+   refresh. Existing source clients, adaptive scheduler, Completed rules, queues,
+   downloads, tracker synchronization and reading-progress writes are untouched.
+   Komga writes are absent; POST fallback endpoints are documented read searches.
+3. Added WebUI tracking settings and manga cards alongside existing providers,
+   including Komga-only access without MAL/AniList login. Internal/browser URLs
+   are separate; default integration state is disabled. Exact chapter matches
+   require unambiguous stored source URL links, with number hints/volumes/specials
+   and incomplete inventories explicitly uncertain. Links survive normal database
+   persistence; changing API destinations requires reconfirmation. Portable
+   backups include non-secret settings/links when user settings are included;
+   restore disables the imported connection and requires reconfirmation without
+   overwriting an existing confirmed manga link. Sync restore ignores them.
+4. Added mock HTTP, schema/permissions, inventory, cache, secret-rotation,
+   pagination, backup and WebUI regressions. Regenerated all three GraphQL outputs
+   against `server/build/adaptive-schema.graphql` from the actual custom schema.
+   New strings are extracted into the English catalogue; other locales fall back
+   to English pending translation.
+
+Configuration and behavior: `docs/komga-integration.md`. User's Komga container is
+`komga`, mapping `8080:25600` with internal listener 25600, reading existing
+Suwayomi downloads. Suwayomi shares another service's network namespace. Exact
+Komga version, full namespace owner/network names, firewall/routing, final URLs
+and secret mount remain unconfirmed. **No actual NAS connectivity was tested**:
+access was explicitly forbidden. Test Connection runs from Suwayomi's own HTTP
+client and can establish this during the user's eventual installation review.
+Do not assume `http://komga:25600` resolves or routes through Gluetun.
+
+Initial implementation validation before the five follow-up fixes: **444 server
+tests**, zero failures/errors/skips (16 initial Komga tests), and server ktlint
+passed. **48 WebUI tests** in 12 files passed, as did TypeScript,
+lint, whole-WebUI formatting, English extraction, Vite/PWA production build and
+`git diff --check`. The final full server test run passed every test; ktlint then
+reported one multiline test declaration, corrected by ktlintFormat and followed
+by a successful ktlintCheck. No behavioral change followed the passing tests.
+The full check used the existing Docker init script, JDK 21, `--max-workers=1`,
+`-Dorg.gradle.jvmargs=-Xmx3072m` and Kotlin compilation in process. Local Kotlin
+statistics collection adds several minutes after task completion on this host.
+
+Initial real headless Chrome checks against the production build, local mock HTTP Komga
+and disposable no-login server passed at 1440x1000 and 390x844: settings, successful
+and failed connection tests, provider list, manual linking, URL separation,
+inventory/progress, uncertainty, cached failures, refresh and unlink. No uncaught
+browser errors or horizontal overflow. A confirmed link and settings survived an
+actual server process restart; the three disposable source chapters remained
+unread/not downloaded with page zero while Komga reported its separate progress.
+Only stored chapter queries were used; no manga-source fetch operations occurred.
+Snapshots/reports/logs are outside Git under the existing isolated tooling path.
+Temporary QA servers, proxy, mock and headless browsers were stopped afterward.
+The existing update notice was ignored without downloading an update. Browser QA
+found an idle pooled-socket failure; bounded read-only connection recovery fixed
+it and is covered by a dropped-connection regression. A nested translation that
+hid the uncertainty label was also corrected before the passing final UI checks.
+
+No live Komga, NAS connectivity, Linux/Java 25 CI, Docker image build or live
+provider authorization was tested. Existing legacy-minifier/chunk-size and
+Kotlin/Gradle deprecation warnings remain. Numeric-only book metadata cannot
+prove chapter identity, large inventories may be truncated, and untranslated
+locales use English fallback. Full configuration and bounds are documented.
+
+The upstream WebUI baseline remains pinned r3549 (`8ab2f3385d643f36a415bc8df0c414f86c8a97b1`),
+with r3518 (`41443eaba44bcbdf45d666fe27471b50d41fd994`) as original ancestor.
+The server base remains custom r2422; this phase adds only the approved custom
+Komga integration and backup/schema/UI hooks, with no new dependencies or Docker
+packaging changes. Local isolated tooling remains the Node 24/JDK 21 setup below.
+
+## Approved and committed Phase 1: bundled WebUI r3549 integration
 
 User approved the completed Phase 1 integration, validation results and a focused
-local commit on 19 October 2026. Phase 2 architecture is approved for final planning
-only; implementation must wait for review of that plan.
-Stay on `investigate/adaptive-library-updates`; no pushing, image publication,
-upstream server merging, NAS deployment, extension edits or Komga implementation
-is authorized. This section supersedes historical branch/release and pending-work
-statements below.
+local commit on 19 October 2026. Phase 2 was subsequently authorized as recorded
+above. Stay on `investigate/adaptive-library-updates`; no pushing, image
+publication, upstream server merging, NAS deployment or extension edits are
+authorized. Historical branch/release statements below are retained for context.
 
 The supplied checkout is `C:\Users\bayleeh\Documents\Suwayomi-Server-Personal`;
 the previously documented `D:\Git` location is unavailable on this machine.
@@ -53,8 +167,8 @@ successful full check used `-Dorg.gradle.jvmargs=-Xmx3072m`,
 `-Pkotlin.compiler.execution.strategy=in-process` and `--max-workers=1` with the
 existing Docker Gradle init script. No application/build-source change was needed.
 
-The approved integration is recorded by this local commit on this branch;
-identify it with `git log -1` rather than the preceding published image SHA.
+The approved Phase 1 integration is recorded by local commit
+`b952d64ea5ef403ba17e68f1648a4793d4148cb7`, preceding the Phase 2 commit above.
 No push or publication is authorized. No Docker image build,
 Linux/Java 25 CI run, NAS deployment, production-library test or live tracker
 authorization was performed. Migration navigation/provider behavior is covered by

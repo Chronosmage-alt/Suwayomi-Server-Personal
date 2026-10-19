@@ -907,6 +907,137 @@ export type KoSyncStatusPayloadFieldPolicy = {
     serverAddress?: FieldPolicy<any> | FieldReadFunction<any>;
     username?: FieldPolicy<any> | FieldReadFunction<any>;
 };
+export type KomgaBookInfoKeySpecifier = (
+    | 'confirmedNumbers'
+    | 'id'
+    | 'lastProgressAt'
+    | 'numberHint'
+    | 'page'
+    | 'pages'
+    | 'read'
+    | 'title'
+    | KomgaBookInfoKeySpecifier
+)[];
+export type KomgaBookInfoFieldPolicy = {
+    confirmedNumbers?: FieldPolicy<any> | FieldReadFunction<any>;
+    id?: FieldPolicy<any> | FieldReadFunction<any>;
+    lastProgressAt?: FieldPolicy<any> | FieldReadFunction<any>;
+    numberHint?: FieldPolicy<any> | FieldReadFunction<any>;
+    page?: FieldPolicy<any> | FieldReadFunction<any>;
+    pages?: FieldPolicy<any> | FieldReadFunction<any>;
+    read?: FieldPolicy<any> | FieldReadFunction<any>;
+    title?: FieldPolicy<any> | FieldReadFunction<any>;
+};
+export type KomgaConnectionResultKeySpecifier = ('code' | 'message' | 'success' | KomgaConnectionResultKeySpecifier)[];
+export type KomgaConnectionResultFieldPolicy = {
+    code?: FieldPolicy<any> | FieldReadFunction<any>;
+    message?: FieldPolicy<any> | FieldReadFunction<any>;
+    success?: FieldPolicy<any> | FieldReadFunction<any>;
+};
+export type KomgaMangaInfoKeySpecifier = (
+    | 'ambiguousBooks'
+    | 'bookCount'
+    | 'books'
+    | 'code'
+    | 'confirmedButNotDownloaded'
+    | 'confirmedNumbers'
+    | 'downloadedButNotMatched'
+    | 'duplicateSourceEntries'
+    | 'enabled'
+    | 'extraNumberHints'
+    | 'fetchedAt'
+    | 'inProgressBooks'
+    | 'inventoryComplete'
+    | 'lastProgressAt'
+    | 'linked'
+    | 'message'
+    | 'missingCount'
+    | 'numberHints'
+    | 'openUrl'
+    | 'readBooks'
+    | 'seriesId'
+    | 'sourceEntries'
+    | 'stale'
+    | 'suwayomiDownloaded'
+    | 'title'
+    | 'unknownSourceEntries'
+    | 'unmatchedSourceNumbers'
+    | 'unreadBooks'
+    | KomgaMangaInfoKeySpecifier
+)[];
+export type KomgaMangaInfoFieldPolicy = {
+    ambiguousBooks?: FieldPolicy<any> | FieldReadFunction<any>;
+    bookCount?: FieldPolicy<any> | FieldReadFunction<any>;
+    books?: FieldPolicy<any> | FieldReadFunction<any>;
+    code?: FieldPolicy<any> | FieldReadFunction<any>;
+    confirmedButNotDownloaded?: FieldPolicy<any> | FieldReadFunction<any>;
+    confirmedNumbers?: FieldPolicy<any> | FieldReadFunction<any>;
+    downloadedButNotMatched?: FieldPolicy<any> | FieldReadFunction<any>;
+    duplicateSourceEntries?: FieldPolicy<any> | FieldReadFunction<any>;
+    enabled?: FieldPolicy<any> | FieldReadFunction<any>;
+    extraNumberHints?: FieldPolicy<any> | FieldReadFunction<any>;
+    fetchedAt?: FieldPolicy<any> | FieldReadFunction<any>;
+    inProgressBooks?: FieldPolicy<any> | FieldReadFunction<any>;
+    inventoryComplete?: FieldPolicy<any> | FieldReadFunction<any>;
+    lastProgressAt?: FieldPolicy<any> | FieldReadFunction<any>;
+    linked?: FieldPolicy<any> | FieldReadFunction<any>;
+    message?: FieldPolicy<any> | FieldReadFunction<any>;
+    missingCount?: FieldPolicy<any> | FieldReadFunction<any>;
+    numberHints?: FieldPolicy<any> | FieldReadFunction<any>;
+    openUrl?: FieldPolicy<any> | FieldReadFunction<any>;
+    readBooks?: FieldPolicy<any> | FieldReadFunction<any>;
+    seriesId?: FieldPolicy<any> | FieldReadFunction<any>;
+    sourceEntries?: FieldPolicy<any> | FieldReadFunction<any>;
+    stale?: FieldPolicy<any> | FieldReadFunction<any>;
+    suwayomiDownloaded?: FieldPolicy<any> | FieldReadFunction<any>;
+    title?: FieldPolicy<any> | FieldReadFunction<any>;
+    unknownSourceEntries?: FieldPolicy<any> | FieldReadFunction<any>;
+    unmatchedSourceNumbers?: FieldPolicy<any> | FieldReadFunction<any>;
+    unreadBooks?: FieldPolicy<any> | FieldReadFunction<any>;
+};
+export type KomgaSearchPageKeySpecifier = (
+    | 'code'
+    | 'hasNextPage'
+    | 'items'
+    | 'message'
+    | 'page'
+    | KomgaSearchPageKeySpecifier
+)[];
+export type KomgaSearchPageFieldPolicy = {
+    code?: FieldPolicy<any> | FieldReadFunction<any>;
+    hasNextPage?: FieldPolicy<any> | FieldReadFunction<any>;
+    items?: FieldPolicy<any> | FieldReadFunction<any>;
+    message?: FieldPolicy<any> | FieldReadFunction<any>;
+    page?: FieldPolicy<any> | FieldReadFunction<any>;
+};
+export type KomgaSeriesOptionKeySpecifier = (
+    | 'alternateTitles'
+    | 'bookCount'
+    | 'id'
+    | 'title'
+    | KomgaSeriesOptionKeySpecifier
+)[];
+export type KomgaSeriesOptionFieldPolicy = {
+    alternateTitles?: FieldPolicy<any> | FieldReadFunction<any>;
+    bookCount?: FieldPolicy<any> | FieldReadFunction<any>;
+    id?: FieldPolicy<any> | FieldReadFunction<any>;
+    title?: FieldPolicy<any> | FieldReadFunction<any>;
+};
+export type KomgaSettingsKeySpecifier = (
+    | 'apiUrl'
+    | 'browserUrl'
+    | 'canManage'
+    | 'credentialConfigured'
+    | 'enabled'
+    | KomgaSettingsKeySpecifier
+)[];
+export type KomgaSettingsFieldPolicy = {
+    apiUrl?: FieldPolicy<any> | FieldReadFunction<any>;
+    browserUrl?: FieldPolicy<any> | FieldReadFunction<any>;
+    canManage?: FieldPolicy<any> | FieldReadFunction<any>;
+    credentialConfigured?: FieldPolicy<any> | FieldReadFunction<any>;
+    enabled?: FieldPolicy<any> | FieldReadFunction<any>;
+};
 export type LastUpdateTimestampPayloadKeySpecifier = ('timestamp' | LastUpdateTimestampPayloadKeySpecifier)[];
 export type LastUpdateTimestampPayloadFieldPolicy = {
     timestamp?: FieldPolicy<any> | FieldReadFunction<any>;
@@ -1204,6 +1335,7 @@ export type MutationKeySpecifier = (
     | 'fetchSourceManga'
     | 'fetchTrack'
     | 'installExternalExtension'
+    | 'linkKomgaSeries'
     | 'login'
     | 'loginTrackerCredentials'
     | 'loginTrackerOAuth'
@@ -1214,6 +1346,7 @@ export type MutationKeySpecifier = (
     | 'pushKoSyncProgress'
     | 'redeemRecoveryCode'
     | 'redeemRegistrationCode'
+    | 'refreshKomgaManga'
     | 'refreshToken'
     | 'register'
     | 'removeExtensionStore'
@@ -1235,6 +1368,7 @@ export type MutationKeySpecifier = (
     | 'setCompletedCategorySettings'
     | 'setGlobalMeta'
     | 'setGlobalMetas'
+    | 'setKomgaSettings'
     | 'setMangaMeta'
     | 'setMangaMetas'
     | 'setPassword'
@@ -1245,8 +1379,10 @@ export type MutationKeySpecifier = (
     | 'startDownloader'
     | 'startSync'
     | 'stopDownloader'
+    | 'testKomgaConnection'
     | 'trackProgress'
     | 'unbindTrack'
+    | 'unlinkKomgaSeries'
     | 'updateCategories'
     | 'updateCategory'
     | 'updateCategoryManga'
@@ -1305,6 +1441,7 @@ export type MutationFieldPolicy = {
     fetchSourceManga?: FieldPolicy<any> | FieldReadFunction<any>;
     fetchTrack?: FieldPolicy<any> | FieldReadFunction<any>;
     installExternalExtension?: FieldPolicy<any> | FieldReadFunction<any>;
+    linkKomgaSeries?: FieldPolicy<any> | FieldReadFunction<any>;
     login?: FieldPolicy<any> | FieldReadFunction<any>;
     loginTrackerCredentials?: FieldPolicy<any> | FieldReadFunction<any>;
     loginTrackerOAuth?: FieldPolicy<any> | FieldReadFunction<any>;
@@ -1315,6 +1452,7 @@ export type MutationFieldPolicy = {
     pushKoSyncProgress?: FieldPolicy<any> | FieldReadFunction<any>;
     redeemRecoveryCode?: FieldPolicy<any> | FieldReadFunction<any>;
     redeemRegistrationCode?: FieldPolicy<any> | FieldReadFunction<any>;
+    refreshKomgaManga?: FieldPolicy<any> | FieldReadFunction<any>;
     refreshToken?: FieldPolicy<any> | FieldReadFunction<any>;
     register?: FieldPolicy<any> | FieldReadFunction<any>;
     removeExtensionStore?: FieldPolicy<any> | FieldReadFunction<any>;
@@ -1336,6 +1474,7 @@ export type MutationFieldPolicy = {
     setCompletedCategorySettings?: FieldPolicy<any> | FieldReadFunction<any>;
     setGlobalMeta?: FieldPolicy<any> | FieldReadFunction<any>;
     setGlobalMetas?: FieldPolicy<any> | FieldReadFunction<any>;
+    setKomgaSettings?: FieldPolicy<any> | FieldReadFunction<any>;
     setMangaMeta?: FieldPolicy<any> | FieldReadFunction<any>;
     setMangaMetas?: FieldPolicy<any> | FieldReadFunction<any>;
     setPassword?: FieldPolicy<any> | FieldReadFunction<any>;
@@ -1346,8 +1485,10 @@ export type MutationFieldPolicy = {
     startDownloader?: FieldPolicy<any> | FieldReadFunction<any>;
     startSync?: FieldPolicy<any> | FieldReadFunction<any>;
     stopDownloader?: FieldPolicy<any> | FieldReadFunction<any>;
+    testKomgaConnection?: FieldPolicy<any> | FieldReadFunction<any>;
     trackProgress?: FieldPolicy<any> | FieldReadFunction<any>;
     unbindTrack?: FieldPolicy<any> | FieldReadFunction<any>;
+    unlinkKomgaSeries?: FieldPolicy<any> | FieldReadFunction<any>;
     updateCategories?: FieldPolicy<any> | FieldReadFunction<any>;
     updateCategory?: FieldPolicy<any> | FieldReadFunction<any>;
     updateCategoryManga?: FieldPolicy<any> | FieldReadFunction<any>;
@@ -1715,6 +1856,9 @@ export type QueryKeySpecifier = (
     | 'extensions'
     | 'getWebUIUpdateStatus'
     | 'koSyncStatus'
+    | 'komgaManga'
+    | 'komgaSearch'
+    | 'komgaSettings'
     | 'lastSyncStatus'
     | 'lastUpdateTimestamp'
     | 'libraryUpdateStatus'
@@ -1759,6 +1903,9 @@ export type QueryFieldPolicy = {
     extensions?: FieldPolicy<any> | FieldReadFunction<any>;
     getWebUIUpdateStatus?: FieldPolicy<any> | FieldReadFunction<any>;
     koSyncStatus?: FieldPolicy<any> | FieldReadFunction<any>;
+    komgaManga?: FieldPolicy<any> | FieldReadFunction<any>;
+    komgaSearch?: FieldPolicy<any> | FieldReadFunction<any>;
+    komgaSettings?: FieldPolicy<any> | FieldReadFunction<any>;
     lastSyncStatus?: FieldPolicy<any> | FieldReadFunction<any>;
     lastUpdateTimestamp?: FieldPolicy<any> | FieldReadFunction<any>;
     libraryUpdateStatus?: FieldPolicy<any> | FieldReadFunction<any>;
@@ -3561,6 +3708,30 @@ export type StrictTypedTypePolicies = {
     KoSyncStatusPayload?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
         keyFields?: false | KoSyncStatusPayloadKeySpecifier | (() => undefined | KoSyncStatusPayloadKeySpecifier);
         fields?: KoSyncStatusPayloadFieldPolicy;
+    };
+    KomgaBookInfo?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
+        keyFields?: false | KomgaBookInfoKeySpecifier | (() => undefined | KomgaBookInfoKeySpecifier);
+        fields?: KomgaBookInfoFieldPolicy;
+    };
+    KomgaConnectionResult?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
+        keyFields?: false | KomgaConnectionResultKeySpecifier | (() => undefined | KomgaConnectionResultKeySpecifier);
+        fields?: KomgaConnectionResultFieldPolicy;
+    };
+    KomgaMangaInfo?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
+        keyFields?: false | KomgaMangaInfoKeySpecifier | (() => undefined | KomgaMangaInfoKeySpecifier);
+        fields?: KomgaMangaInfoFieldPolicy;
+    };
+    KomgaSearchPage?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
+        keyFields?: false | KomgaSearchPageKeySpecifier | (() => undefined | KomgaSearchPageKeySpecifier);
+        fields?: KomgaSearchPageFieldPolicy;
+    };
+    KomgaSeriesOption?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
+        keyFields?: false | KomgaSeriesOptionKeySpecifier | (() => undefined | KomgaSeriesOptionKeySpecifier);
+        fields?: KomgaSeriesOptionFieldPolicy;
+    };
+    KomgaSettings?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
+        keyFields?: false | KomgaSettingsKeySpecifier | (() => undefined | KomgaSettingsKeySpecifier);
+        fields?: KomgaSettingsFieldPolicy;
     };
     LastUpdateTimestampPayload?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
         keyFields?:

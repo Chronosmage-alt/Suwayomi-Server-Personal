@@ -197,6 +197,14 @@ object ProtoBackupExport : ProtoBackupBase() {
                         } else {
                             null
                         },
+                    komgaConnection =
+                        if (flags.includeUserSettings) {
+                            suwayomi.tachidesk.manga.impl.komga.Komga.backupConnection(
+                                userId,
+                            )
+                        } else {
+                            null
+                        },
                     adaptiveSources =
                         if (flags.includeServerSettings) {
                             suwayomi.tachidesk.manga.impl.update.adaptive.AdaptiveUpdates.policies().map {

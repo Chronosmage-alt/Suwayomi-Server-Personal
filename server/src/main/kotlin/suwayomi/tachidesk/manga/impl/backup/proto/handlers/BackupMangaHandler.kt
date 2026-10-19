@@ -190,6 +190,11 @@ object BackupMangaHandler {
                         suwayomi.tachidesk.manga.impl.CompletedCategories
                             .handledOrders(userId, mangaId)
                 }
+                if (flags.includeUserSettings) {
+                    backupManga.komgaLink =
+                        suwayomi.tachidesk.manga.impl.komga.Komga
+                            .backupLink(userId, mangaId)
+                }
                 if (flags.includeCategories) {
                     backupManga.categories = CategoryManga.getMangaCategories(userId, mangaId).map { it.order }
                 }
@@ -402,6 +407,12 @@ object BackupMangaHandler {
                 }
 
                 // update categories
+                if (flags.includeUserSettings && !syncMode.isSync) {
+                    manga.komgaLink?.let {
+                        suwayomi.tachidesk.manga.impl.komga.Komga
+                            .restoreLink(userId, mangaId, it)
+                    }
+                }
                 if (flags.includeCategories && !keepLocalManga) {
                     restoreMangaCategoryData(userId, mangaId, categoryIds, syncMode)
                 }

@@ -19,6 +19,7 @@ data class Backup(
     @ProtoNumber(9002) var userSettings: BackupUserSettings? = null,
     @ProtoNumber(9003) var adaptiveSources: List<BackupAdaptiveSource> = emptyList(),
     @ProtoNumber(9004) var completedCategoryRule: BackupCompletedCategoryRule? = null,
+    @ProtoNumber(9005) var komgaConnection: BackupKomgaConnection? = null,
 ) {
     fun getSourceMap(): Map<Long, String> =
         backupSources
