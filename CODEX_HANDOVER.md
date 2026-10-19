@@ -2,7 +2,78 @@
 
 Updated 19 October 2026. This document is context for a fresh Codex conversation.
 
+## Publication complete: combined r3549 and Komga Linux image
+
+The identity repair and publication succeeded. GitHub privacy remains enabled.
+Repository-local author/committer identity is the user-supplied verified address
+283986614+Chronosmage-alt@users.noreply.github.com; GitHub attributes both identities
+to Chronosmage-alt. Global Git configuration and other repositories were unchanged.
+Only the four previously unpublished commit email headers/descendant parent IDs
+were rewritten; trees, messages, names, timestamps and order were verified equal.
+Published base 639355fb and its ancestors were never rewritten. Recovery bundles,
+handover copies/patches and the old local backup ref remain available below.
+
+Image source commit: 6eec513f241309e92b36c14c5e9151a8863789f4.
+Commit-specific tag:
+ghcr.io/chronosmage-alt/suwayomi-server-personal:sha-6eec513f2413
+Immutable digest pin:
+ghcr.io/chronosmage-alt/suwayomi-server-personal@sha256:86306d189eeb2ea81bcc5e3e1fbb6fece04be34a780e081fbb0a1a1e0336a606
+CI: https://github.com/Chronosmage-alt/Suwayomi-Server-Personal/actions/runs/39242420411
+Run/job conclusion: success. Registry tag digest independently matched the CI
+publish digest; registry image configuration independently confirmed linux/amd64
+and the exact source-revision label above. The moving adaptive-test tag was also
+published; prefer the digest pin when selecting this exact reviewed artifact.
+Runtime base used by CI:
+ghcr.io/suwayomi/suwayomi-server@sha256:9397e89561c3d0d05bd8657b89808bb306f4a228ca3d055b81c471cee834af41
+
+Linux/Java 25 CI passed 452 server tests, ktlint and shadow JAR build. WebUI passed
+50 tests, TypeScript, lint, full formatting and production/PWA build. The actual
+packaged image passed adaptive/Completed defaults, all eight Komga GraphQL
+operations (including safe disabled/missing-manga guards), no-login/default-user
+settings, secret-free settings responses, served JavaScript, all Komga operation
+names in the bundled assets and the r3549 revision marker. No live Komga was used.
+The previously validated isolated PostgreSQL suite remains 14 prepare + 1 restart
+tests; it is not part of Linux CI. Existing build-size/minifier warnings remain
+non-blocking. The first run failed only because the new smoke test combined too
+many introspection fields; a separate normal follow-up commit split those requests
+without weakening the server's introspection protection. The second run passed
+and published. All pushes were normal fast-forwards; no force-push/rebase occurred.
+
+M0070 applies automatically on normal startup to the existing configured database,
+adding Komga connection/link tables. No manual SQL or database-engine conversion
+is required. Komga remains disabled by default; preserve the existing no-login
+configuration. To enable it, mount the API-key secret read only into Suwayomi
+(default /run/secrets/komga_api_key; optional KOMGA_API_KEY_FILE override), save a
+verified server-reachable internal Komga base URL and optional separate browser
+URL, run Test Connection, enable, and manually confirm series links. The key is
+never entered into WebUI, stored in the DB or included in portable backups.
+
+Remaining NAS checks belong to the user: independently restorable backups,
+installed Komga/API-key version, actual network_mode owner and Docker networks,
+DNS/LAN routing through Gluetun (do not assume komga:25600 works), readable secret
+mount, browser URL, and real API/inventory behavior with disposable Suwayomi data.
+The supplied 8080:25600 mapping is not proof of namespace connectivity. Synthetic
+PostgreSQL validation is not a real production-library restore rehearsal.
+No NAS, production database/downloads/Komga library, extension repository or master
+branch was accessed or modified; no deployment occurred. The user will deploy.
+
+This results update is a documentation-only follow-up to the image source above;
+it does not alter application content or trigger another image build. Review Git
+status and this section before further work. No implementation blocker remains.
+
 ## Identity repair completed; normal push succeeded; publication pending CI
+
+Current publication source: 6eec513f241309e92b36c14c5e9151a8863789f4.
+The smoke introspection correction was committed with the verified noreply email
+and pushed normally after confirming origin had not moved from our prior push.
+Local syntax and actual production WebUI asset extraction passed. Production
+server/WebUI sources did not change; the new CI run repeats all Linux gates.
+The branch is synchronized with origin and the working tree was clean after push.
+Monitor the NEW run for 6eec513f rather than failed fd56c926; no published digest
+exists yet. Final publication results must be recorded after this run succeeds.
+New workflow: https://github.com/Chronosmage-alt/Suwayomi-Server-Personal/actions/runs/39242420411
+New job ID: 118026171629. Server tests/ktlint/JAR passed; current step is WebUI
+validation/build. Packaged smoke and publication still pending.
 
 First Linux run 39241096614 passed server tests/ktlint/shadow JAR and all WebUI
 checks/build, but the new packaged smoke test failed: its combined introspection
