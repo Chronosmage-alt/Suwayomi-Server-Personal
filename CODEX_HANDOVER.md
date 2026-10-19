@@ -2,7 +2,129 @@
 
 Updated 19 October 2026. This document is context for a fresh Codex conversation.
 
+## Identity repair completed; normal push succeeded; publication pending CI
+
+First Linux run 39241096614 passed server tests/ktlint/shadow JAR and all WebUI
+checks/build, but the new packaged smoke test failed: its combined introspection
+query used __Type.fields three times and hit GraphQL Java's good-faith limit.
+Publication was skipped; no image was published. Corrected only the smoke script
+to use separate introspection requests, retaining the server protection unchanged.
+Next: validate smoke syntax/queries, commit this CI correction using the noreply
+identity, fetch/check no external remote movement, normal push and monitor again.
+
+User supplied the exact GitHub noreply identity:
+283986614+Chronosmage-alt@users.noreply.github.com.
+It is now configured repository-locally for future commits; global Git identity
+and other repositories were not changed. Corrected author AND committer emails on
+only the four unpublished commits. Preserved every tree, message, author/committer
+name, original timestamp and commit order; only email fields and descendant parent
+IDs changed. Published base 639355fb and all its ancestors are unchanged.
+
+Old -> new mapping:
+- b952d64e -> ce7e29241e22b681ca2a61d8b6d01addbb7c737c (r3549).
+- ec69f7d4 -> 2190007be4beed9222a894e486d3995d8b07098b (Komga).
+- fd8b366f -> e73742726f8f9c1d14b989b857d66e13a2297d53 (PostgreSQL harness).
+- 8c1f1d17 -> fd56c926da312f60f31d8ae03a23cabca8e026a0 (packaged smoke gates).
+
+Recovery data: C:/Users/bayleeh/.codex/tmp/suwayomi-publication/identity-repair/
+contains the complete pre-rewrite working handover, binary patch, verified bundle
+and verification.json with all old/new commit and tree IDs. A local backup ref
+refs/backup/email-privacy-before-20261019 retains the old head and was NOT pushed.
+The uncommitted handover survived byte-for-byte before this new status addition.
+
+Fetched origin immediately before push; it was still 639355fb, ahead 4/behind 0.
+Normal push succeeded: origin/investigate/adaptive-library-updates now fd56c926.
+No force push, rebase, master merge, production or extension access occurred.
+No source changed during identity repair, so previous local test results stand.
+Next: monitor the workflow for source fd56c926 through server/WebUI and Linux
+packaged Komga smoke checks, then publication. Do not declare an image ready until
+CI succeeds. Record run URL, exact source SHA, image SHA tag and digest here.
+This handover remains uncommitted while CI results are pending.
+Active workflow: https://github.com/Chronosmage-alt/Suwayomi-Server-Personal/actions/runs/39241096614
+Job ID: 118021810861. Monitor this exact source/run, not an older successful image.
+Linux CI progress: server tests, ktlint and shadow JAR build passed. WebUI
+validation/build is running; packaged smoke and publication remain pending.
+
+## Identity repair authorized — waiting for exact GitHub noreply address
+
+User authorizes correcting author/committer identities on only the four unpublished
+commits, preserving all trees, messages, order and published history; then a normal
+push and CI publication monitoring. Keep GitHub privacy enabled. Do not guess the
+noreply address; stop and request it if it cannot be established reliably.
+
+Inspection: b952d64e, ec69f7d4, fd8b366f and 8c1f1d17 all use the same personal email
+in both author and committer headers. The repository inherits that personal email
+and user.name=Chronosmage-alt from C:/Users/bayleeh/.gitconfig. No repository-local
+or matching historical noreply identity was found. The connected GitHub profile
+is Chronosmage, while this repository/commit identity uses Chronosmage-alt. No
+account's noreply address was inferred from that mismatch. Exact user-supplied
+GitHub Settings -> Emails noreply address is required before proceeding.
+
+No identity configuration, commit/ref/history change, push or CI run was performed
+in this repair attempt. HEAD remains 8c1f1d1711bdf7e02f3b3f8165c860a84192b0e4,
+four commits ahead of the last fetched origin 639355fb. Published commits and all
+source content are unchanged; only this handover remains modified.
+
+Protected the pre-repair uncommitted handover before any history work:
+C:/Users/bayleeh/.codex/tmp/suwayomi-email-repair-918fe42eee1f469cad6808fb807d16ef/
+contains its complete file, binary Git patch, base/head/tree IDs and a verified
+bundle containing the four unpublished commits (requires base 639355fb).
+Original handover SHA256:
+059647ECDDB1F00D695FC3C705CDBE183C2C8FAF3BB5B7D9E795107530F60506
+
+Next: obtain the exact intended verified GitHub noreply address from the user.
+Then fetch/check origin has not moved; set repository-local identity, reconstruct
+only the four unpublished commits with corrected emails, preserving names/dates,
+trees/messages/order, and restore/preserve this working handover. Verify every
+old/new tree and message plus unchanged published base. Rerun source validation
+only if source content changes. Use a normal push only; stop on a remote change or
+push rejection. Monitor all Linux gates/publication and record source SHA/tag/digest
+only after success. No master, extension repository or NAS/production access.
+
 ## Publication approved: combined r3549 and Komga development image
+
+### STOPPED: GitHub rejected the normal push (GH007)
+
+The normal push was rejected by GitHub email privacy protection:
+"Your push would publish a private email address" (GH007). Per the user's explicit
+instruction, publication work stopped immediately. No retry, force-push, rebase,
+reset, history rewrite or account-setting change was performed. No CI run or new
+Docker image was triggered, so there is no published image digest or ready image
+to report for this attempt. Do not present the intended SHA tag as published.
+
+Current branch: investigate/adaptive-library-updates.
+Local HEAD: 8c1f1d1711bdf7e02f3b3f8165c860a84192b0e4.
+Last fetched origin: 639355fbad51cd663ab619731453d7b0a08d361c.
+The pre-push fetch confirmed the remote was unchanged, with 4 local-only commits,
+0 remote-only commits and no divergence. All approved work is preserved:
+
+- b952d64e: pinned official WebUI r3549 integration.
+- ec69f7d4: complete optional read-only Komga integration and five review fixes.
+- fd8b366f: focused commit of all seven PostgreSQL harness/documentation files.
+- 8c1f1d17: packaged Komga GraphQL/WebUI smoke checks and CI formatting gate.
+
+Local syntax, workflow YAML and actual built-WebUI asset extraction checks passed
+for the smoke change. Previous fresh validation remains 452 server tests, ktlint,
+50 WebUI tests, TypeScript, lint, formatting, production build and all GraphQL
+operations; isolated PostgreSQL 14 prepare + 1 restart tests also passed. The new
+Linux packaged-image checks have NOT run because the push was rejected.
+
+This rejection/status update is deliberately left uncommitted after stopping.
+Next session: review git status/diff and this blocker first. The user must resolve
+the GitHub email privacy setting, or explicitly authorize correcting identity on
+the unpublished commits under a separately reviewed preservation plan. Do not
+assume permission to rewrite those commits. After the blocker is resolved, fetch
+again, stop if the remote changed, perform only an authorized normal push, and
+monitor the full Linux workflow before reporting a tag/digest or readiness.
+
+M0070 is applied automatically by normal database migration on server startup;
+there is no manual SQL step. Komga stays disabled until configured. Production
+setup still needs an independently backed-up installation, a readable API-key
+secret mounted into Suwayomi, a verified internal API route through its actual
+Docker/Gluetun namespace, and optionally a separate browser URL. Installed Komga
+version and real NAS connectivity/API behavior remain unverified. No NAS,
+production database/downloads/Komga library, extension repository or master branch
+was accessed or modified.
 
 The user now explicitly authorizes committing the seven reviewed PostgreSQL
 harness/documentation files, extending packaged Komga smoke checks, a normal push

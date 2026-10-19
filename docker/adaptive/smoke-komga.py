@@ -56,8 +56,6 @@ def main():
     results = {}
     results["schema"] = graphql(
         """query {
-          __schema { queryType { fields { name } } mutationType { fields { name } } }
-          __type(name: "KomgaSettings") { fields { name } }
           komgaSettings { enabled apiUrl browserUrl credentialConfigured canManage }
         }"""
     )
@@ -69,10 +67,17 @@ def main():
         "credentialConfigured": False,
         "canManage": True,
     }, data["komgaSettings"]
-    queries = {field["name"] for field in data["__schema"]["queryType"]["fields"]}
-    mutations = {
-        field["name"] for field in data["__schema"]["mutationType"]["fields"]
-    }
+    # GraphQL Java limits repeated __Type.fields in one request. Keep each
+    # introspection lookup separate, preserving the server's good-faith guard.
+    results["roots"] = graphql("query { __schema { queryType { name } mutationType { name } } }")
+    for root in ("queryType", "mutationType"):
+        name = results["roots"]["data"]["__schema"][root]["name"]
+        results[root] = graphql(
+            "query { __type(name:" + json.dumps(name) + ") { fields { name } } }"
+        )
+    results["settingsType"] = graphql('query { __type(name:"KomgaSettings") { fields { name } } }')
+    queries = {field["name"] for field in results["queryType"]["data"]["__type"]["fields"]}
+    mutations = {field["name"] for field in results["mutationType"]["data"]["__type"]["fields"]}
     assert {"komgaSettings", "komgaSearch", "komgaManga"} <= queries
     assert {
         "setKomgaSettings",
@@ -81,9 +86,9 @@ def main():
         "unlinkKomgaSeries",
         "refreshKomgaManga",
     } <= mutations
-    assert {field["name"] for field in data["__type"]["fields"]} == {
+    assert {field["name"] for field in results["settingsType"]["data"]["__type"]["fields"]} == {
         "enabled", "apiUrl", "browserUrl", "credentialConfigured", "canManage"
-    }, data["__type"]
+    }, results["settingsType"]
 
     results["save"] = graphql(
         'mutation { setKomgaSettings(enabled:false, apiUrl:"", browserUrl:"") '
