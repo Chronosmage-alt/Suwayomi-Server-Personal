@@ -2,6 +2,30 @@
 
 Updated 19 October 2026. This document is context for a fresh Codex conversation.
 
+## Latest matching policy — explicit personal-library override
+
+The user supplied a completed scan: 300 indexed series, 309/309 processed,
+4 auto-linked, 36 already linked, 180 ambiguous/review, 0 opted-out, 89 unmatched.
+Absolute Regression has Suwayomi author U+200B + Jang Yeonghun and artist
+U+200B U+200B + Studio JHS; Komga credits JP, Jang Yeonghun (장영훈), and
+Park Jin-Hwan (박진환). This confirms creator-credit comparison rejected it.
+The user then explicitly requested that an exact name be sufficient for their
+personal setup. This supersedes the stricter primary-title creator/URL rule in
+older sections: a UNIQUE normalized primary-title match now links regardless of
+creator or URL differences. Multiple primary/alternate candidates still require
+review; alternate-title-only matches keep corroboration and conflict checks.
+Preserve manual decisions/opt-outs, index validity/freshness/completeness, all
+caps/caching/batching and source-free operation. No fuzzy matching, migrations,
+backup changes, source metadata fetches, or NAS writes are needed. A regression
+uses the actual Absolute Regression credits and verifies alias collisions still
+block linking. The 89 unmatched titles may still require manual links; don't
+promise that every reviewed title becomes linked (duplicate candidates remain).
+After installing the new image, run Scan for matching Komga series again to
+apply the new policy to existing unlinked library entries using the shared index.
+Local validation: all 44 targeted Komga/migration/GraphQL/custom-updater tests
+passed with zero failures/errors/skips; ktlint passed. CI will run the full server
+and WebUI suites before publishing the new matching-policy image.
+
 ## Latest follow-up: Docker publication and missing Komga labels
 
 Additional user-provided log contained MAL tracker HTTP 401s, followed by a

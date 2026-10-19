@@ -39,14 +39,16 @@ existing decisions in one bulk query rather than querying each linked manga.
 Matching uses only stored Suwayomi title/author/artist/URL and the shared Komga
 index. It collapses whitespace (including Unicode spaces), ignores title case,
 and preserves punctuation, numbers and edition/subtitle text. Multiple candidates
-across primary AND alternate titles are ambiguous. Unique primary exact matches
-must have no known creator or authoritative same-host URL conflict. Where
-remote contributor names exist, all known local contributors must be present; a
-shared artist cannot conceal a different known author. Incomplete attribution
-can therefore require review. URL identity ignores host case/fragments while
-preserving path/query differences. An alternate
-exact match needs matching creator or URL evidence. Missing metadata cannot prove
-identity perfectly; conservative checks can leave legitimate matches for review.
+across primary AND alternate titles are ambiguous. For this personal library,
+a unique primary exact-title match is sufficient even when author, artist or
+stored URL credits differ. This policy was explicitly requested after the
+Absolute Regression example (studio vs individual artist and bilingual credits).
+An alternate-title-only exact match still needs creator or URL corroboration and
+must have no known creator or authoritative same-host URL conflict. For those
+alternate matches, available remote contributors must contain all known local
+contributors, so a shared artist cannot conceal a conflicting author. URL identity
+ignores host case/fragments while preserving path/query differences. Matching
+is not fuzzy: spelling, punctuation, numbers and edition text remain significant.
 No fuzzy matching or source refresh is performed.
 
 Links show MANUAL or AUTOMATIC provenance. Existing links migrate as MANUAL.

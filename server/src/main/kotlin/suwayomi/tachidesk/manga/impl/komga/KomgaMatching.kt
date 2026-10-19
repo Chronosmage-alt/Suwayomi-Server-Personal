@@ -30,6 +30,9 @@ internal object KomgaMatching {
         if (candidates.isEmpty()) return "UNMATCHED" to null
         if (candidates.size != 1) return "AMBIGUOUS" to null
         val candidate = candidates.single()
+        // Personal-library policy: one exact primary-title match is sufficient.
+        // Creator/URL evidence remains required only for alternate-title matches.
+        if (normalize(title) == normalize(candidate.title)) return "MATCH" to candidate
         val localCreators =
             creators
                 .flatMap { it.split(',', ';') }
@@ -56,7 +59,7 @@ internal object KomgaMatching {
         val urlConflict =
             localUrl != null && remoteUrls.any { it.host.equals(localUrl.host, ignoreCase = true) && it != localUrl }
         if (creatorConflict || urlConflict) return "REVIEW" to null
-        if (normalize(title) != normalize(candidate.title) && !creatorMatch && !urlMatch) return "REVIEW" to null
+        if (!creatorMatch && !urlMatch) return "REVIEW" to null
         return "MATCH" to candidate
     }
 }
