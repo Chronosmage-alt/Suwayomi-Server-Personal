@@ -6,6 +6,8 @@ all r3549, adaptive scheduling, Completed-category and Komga work is retained.
 The image repository and tags remain unchanged, including `adaptive-test` and
 `sha-<12-character-commit>`. Pushes to `dev` matching the workflow's build paths
 continue running the existing server/WebUI/container validation and publication.
+The previous remote branch remains available for reference; new work belongs on
+`dev`. The separate extension repository and historical WebUI checkout are unchanged.
 
 The integration starts disabled. It reads inventory and the Komga API-key user's
 reading progress alongside existing trackers. It does not update Komga, reading

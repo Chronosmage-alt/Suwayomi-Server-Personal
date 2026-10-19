@@ -18,11 +18,29 @@ Historical snapshots below deliberately retain their original branch names,
 commit IDs and permissions; they are records, not instructions to switch back.
 The separate historical WebUI checkout and extension repository are untouched.
 
-In progress: validate branch-trigger/docs-only changes, commit them, push dev with
-upstream origin/dev, and verify the workflow starts on dev. The old remote branch
-is retained as an archive; deleting it was not requested. No default-branch change,
-master merge, force push, NAS access or deployment is authorized or performed.
-Next session must inspect this top section and git status/branch before resuming.
+Completed: renamed locally, committed workflow/active-documentation updates as
+74e2d90e57efda783b46fa7f5214a2a54dd7a2c2, and pushed dev with upstream origin/dev.
+Both Git tracking and editor merge-base metadata now use origin/dev. The old
+remote branch is retained at 6a063c71; deleting it was not requested. Neither
+master nor the repository default branch was changed. No force push, NAS access
+or deployment occurred. All existing application commits remain ancestors of dev.
+
+Validation: workflow YAML parsed, push trigger equals dev, image tag configuration
+is retained, git diff --check passed, and server/webui/runtime/smoke sources are
+unchanged from the previous validated build. No application test rerun was needed
+for this branch-name/documentation-only change. GitHub confirmed the workflow
+triggered on dev for source 74e2d90e:
+https://github.com/Chronosmage-alt/Suwayomi-Server-Personal/actions/runs/39246941183
+This run is still in progress; its image is NOT yet claimed ready. The last
+verified published digest remains recorded in the publication section below.
+If this run succeeds, adaptive-test advances normally; repository/tag names stay
+the same. Do not confuse a pending run with the previous successfully tested image.
+
+The rename-status follow-up changes only this document and does not trigger an
+additional image build. Next session: first inspect git status/branch/log and
+this section, then check the existing dev workflow run before starting any new
+build or development. Continue all future development on dev, preserving current
+work and the no-NAS/no-extension/no-master-merge constraints.
 
 ## Publication complete: combined r3549 and Komga Linux image
 
