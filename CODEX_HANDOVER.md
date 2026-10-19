@@ -18,6 +18,19 @@ Linux server/WebUI/packaged smoke gates before reporting publication readiness.
 Record exact source SHA, immutable image tag/digest and run URL here afterwards.
 No image is yet declared ready by this new publication task.
 
+Progress: the seven reviewed files were committed as fd8b366f (Add isolated
+PostgreSQL migration and persistence validation). Added a separate packaged-image
+smoke script and workflow gate covering all eight Komga GraphQL operation names,
+disabled/default-user settings, save/Test Connection/disabled search, missing-manga
+resolver guards, served JavaScript assets and bundled Komga operations plus r3549
+revision. It uses CI's empty loopback container only, without a Komga URL, secret,
+source request or production mount. WebUI formatting is now also checked in CI.
+Local Python syntax, actual production asset extraction and workflow YAML checks
+passed. Fetch confirmed origin still 639355fb, ahead 3/behind 0 before the smoke
+commit; no divergence or external branch update. Next: commit smoke changes,
+fetch/check again, push normally and monitor the Linux workflow. Exact publication
+results and final source/image identifiers must be filled in after CI success.
+
 ## Completed: final integration and Git readiness review
 
 User requested a full integration review and fresh server/WebUI validation before
