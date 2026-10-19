@@ -1,5 +1,8 @@
 name: Adaptive NAS test image
 
+# Rebuild dev with r3549, adaptive/history, Completed and Komga M0068-M0071.
+# Publish the checked-out revision under adaptive-test and its immutable SHA tag.
+
 on:
   workflow_dispatch:
   push:
