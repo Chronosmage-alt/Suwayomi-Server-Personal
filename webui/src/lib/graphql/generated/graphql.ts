@@ -2243,12 +2243,15 @@ export type KomgaSettingsFragment = {
     browserUrl: string;
     credentialConfigured: boolean;
     canManage: boolean;
+    autoLink: boolean;
+    showCounter: boolean;
 };
 
 export type KomgaInfoFragment = {
     __typename: 'KomgaMangaInfo';
     enabled: boolean;
     linked: boolean;
+    provenance: string;
     code: string;
     message: string;
     seriesId: string | null;
@@ -2298,6 +2301,8 @@ export type KomgaSettingsQuery = {
         browserUrl: string;
         credentialConfigured: boolean;
         canManage: boolean;
+        autoLink: boolean;
+        showCounter: boolean;
     };
 };
 
@@ -2305,6 +2310,8 @@ export type SaveKomgaSettingsMutationVariables = Exact<{
     enabled: boolean;
     apiUrl: string;
     browserUrl: string;
+    autoLink?: boolean | null | undefined;
+    showCounter?: boolean | null | undefined;
 }>;
 
 export type SaveKomgaSettingsMutation = {
@@ -2316,6 +2323,8 @@ export type SaveKomgaSettingsMutation = {
         browserUrl: string;
         credentialConfigured: boolean;
         canManage: boolean;
+        autoLink: boolean;
+        showCounter: boolean;
     };
 };
 
@@ -2359,6 +2368,7 @@ export type KomgaMangaQuery = {
         __typename: 'KomgaMangaInfo';
         enabled: boolean;
         linked: boolean;
+        provenance: string;
         code: string;
         message: string;
         seriesId: string | null;
@@ -2409,6 +2419,7 @@ export type LinkKomgaMutation = {
         __typename: 'KomgaMangaInfo';
         enabled: boolean;
         linked: boolean;
+        provenance: string;
         code: string;
         message: string;
         seriesId: string | null;
@@ -2458,6 +2469,7 @@ export type UnlinkKomgaMutation = {
         __typename: 'KomgaMangaInfo';
         enabled: boolean;
         linked: boolean;
+        provenance: string;
         code: string;
         message: string;
         seriesId: string | null;
@@ -2507,6 +2519,7 @@ export type RefreshKomgaMutation = {
         __typename: 'KomgaMangaInfo';
         enabled: boolean;
         linked: boolean;
+        provenance: string;
         code: string;
         message: string;
         seriesId: string | null;
@@ -2543,6 +2556,75 @@ export type RefreshKomgaMutation = {
             pages: number | null;
             lastProgressAt: string | null;
         }>;
+    };
+};
+
+export type KomgaLibrarySummariesQueryVariables = Exact<{
+    mangaIds: Array<number> | number;
+}>;
+
+export type KomgaLibrarySummariesQuery = {
+    __typename: 'Query';
+    komgaLibrarySummaries: Array<{
+        __typename: 'KomgaLibrarySummary';
+        mangaId: number;
+        provenance: string;
+        code: string;
+        bookCount: number | null;
+        fetchedAt: string | null;
+        stale: boolean;
+    }>;
+};
+
+export type KomgaScanStatusFragment = {
+    __typename: 'KomgaScanStatus';
+    running: boolean;
+    code: string;
+    processed: number;
+    total: number;
+    automaticallyLinked: number;
+    alreadyLinked: number;
+    ambiguous: number;
+    optedOut: number;
+    unmatched: number;
+    indexedSeries: number;
+};
+
+export type ScanKomgaLibraryMutationVariables = Exact<{ [key: string]: never }>;
+
+export type ScanKomgaLibraryMutation = {
+    __typename: 'Mutation';
+    scanKomgaLibrary: {
+        __typename: 'KomgaScanStatus';
+        running: boolean;
+        code: string;
+        processed: number;
+        total: number;
+        automaticallyLinked: number;
+        alreadyLinked: number;
+        ambiguous: number;
+        optedOut: number;
+        unmatched: number;
+        indexedSeries: number;
+    };
+};
+
+export type KomgaScanStatusQueryVariables = Exact<{ [key: string]: never }>;
+
+export type KomgaScanStatusQuery = {
+    __typename: 'Query';
+    komgaScanStatus: {
+        __typename: 'KomgaScanStatus';
+        running: boolean;
+        code: string;
+        processed: number;
+        total: number;
+        automaticallyLinked: number;
+        alreadyLinked: number;
+        ambiguous: number;
+        optedOut: number;
+        unmatched: number;
+        indexedSeries: number;
     };
 };
 

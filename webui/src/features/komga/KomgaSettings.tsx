@@ -17,11 +17,19 @@ import Switch from '@mui/material/Switch';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { requestManager } from '@/lib/requests/RequestManager.ts';
-import { KOMGA_SETTINGS, SAVE_KOMGA_SETTINGS, TEST_KOMGA } from '@/lib/graphql/komga/Komga.ts';
+import {
+    KOMGA_SETTINGS,
+    SAVE_KOMGA_SETTINGS,
+    TEST_KOMGA,
+    SCAN_KOMGA,
+    KOMGA_SCAN_STATUS,
+} from '@/lib/graphql/komga/Komga.ts';
 import type {
     KomgaSettingsQuery,
     SaveKomgaSettingsMutation,
     TestKomgaMutation,
+    ScanKomgaLibraryMutation,
+    KomgaScanStatusQuery,
 } from '@/lib/graphql/generated/graphql.ts';
 
 export const useKomgaSettings = () =>
@@ -38,6 +46,10 @@ export const KomgaSettings = () => {
     const [enabled, setEnabled] = useState(false);
     const [apiUrl, setApiUrl] = useState('');
     const [browserUrl, setBrowserUrl] = useState('');
+    const [autoLink, setAutoLink] = useState(false);
+    const [showCounter, setShowCounter] = useState(true);
+    const [scanStatus, setScanStatus] = useState<KomgaScanStatusQuery['komgaScanStatus']>();
+    const [scan, scanning] = useMutation<ScanKomgaLibraryMutation>(SCAN_KOMGA, { client });
     const [message, setMessage] = useState('');
     const [success, setSuccess] = useState(false);
     const [save, saving] = useMutation<SaveKomgaSettingsMutation>(SAVE_KOMGA_SETTINGS, { client });
@@ -47,15 +59,50 @@ export const KomgaSettings = () => {
             setEnabled(config.enabled);
             setApiUrl(config.apiUrl);
             setBrowserUrl(config.browserUrl);
+            setAutoLink(config.autoLink ?? false);
+            setShowCounter(config.showCounter ?? true);
         }
     }, [config]);
+    useEffect(() => {
+        if (!scanStatus?.running) {
+            return undefined;
+        }
+        let cancelled = false;
+        const timer = window.setTimeout(async () => {
+            try {
+                const result = await client.query<KomgaScanStatusQuery>({
+                    query: KOMGA_SCAN_STATUS,
+                    fetchPolicy: 'network-only',
+                });
+                if (!cancelled) {
+                    // Apollo can reuse the same cached object while a scan is still active.
+                    const progress = result.data?.komgaScanStatus;
+                    setScanStatus(progress ? { ...progress } : undefined);
+                }
+            } catch {
+                if (!cancelled) {
+                    setScanStatus(undefined);
+                    setMessage(t`Could not read scan progress. The server may still be processing.`);
+                }
+            }
+        }, 2000);
+        return () => {
+            cancelled = true;
+            window.clearTimeout(timer);
+        };
+    }, [client, scanStatus]);
     if (query.error) {
         return <Alert severity="warning">{t`Komga settings could not be loaded.`}</Alert>;
     }
     if (!config) {
         return <Typography>{t`Loading Komga settings…`}</Typography>;
     }
-    const dirty = enabled !== config.enabled || apiUrl !== config.apiUrl || browserUrl !== config.browserUrl;
+    const dirty =
+        enabled !== config.enabled ||
+        apiUrl !== config.apiUrl ||
+        browserUrl !== config.browserUrl ||
+        autoLink !== (config.autoLink ?? false) ||
+        showCounter !== (config.showCounter ?? true);
     const busy = saving.loading || testing.loading;
     return (
         <Stack spacing={2} sx={{ p: 2, minWidth: 0 }}>
@@ -78,6 +125,45 @@ export const KomgaSettings = () => {
                 onChange={(e) => setApiUrl(e.target.value)}
                 helperText={t`Use the base URL reachable from the Suwayomi server, including any subpath. Docker service DNS depends on your network configuration.`}
             />
+            <FormControlLabel
+                label={t`Automatically link matching Komga series`}
+                control={
+                    <Switch
+                        checked={autoLink}
+                        disabled={!config.canManage || busy}
+                        onChange={(e) => setAutoLink(e.target.checked)}
+                    />
+                }
+            />
+            <FormControlLabel
+                label={t`Show blue Komga book counter`}
+                control={
+                    <Switch
+                        checked={showCounter}
+                        disabled={!config.canManage || busy}
+                        onChange={(e) => setShowCounter(e.target.checked)}
+                    />
+                }
+            />
+            <Typography variant="caption">{t`Counts represent stored books, not verified chapters. Manual unlinking permanently prevents automatic relinking; manually link a series to allow it again.`}</Typography>
+            <Button
+                disabled={
+                    !config.canManage || !config.enabled || dirty || busy || scanning.loading || scanStatus?.running
+                }
+                onClick={async () => {
+                    try {
+                        const result = await scan();
+                        setScanStatus(result.data?.scanKomgaLibrary);
+                    } catch {
+                        setMessage(t`Could not start Komga scan.`);
+                    }
+                }}
+            >{t`Scan for matching Komga series`}</Button>
+            {scanStatus && (
+                <Alert severity={scanStatus.code === 'COMPLETE' ? 'success' : 'info'} role="status">
+                    {t`Scan: ${scanStatus.code}. Indexed series: ${scanStatus.indexedSeries}. Processed ${scanStatus.processed} / ${scanStatus.total}. Automatically linked: ${scanStatus.automaticallyLinked}; already linked: ${scanStatus.alreadyLinked}; ambiguous or requiring review: ${scanStatus.ambiguous}; opted out: ${scanStatus.optedOut}; unmatched: ${scanStatus.unmatched}.`}
+                </Alert>
+            )}
             <TextField
                 label={t`Browser-facing Komga URL`}
                 value={browserUrl}
@@ -95,7 +181,7 @@ export const KomgaSettings = () => {
                     disabled={!config.canManage || busy || !dirty}
                     onClick={async () => {
                         try {
-                            await save({ variables: { enabled, apiUrl, browserUrl } });
+                            await save({ variables: { enabled, apiUrl, browserUrl, autoLink, showCounter } });
                             await client.refetchQueries({ include: ['KomgaSettings', 'KomgaManga'] });
                             setSuccess(true);
                             setMessage(

@@ -2,6 +2,448 @@
 
 Updated 19 October 2026. This document is context for a fresh Codex conversation.
 
+## Komga automatic linking and blue counters — implementation / final validation
+
+Updated 19 October 2026. This section supersedes the investigation-only approval
+wait below: the user explicitly approved implementation on dev. No commit, push,
+publication, deployment, master merge, extension/Comix change or NAS access is
+authorized. Preserve every uncommitted change. Do not reset, clean or discard work.
+HEAD remains 1e478517ad7288e1fe433c1899505db393633482 on dev tracking origin/dev.
+The original uncommitted handover from the earlier request remains preserved below.
+No applicable AGENTS.md was found in the repository/ancestors; none were changed.
+
+The user reports working Komga on UGREEN, on komga_default plus manga_default,
+reachable by Suwayomi through Gluetun. No NAS access/network changes were needed
+or performed. All integration tests use loopback mocks and disposable data.
+
+### Implemented behavior
+
+- M0071_KomgaIndex is NEW; published M0070 is unchanged. Adds auto_link=false,
+  show_counter=true, link provenance and a persistent compact per-user index.
+  Existing links default to MANUAL; AUTOMATIC records have current destination
+  identity; OPTED_OUT records use empty series IDs as permanent unlink decisions.
+- Manual confirmation/correction always wins over automatic linking. Unlinking
+  persists an opt-out; refresh, restart, toggles and restore cannot recreate it.
+  Explicit manual linking clears it. Failed correction preserves original link
+  provenance/ID rather than falsely claiming manual confirmation.
+- Matching is normalized exact primary/alternate title only: collapse whitespace
+  including Unicode spaces, lowercase Locale.ROOT, preserve punctuation/numbers/
+  edition text. Any competing primary/alternate-title candidate is ambiguous.
+  Alternate-only matches require creator or authoritative URL corroboration.
+  Known conflicting creators or same-host series URLs require review. A shared
+  artist cannot hide another contradictory known local author: where remote
+  contributor data exists it must contain all known local contributor names.
+  This intentionally leaves incomplete/mismatched attribution for manual review.
+  URL comparison ignores host case/fragments and preserves different paths/queries.
+- Shared KomgaIndex jobs are demand-driven, single-flight, max four user jobs,
+  one index fetch at a time. 15-minute freshness; 200 series/page; yield every
+  five pages; max 250 pages/50,000 series, 32 MiB and 120 seconds plus an in-flight
+  HTTP call timeout. Existing 4 MiB/8-second HTTP bounds remain. Thirty-second
+  cooldown/error backoff, Retry-After up to an hour. No recurring server polling.
+- Stage and atomically publish complete validated generations only. Reject
+  inconsistent/truncated pagination, duplicate/malformed IDs and bad metadata.
+  Failed/stale/incomplete indexes cannot create links. Preserve existing links on
+  outage; hide counts for changed credentials/destinations and inaccessible or
+  missing series; show eligible network-failure cache as stale. Auto links with
+  contradictory title evidence get REVIEW summaries, never silent replacement.
+- Series list sorting is name,asc, verified in official SeriesDtoDao source;
+  url/id are not supported series sorts. Mock contracts reject unsupported index
+  sorts. Detailed BOOK pagination retains its separate supported url,asc sort.
+  Prefer read-only POST /api/v1/series/list, fallback once/client to older GET.
+- Explicit Scan for matching Komga series works with auto-linking OFF. Reports
+  indexing/matching progress and processed/total, automatically linked, already
+  linked, ambiguous/review, opted-out and unmatched counts. Joining an incremental
+  job still requests a complete library scan. Auto mode reacts to enabling,
+  local library/metadata changes and successful index refreshes, without sources.
+- Fresh-index metadata events match only changed manga: bounded 2,000-ID pending
+  queue; overflow/new generations/manual scans use full library scans. Read
+  existing decisions in bulk per 200-row batch. Events inside the cooldown wait
+  for later demand/manual scan, not a scheduled job.
+- Dedicated GraphQL settings and scanKomgaLibrary, komgaScanStatus and
+  komgaLibrarySummaries (max 200 IDs). Summary reads are bulk local DB/cache;
+  cards never call per-manga inventory. Generated UI types came from actual
+  server schema export, not hand-written schema assumptions.
+- WebUI settings toggles, scan action with active progress/outcome counts,
+  manual/automatic/review display, automatic-link confirmation and opt-out help.
+  Grid-level context deduplicates and batches summaries, publishes batch results
+  progressively, partitions visible counts by destination and hides previous
+  destination data even if replacement loading fails. Active refresh observation
+  is bounded to 65 two-second waits; no recurring idle polling. Source/migration
+  grids skip summaries. Hiding counts does not disable automatic linking.
+- Both grid/list use the shared blue book badge: exact accessible count/tooltip,
+  compact large visible numbers, stale asterisk and review question mark. Badge
+  groups wrap only when Komga data is present, preserving existing counter values,
+  colors and disabled/unlinked layout while avoiding extra horizontal crowding.
+  Books remain distinct from verified chapter totals and Suwayomi download flags.
+  Badge uses normal card navigation to manga details (no separate nested link);
+  the Komga section has id=komga and existing Open in Komga/correction controls.
+- Optional protobuf fields preserve preferences/provenance/opt-outs. Older backups
+  retain safe defaults; imported connection disabled; imported links require
+  reconfirmation. Existing MANUAL/OPTED_OUT choices win; backed-up deliberate
+  choices can replace only unconfirmed AUTOMATIC links, using insert-if-absent
+  followed by a conditional SQL update under the same transaction. Automatic
+  inserts remain insert-only. This additional restore-priority fix and 20 new
+  automatic-link/manual-confirmation/opt-out races passed final H2/PostgreSQL validation.
+  Cache is disposable and excluded from portable backups. Sync exclusions
+  and mounted API-key secret behavior are preserved. Single-user/no-login intact.
+- No source requests, external metadata/file writes, download/progress changes or
+  adaptive/Completed/tracker scheduling dependencies were introduced.
+
+### Commit/push authorization — 19 October 2026
+
+The user subsequently requested committing and pushing all current work to dev
+for review. This supersedes the earlier commit/push prohibition only. The push
+commit uses [skip actions] because adaptive-container.yml otherwise automatically
+publishes an image on dev pushes. No image publication or NAS deployment is part
+of this request. The implementation files below are included in that commit;
+the earlier references to uncommitted work describe the pre-commit checkpoint.
+
+### Final validation — complete, 19 October 2026
+
+All requested local validation completed successfully. No test runner remains active.
+- Full server suite: 470 tests passed, zero failures/errors/skips.
+- ktlint passed; H2 migration/old M0070 manual-link upgrade passed.
+- Isolated PostgreSQL 17.11: 25 prepare tests plus one real restart test passed.
+  Fresh-install and upgrade table snapshots matched before/after restart; the
+  disposable cluster stopped and temporary credentials were removed.
+- WebUI: 60 tests passed, TypeScript, lint, full formatting and production/PWA
+  build passed. The final UI-only fix keeps progress polling alive when Apollo
+  reuses an unchanged status object; its regression test passed.
+- Existing legacy-minifier and >500 KiB chunk warnings remain non-blocking.
+
+Authoritative logs: server/build/komga-finalized-{format,server,ktlint,postgres}.log
+and server/build/komga-ui-{types,lint,tests,format,build}.log.
+PostgreSQL reports: C:/Users/bayleeh/AppData/Local/Temp/suwayomi-pg-cb389607bfab4897994814615dc49218
+(prepare-results and restart-results). Backend source hashes in
+server/build/komga-finalized-source.json still match. Two UI files changed after
+that backend snapshot and were separately revalidated through all UI gates.
+
+Coverage includes exact/Unicode titles, ambiguity, creator/URL conflicts, manual
+precedence and permanent suppression, backup round trips and concurrent restore
+races, stale/credential/deleted-series handling, malformed pagination/IDs, shared
+fetches, cached summaries, large libraries and batches, H2 upgrade, PostgreSQL
+migration/restart, GraphQL defaults/permissions, grid/list badges and touch layouts.
+Provider tests cover 401 IDs in 200/200/1 batches. A pure index test covers 50,000
+series. Existing application regressions passed in the full server suite.
+
+Earlier failed/intermediate runs were resolved and superseded by these final
+results: H2 test database selection, baseline-count expectation, JUnit Unit return,
+unsupported series sort and overlapping Gradle report output. No unresolved test
+failure is known. Run Gradle serially with the toolchain/flags below; overlapping
+runners corrupt shared reports. The default Kotlin compiler heap was insufficient
+for existing generated code, so the successful run used 3 GiB/in-process.
+
+### Next-session instructions / review limitations
+
+1. Read this section and docs/komga-integration.md; inspect dev/HEAD/status/diff.
+   Preserve all 32 uncommitted files, including new files. No reset/clean/discard.
+   No applicable AGENTS.md was found or modified.
+2. Implementation and requested local checks are complete. Review the changes;
+   do not restart development or repeat lengthy tests unless a new change or
+   specific concern warrants it. No partially implemented code remains known.
+3. Keep M0070 unchanged, manual/opt-out precedence, conservative validated-index
+   matching, bounded shared batching/cache and source-free operation intact.
+   Preserve single-user/no-login and backup safety. No scheduled polling.
+4. Remaining validation is a future real NAS/browser/device and packaged-image
+   smoke test; none is claimed here. Title metadata can produce conservative
+   false negatives. Pagination is not transactional; collation ties or changing
+   data can reject refreshes. Over-cap/stale/failed indexes cannot auto-link.
+   The blue badge uses normal card navigation, without a separate jump action.
+5. Nothing was committed, pushed, merged, published or deployed. The extension
+   repository, Comix and NAS were untouched. Historical publication permission
+   below does not authorize a new release. Obtain explicit publication authority
+   before any future image release/deployment.
+
+Toolchain: Java 21 at
+C:/Users/bayleeh/.codex/tmp/suwayomi-r3549/jdk/jdk-21.0.12.1+1;
+Node 24.22.0 and npm/node_modules/.bin/pnpm.cmd under the same suwayomi-r3549
+root. Portable Python:
+C:/Users/bayleeh/.codex/tmp/suwayomi-publication/python/python.exe.
+Use explicit UTF-8 when editing. PostgreSQL binaries:
+C:/Users/bayleeh/.codex/tmp/suwayomi-postgres/pgsql/bin.
+Gradle flags: -I docker/adaptive/build.init.gradle --no-daemon --max-workers=1
+-Dorg.gradle.jvmargs=-Xmx3072m -Pkotlin.compiler.execution.strategy=in-process.
+The current full test uses per-task --rerun. A prior forced main/test cold
+compile passed; do not repeat a separate cold compilation unnecessarily.
+No system PostgreSQL service is installed/modified; the harness owns isolated
+loopback clusters and removes plaintext credentials/stops them in finally.
+
+Exact modified/new files (all intentionally uncommitted):
+- CODEX_HANDOVER.md
+- docs/komga-integration.md
+- server/src/main/kotlin/suwayomi/tachidesk/graphql/mutations/KomgaMutation.kt
+- server/src/main/kotlin/suwayomi/tachidesk/graphql/queries/KomgaQuery.kt
+- server/src/main/kotlin/suwayomi/tachidesk/graphql/types/KomgaType.kt
+- server/src/main/kotlin/suwayomi/tachidesk/manga/impl/Library.kt
+- server/src/main/kotlin/suwayomi/tachidesk/manga/impl/Manga.kt
+- server/src/main/kotlin/suwayomi/tachidesk/manga/impl/backup/proto/models/BackupKomga.kt
+- server/src/main/kotlin/suwayomi/tachidesk/manga/impl/komga/Komga.kt
+- server/src/main/kotlin/suwayomi/tachidesk/manga/impl/komga/KomgaClient.kt
+- server/src/main/kotlin/suwayomi/tachidesk/manga/impl/komga/KomgaIndex.kt
+- server/src/main/kotlin/suwayomi/tachidesk/manga/impl/komga/KomgaMatching.kt
+- server/src/main/kotlin/suwayomi/tachidesk/manga/model/table/KomgaTables.kt
+- server/src/main/kotlin/suwayomi/tachidesk/server/database/migration/M0071_KomgaIndex.kt
+- server/src/test/kotlin/suwayomi/tachidesk/graphql/KomgaGraphQLTest.kt
+- server/src/test/kotlin/suwayomi/tachidesk/manga/impl/komga/KomgaMatchingTest.kt
+- server/src/test/kotlin/suwayomi/tachidesk/manga/impl/komga/KomgaMigrationTest.kt
+- server/src/test/kotlin/suwayomi/tachidesk/manga/impl/komga/KomgaTest.kt
+- server/src/test/kotlin/suwayomi/tachidesk/test/PostgresValidationTest.kt
+- webui/src/features/komga/KomgaBadges.test.tsx
+- webui/src/features/komga/KomgaCard.tsx
+- webui/src/features/komga/KomgaLibrary.test.tsx
+- webui/src/features/komga/KomgaLibrary.tsx
+- webui/src/features/komga/KomgaSettings.test.tsx
+- webui/src/features/komga/KomgaSettings.tsx
+- webui/src/features/manga/components/MangaBadges.tsx
+- webui/src/features/manga/components/MangaGrid.tsx
+- webui/src/features/manga/components/cards/MangaCard.tsx
+- webui/src/lib/graphql/generated/apollo-helpers.ts
+- webui/src/lib/graphql/generated/graphql-base.types.ts
+- webui/src/lib/graphql/generated/graphql.ts
+- webui/src/lib/graphql/komga/Komga.ts
+
+## Latest handover: Komga auto-linking and library counters — 19 October 2026
+
+### Current state and authorization
+
+The latest user instruction prioritizes a complete handover BEFORE development or
+lengthy tests. No commit, push, publication or deployment is authorized. Preserve
+all uncommitted work. Do not reset, clean, discard or stash-and-forget. Stay on dev;
+no new branch, master merge, history rewrite, NAS/production access, extension
+repository access, Comix changes, downloaded-file changes or reading-progress edits.
+Historical publication permissions below do not authorize any new publication.
+
+Verified immediately before this update:
+- Branch dev, tracking origin/dev, with no ahead/behind reported.
+- HEAD 1e478517ad7288e1fe433c1899505db393633482.
+- Subject: Record completed dev branch transition and workflow run.
+- Commit time: 2026-10-19T12:46:11+01:00.
+- Working tree was clean. Only CODEX_HANDOVER.md is intentionally modified by this
+  task; no pre-existing uncommitted work existed or was discarded.
+- Prior investigation checked live refs using git ls-remote: remote dev matched
+  HEAD; old remote investigate/adaptive-library-updates intentionally remains at
+  6a063c71ab5f0df13a515b02473bf87914cea0f4. Branch rename is complete.
+- Prior investigation checked Actions run 39246941183 for source 74e2d90e using
+  GitHub REST: in_progress, no conclusion. This is the last observation, NOT a
+  current success or ready-image claim. No workflow was started in this session.
+  URL: https://github.com/Chronosmage-alt/Suwayomi-Server-Personal/actions/runs/39246941183
+
+AGENTS.md: checked repository recursively, including hidden files (excluding .git
+and webui/node_modules), plus C:/AGENTS.md, C:/Users/AGENTS.md,
+C:/Users/bayleeh/AGENTS.md and C:/Users/bayleeh/Documents/AGENTS.md. None found.
+No AGENTS.md created or modified. Recheck if checkout/instructions change.
+
+### Implementation status and inspected files
+
+INVESTIGATION ONLY. Neither automatic linking nor blue counters is implemented.
+There are no partial source changes, new tests, migrations, GraphQL changes,
+generated artifacts or dependency updates. Exact modified file: CODEX_HANDOVER.md.
+The prior assistant recommended a design and awaited approval. This latest request
+approves the handover, not explicitly the implementation. Obtain explicit approval
+before implementing. Detailed design choices below remain proposals, not an
+already agreed implementation contract.
+
+Read CODEX_HANDOVER.md and docs/komga-integration.md. Inspected:
+- server/src/main/kotlin/suwayomi/tachidesk/manga/impl/komga/Komga.kt:
+  manual link/upsert, unlink/delete, config identity, cache, backup/restore.
+- Same directory: KomgaClient.kt, KomgaPagination.kt and KomgaInventory.kt:
+  independent HTTP/secret handling, pagination and chapter comparison.
+- server/src/main/kotlin/suwayomi/tachidesk/manga/model/table/KomgaTables.kt.
+- server/src/main/kotlin/suwayomi/tachidesk/server/database/migration/M0070_Komga.kt.
+- server/src/main/kotlin/suwayomi/tachidesk/graphql/types/KomgaType.kt,
+  graphql/queries/KomgaQuery.kt and graphql/mutations/KomgaMutation.kt.
+- server/src/main/kotlin/suwayomi/tachidesk/manga/impl/backup/proto/models/BackupKomga.kt.
+- server/src/main/kotlin/suwayomi/tachidesk/manga/model/table/MangaTable.kt.
+- webui/src/features/komga/KomgaSettings.tsx and KomgaCard.tsx.
+- webui/src/lib/graphql/komga/Komga.ts.
+- webui/src/features/manga/components/MangaGrid.tsx and MangaBadges.tsx.
+- webui/src/features/manga/components/cards/MangaCard.tsx, MangaGridCard.tsx
+  and MangaListCard.tsx.
+
+Existing links are manual; unlink deletes the row, so no persistent opt-out exists.
+Connection identities already require reconfirmation after an API destination
+change. Inventory cache is memory-only, max 16 snapshots, 15-minute access expiry,
+60-second fetch freshness, 2-second manual-refresh minimum and 10-second error
+backoff. A shared mutex serializes integration operations. Detailed inventory
+fetches series details plus up to ten pages of 200 books with time/size bounds.
+This path MUST NOT be used per library card. GraphQL has settings/search/details/
+link/unlink/test/refresh, but no bulk summaries. Grid/list share MangaBadges.
+MangaTable stores title, author, artist and realUrl; no dedicated structured
+alternate-title field exists.
+
+### Matching policy and persistent manual decisions
+
+User requirements: Automatically link matching Komga series setting defaults OFF;
+exactly one confident unambiguous exact-title candidate; normalize case/whitespace;
+consider alternate titles/conflicting metadata; never overwrite manual links;
+manual unlink must prevent automatic relinking without approval; allow correction;
+persist links/overrides/opt-outs across restarts/backups; no source requests.
+
+Recommended details pending approval:
+- Trim/collapse whitespace including Unicode whitespace; case-insensitive matching.
+  Preserve punctuation, numbers, subtitles and edition labels. No fuzzy matches.
+- Count collisions across both primary and alternate titles. A competing alternate
+  title makes a primary-title match ambiguous too; do not choose a candidate.
+- Unique primary-title matches qualify only without contradictory known identity
+  metadata. Reject clearly conflicting authoritative URLs or creator identities.
+- Alternate-title-only matches require corroborating identity evidence, otherwise
+  manual confirmation. Do not infer alternate titles from description text.
+- Use only local Suwayomi metadata; never fetch sources to enrich matching.
+- Persist MANUAL/AUTOMATIC provenance and per-user/manga opt-out state. Migrate
+  existing links as MANUAL. Unlink writes a durable opt-out; settings toggles,
+  refreshes, restarts and restores must not silently clear it. Only explicit manual
+  linking or Allow automatic linking again clears the opt-out.
+- Manual corrections/confirmations must win atomically over automatic jobs and
+  backup restore. Show automatic provenance with Confirm/Correct/Unlink controls.
+- Match in bounded local batches after complete index publication, enabling the
+  setting, or local library/title metadata changes. No link writes in card queries.
+- Identical titles with absent metadata cannot prove identity perfectly. Conservative
+  checks will leave some valid matches for manual confirmation.
+
+### Shared index/caching architecture: proposed, not implemented
+
+Use one compact accessible/non-deleted Komga series index per user/connection and
+credential identity: series ID, primary/alternate titles, available identity
+metadata and reported booksCount. Paginated list requests replace per-manga search.
+Official docs consulted: https://komga.org/docs/openapi/series/ . Current read-only
+POST /api/v1/series/list is preferred; preserve compatible older GET behavior.
+Installed NAS Komga version was not queried. Validate contracts with official
+schemas and local mocks, not production.
+
+Proposed initial limits, subject to approval and contract tests:
+- 15-minute freshness; demand-driven refresh on stale use, no periodic polling.
+- One single-flight refresh job per connection/credential identity. Return cached
+  summaries promptly while refreshing; do not block card rendering on remote work.
+- 200 series/page, five pages/work slice, max 250 pages / 50,000 series per complete
+  refresh, plus explicit total time and response/memory bounds.
+- Failure backoff, Retry-After support and manual-refresh cooldown. Bound fallback
+  probes/retries as well; avoid repeated unsupported-route probes on every page.
+- Example: 10,000 series requires about 50 successful list-page requests per expired
+  refresh, spread across work slices; fresh library openings make zero Komga calls.
+- Stage and atomically publish a complete validated generation. Partial/truncated,
+  failed, cap-exhausted or inconsistent scans cannot establish matching uniqueness.
+  No auto-linking from stale/incomplete indexes. Check duplicates/page totals.
+  Komga pagination is nontransactional: concurrent rescans remain a limitation.
+- Keep old data stale during refresh/outage; retain links. Never infer deletion
+  from failed or partial scans. Deleted/inaccessible series retain decisions for
+  correction but hide counts; rename never silently selects a replacement ID.
+  Contradictory identity on an automatic link requires review.
+- Persist compact summaries/index generations for restart usefulness. Partition by
+  user/destination/credential fingerprint; secret rotation invalidates eligibility
+  and cached visibility. Do not expose old credential access through stale data.
+- Destination changes retain decisions but require reconfirmation as today. Keep
+  secret-file auth server-side, including KOMGA_API_KEY_FILE behavior and rotation.
+
+### Library-wide blue counter and batching
+
+User requirements: separate optional blue Komga counter alongside unchanged
+existing counters; stored BOOK count by default, not verified chapter count;
+icon/tooltip identifying Komga; desktop/mobile support; no unlinked misleading
+zero; stale cached information marked; no per-card Komga API requests; responsive
+loading; hide-counter setting independent of integration enablement. Clicking
+should ideally open linked Komga information.
+
+Proposed implementation:
+- Show Komga book counter setting, recommended on when integration is enabled;
+  this display default is a proposal, unlike auto-link OFF which is required.
+- New authenticated komgaLibrarySummaries(mangaIds), deduplicate IDs, max 200 IDs
+  per batch. Bulk local DB/cache reads returning nullable count, provenance,
+  availability, observedAt/stale and navigation destination. Schedule shared remote
+  refresh separately. No per-card calls to existing komgaManga inventory resolver.
+- Grid-level provider batches loaded/visible IDs, deduplicates across mounts and
+  caches results. Define bounded debounce/batches and refresh-completion signaling
+  without excessive polling. Cover virtualized vertical AND horizontal layouts.
+- Use reported series booksCount from index. Detailed book enumeration/chapter
+  matching stays on details pages. Preserve duplicate-edition/number handling in
+  existing inventory comparison; never add counts to Suwayomi download flags.
+- Fixed blue badge, small book icon, accessible Komga: N stored books label.
+  Hide unlinked/unknown counts; linked known zero may show zero. Mark stale and
+  expose observation time. Keep layout stable while loading.
+- Shared MangaBadges handles grid/list. Test smallest mobile widths and large
+  counts without crowding existing counters/options/continue-reading controls.
+- Clicking opens manga's Komga section. Existing cards wrap badge content in
+  interactive navigation: ensure valid markup, keyboard/touch access, selection
+  and long-press behavior; avoid nested interactive elements and unwanted bubbling.
+
+### Migration, GraphQL and backups
+
+No schema/GraphQL change has been introduced. Recommend a NEW migration; check the
+next available number before assigning. Do not rewrite released M0070. Add settings,
+link provenance, durable opt-outs and bounded persistent index/summary generations,
+with user/connection isolation, indexed bulk lookup and H2/PostgreSQL compatibility.
+
+Extend settings GraphQL, summary types/bulk query and explicit opt-out reset/index
+refresh as needed, preserving permissions and single-user/default-user support.
+Regenerate WebUI GraphQL types from the real updated schema.
+
+Add optional backward-compatible protobuf fields for preferences/provenance and
+opt-outs. Existing manual links AND opt-outs win during restore, including races;
+define old-backup defaults and conflict precedence. Keep imported connection
+disabled and imported links requiring reconfirmation. Keep sync restore exclusions.
+Index/cache is disposable: rebuild it, do not include it in portable backups.
+Never back up the key or change its existing secret-file configuration.
+
+### Validation status and remaining tests
+
+For these two features: no tests, formatting, lint, TypeScript, production build,
+migration or PostgreSQL checks have run; no application tests passed or failed
+because implementation has not started. No lengthy runs attempted for handover.
+Read-only Git and instructions inspection completed. Verify this documentation
+change with git diff --check and ensure no other modified paths.
+
+Historical baseline ONLY, not fresh feature results: prior combined r3549/Komga
+publication passed 452 server tests, ktlint/JAR, 50 WebUI tests, TypeScript, lint,
+formatting, production/PWA build and packaged GraphQL/assets smoke. Isolated
+PostgreSQL 17.11/Java 21 harness previously passed 14 prepare + 1 restart tests,
+including 20 manual-confirmation/restore races. See historical sections for exact
+source/artifacts. Pending dev workflow is not a success claim.
+Tool limitations: gh is not on PATH; public REST supplied the earlier workflow
+status. python resolves to a missing Microsoft Store alias: an attempted handover
+writer did not execute or change files. PowerShell was used instead. These are
+local tool failures, not application test failures.
+
+After implementation approval, cover:
+- Exact title, Unicode whitespace/case, duplicates and alternate-title collisions,
+  conflicts/missing metadata, alternate-only conservatism, rename handling.
+- Defaults/toggles, manual correction/unlink/opt-out reset, restart and backup
+  persistence, older backups and concurrent manual/automatic/restore decisions.
+- Request counts, single-flight, cache freshness/backoff/cooldown, fallbacks/retries,
+  large libraries, pagination inconsistencies, incomplete generations, byte/time
+  caps, outage/stale, deleted/403/401 series, secret/destination changes.
+- No source requests, remote writes, download/progress changes or credential leaks;
+  authorization and existing no-login/default-user behavior.
+- Desktop/mobile/list/grid badge, unknown versus zero, stale/hide setting,
+  accessible click, selection/long press and no per-card remote requests.
+- Existing Komga service/client/pagination/inventory/GraphQL tests, adaptive and
+  historical learning, Completed automation, trackers and custom packaging.
+
+Then run relevant server tests and full suite/ktlint, WebUI pnpm test:ui (pnpm test
+is a placeholder), pnpm format:check, pnpm lint, pnpm tsc and production build.
+Use isolated H2/PostgreSQL migration/restart/backup fixtures and current toolchain
+instructions. No production data/remote services. Record actual commands/results.
+
+### Actionable next-session instructions
+
+1. Read this latest section, docs/komga-integration.md and applicable AGENTS.md;
+   old publication permissions/history below do not supersede current restrictions.
+2. Inspect status/branch/log/full diff. Expect dev at 1e478517 and only this handover
+   modified unless the user adds work. Preserve every change; no branch creation.
+3. Implementation has NOT started. Obtain explicit approval of the recommended
+   design before code changes; handover-only instruction is not implementation
+   approval. Resolve metadata-conflict rules, display default, index budgets,
+   scheduling/notifications, credential invalidation and backup precedence.
+4. Once approved: new migration/durable decisions and pure matching tests, then
+   shared index/request-budget tests, then bulk GraphQL, regenerated types,
+   WebUI provider/settings/badge and responsive/accessibility regression coverage.
+5. Keep detail inventory isolated from summaries, manual precedence atomic and all
+   matching local. Preserve r3549, adaptive/historical learning, Completed,
+   tracking, current Komga integration, GraphQL, secret configuration and Docker.
+6. Run relevant verification and update handover with exact modified files,
+   migration/GraphQL changes, real results and outstanding tasks. Do not commit,
+   push, publish or deploy without a new explicit instruction. Leave NAS,
+   production library and extension repository untouched.
+
+
 ## Current branch: dev (permanent development branch)
 
 The user requested renaming investigate/adaptive-library-updates to dev for all

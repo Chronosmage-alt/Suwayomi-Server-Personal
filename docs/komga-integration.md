@@ -15,6 +15,118 @@ progress, Suwayomi download flags, files, source scheduling or update queues. No
 manga-source requests are made. Existing no-login installations continue to use
 Suwayomi's default user; there is no new account-management screen.
 
+## Automatic linking and library book counters (M0071)
+
+The integration still starts disabled. **Automatically link matching Komga series**
+starts off; **Show blue Komga book counter** starts on and is effective only when
+Komga is enabled. Both options are in Settings -> Tracking -> Komga. Save before
+using **Scan for matching Komga series**. The scan is available even with automatic
+linking off: it is an explicit one-off request to process the existing library.
+
+The scan returns immediately and reports indexing/matching progress followed by
+processed/total, automatically linked, already linked, ambiguous/requiring review,
+opted-out and unmatched counts. Errors and cooldowns are reported as status codes;
+a failed index creates no automatic links. A scan can join an in-progress index
+refresh. Progress requests only observe active work; no scheduled server polling
+or recurring library scans are installed. Automatic mode reacts to enabling the
+setting, local library additions/metadata updates, and demand-driven index refresh.
+With a fresh index, local events match only changed manga, using a bounded queue
+of up to 2,000 IDs per user; overflow requests a full local scan. Events during
+the 30-second cooldown wait until later demand or a manual scan. New index
+generations and explicit scans process the full library. Each work batch reads
+existing decisions in one bulk query rather than querying each linked manga.
+
+Matching uses only stored Suwayomi title/author/artist/URL and the shared Komga
+index. It collapses whitespace (including Unicode spaces), ignores title case,
+and preserves punctuation, numbers and edition/subtitle text. Multiple candidates
+across primary AND alternate titles are ambiguous. Unique primary exact matches
+must have no known creator or authoritative same-host URL conflict. Where
+remote contributor names exist, all known local contributors must be present; a
+shared artist cannot conceal a different known author. Incomplete attribution
+can therefore require review. URL identity ignores host case/fragments while
+preserving path/query differences. An alternate
+exact match needs matching creator or URL evidence. Missing metadata cannot prove
+identity perfectly; conservative checks can leave legitimate matches for review.
+No fuzzy matching or source refresh is performed.
+
+Links show MANUAL or AUTOMATIC provenance. Existing links migrate as MANUAL.
+Automatic links can be confirmed or corrected in the manga's Komga section.
+Unlinking stores a permanent OPTED_OUT decision, rather than merely deleting a
+row. Restart, refresh, settings toggles and backup restore cannot undo it. Explicit
+manual linking clears the opt-out. Existing manual decisions win over automatic
+insertions and backup imports. Restored manual links/opt-outs replace unconfirmed
+automatic decisions only; current manual confirmations and opt-outs are never
+overwritten. Insert-if-absent plus a conditional update is atomic on H2 and PostgreSQL.
+
+### Shared index and request limits
+
+One compact complete series index per user/connection/credential identity is
+persisted in the database. A bounded four-user memory cache accelerates lookups.
+No per-card series search or detailed book inventory is requested. With automatic
+linking off, empty batches and batches containing only unlinked/opted-out manga
+do not fetch an index they cannot use; already cached match information can still
+be read locally. Index lists
+prefer read-only POST /api/v1/series/list and fall back once per client to older
+GET listing on 404/405, ordered by name ascending (a supported series sort;
+book inventories retain their separate url sort). All HTTP credentials remain
+server-side and retain the existing API-key secret-file configuration.
+
+Freshness is 15 minutes. Stale use starts a shared demand-driven job, with at most
+four outstanding user jobs and one index fetch at a time. Pages contain up to 200
+series, yielding every five pages; a full fetch is capped at 250 pages / 50,000
+series, 32 MiB of response data and a two-minute elapsed budget (an in-flight call
+can finish beyond that budget, within the HTTP timeout). HTTP responses retain
+the existing 4 MiB cap and eight-second call timeout. Refresh attempts have a
+30-second cooldown/error backoff, extended by Retry-After up to one hour.
+
+Pages must provide consistent totals, page size and valid metadata; duplicate IDs,
+truncation, malformed pages or exhausted budgets prevent publication. A complete
+validated generation replaces the previous one atomically. Automatic matching uses
+only a fresh complete generation and rechecks destination/settings/credentials
+between work batches. Komga does not provide a transactional snapshot: concurrent
+rescans with unchanged totals and collation ties remain limitations; explicit refresh later can
+resolve changed data. A 10,000-series index needs about 50 successful page requests
+per refresh, plus bounded fallback/transport retries; fresh openings make zero
+Komga list requests. Larger-than-cap libraries need manual links or a future
+reviewed limit change; incomplete indexes never establish title uniqueness.
+
+### Blue counter semantics
+
+Both grid and list cards use the same blue book badge. Its tooltip identifies
+stored Komga BOOKS, not verified individual chapters, with manual/automatic
+provenance. Asterisk and accessible stale text identify old observations. Large
+visible numbers use compact notation; the exact count remains in accessible text
+and the tooltip. Unlinked/unknown counts are hidden; a linked known zero is valid.
+A question mark indicates a link or candidate requiring review. Badge groups
+wrap on narrow cards when Komga data is present, keeping existing counts visible. The badge follows
+normal card navigation into manga details, where the Komga section provides
+confirmation, correction, inventory and Open in Komga controls.
+
+Grid-level summary requests deduplicate IDs and use sequential batches of at most
+200. Cards only read React context. Summaries use bulk local database/cache reads;
+they never call the per-manga inventory API. The provider observes only an active
+refresh, bounded to 65 two-second waits, then leaves cards responsive with cached
+state. No recurring idle polling occurs. Source/migration grids do not request
+these summaries. Disabling counter display does not disable auto-linking.
+
+Temporary failures retain eligible cached counts as stale and retain links.
+Changed keys cannot reuse another credential's snapshot. Authentication/permission
+failures hide cached counts. Missing/deleted series and changed destinations keep
+links for correction but hide counts and require review. Automatic links with new
+contradictory title identity evidence are flagged for review; they are never
+silently replaced. No count changes a Suwayomi download flag or either service's
+reading progress, and nothing writes Komga metadata or files.
+
+M0071 adds preferences, link provenance and a persistent compact index; released
+M0070 is unchanged. Portable user-settings backups include preferences, link
+provenance and unlink opt-outs using optional protobuf fields; old backups keep
+compatible defaults. Imported connections remain disabled and imported links
+require reconfirmation. Existing manual decisions win on restore; backed-up manual decisions outrank
+unconfirmed automatic links. The index is disposable
+and excluded from portable backups; the secret is never included. Full database
+backups retain it, partitioned by credential/destination. Sync restore still does
+not import Komga settings or decisions. Single-user/no-login behavior is unchanged.
+
 ## Configure after reviewing this implementation
 
 1. Confirm the installed Komga version supports API keys and the documented REST
@@ -33,7 +145,8 @@ Suwayomi's default user; there is no new account-management screen.
    is used only for the Open in Komga link. Save and run **Test Connection** before
    enabling the integration. Testing is allowed while disabled.
 4. Enable it, open a manga and choose **Link Komga series**. Search by title, inspect
-   suggestions and explicitly confirm the correct series. Nothing is auto-linked.
+   suggestions and explicitly confirm the correct series. Automatic linking is off
+   unless you enable it or explicitly run the shared-index scan.
    Correct/unlink controls affect only this integration's link.
 
 Illustrative additions to the existing Compose service (not a replacement Compose
@@ -172,12 +285,13 @@ backups remain compatible. Normal full-database persistence retains links withou
 reconfirmation; keep the external secret mount separately. Sync restoration does
 not import connection settings or links.
 
-Restored manga links use one atomic insert-if-absent database statement. They
-cannot update an existing link, including one confirmed concurrently during a
-backup restore. A manual confirmation takes precedence whichever operation starts
+Restoration first inserts absent decisions atomically. M0071 then conditionally
+replaces only AUTOMATIC rows when importing a backed-up deliberate manual choice.
+Existing manual links and opt-outs cannot be updated, including a link confirmed
+concurrently during restore. A manual confirmation takes precedence whichever operation starts
 first. H2 uses `MERGE` with only a `WHEN NOT MATCHED` clause; PostgreSQL uses
-`INSERT ... ON CONFLICT DO NOTHING`. No migration change is needed for this
-correction. Concurrent H2 and isolated PostgreSQL 17.11 behavior are regression-tested;
+`INSERT ... ON CONFLICT DO NOTHING`. That earlier restore-race correction did not require a migration. M0071 now
+adds the optional automatic-link and counter functionality described above. Concurrent H2 and isolated PostgreSQL 17.11 behavior are regression-tested;
 the PostgreSQL validation includes 20 manual-confirmation/restoration races.
 
 The client uses established GET series/book endpoints, falling back to documented

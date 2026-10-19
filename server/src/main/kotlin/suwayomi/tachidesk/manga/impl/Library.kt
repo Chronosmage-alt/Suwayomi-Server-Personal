@@ -70,6 +70,8 @@ object Library {
             }.apply {
                 handleMangaThumbnail(mangaId)
             }
+            suwayomi.tachidesk.manga.impl.komga.KomgaIndex
+                .localLibraryChanged(userId, mangaId)
         }
     }
 

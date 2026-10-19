@@ -934,6 +934,23 @@ export type KomgaConnectionResultFieldPolicy = {
     message?: FieldPolicy<any> | FieldReadFunction<any>;
     success?: FieldPolicy<any> | FieldReadFunction<any>;
 };
+export type KomgaLibrarySummaryKeySpecifier = (
+    | 'bookCount'
+    | 'code'
+    | 'fetchedAt'
+    | 'mangaId'
+    | 'provenance'
+    | 'stale'
+    | KomgaLibrarySummaryKeySpecifier
+)[];
+export type KomgaLibrarySummaryFieldPolicy = {
+    bookCount?: FieldPolicy<any> | FieldReadFunction<any>;
+    code?: FieldPolicy<any> | FieldReadFunction<any>;
+    fetchedAt?: FieldPolicy<any> | FieldReadFunction<any>;
+    mangaId?: FieldPolicy<any> | FieldReadFunction<any>;
+    provenance?: FieldPolicy<any> | FieldReadFunction<any>;
+    stale?: FieldPolicy<any> | FieldReadFunction<any>;
+};
 export type KomgaMangaInfoKeySpecifier = (
     | 'ambiguousBooks'
     | 'bookCount'
@@ -954,6 +971,7 @@ export type KomgaMangaInfoKeySpecifier = (
     | 'missingCount'
     | 'numberHints'
     | 'openUrl'
+    | 'provenance'
     | 'readBooks'
     | 'seriesId'
     | 'sourceEntries'
@@ -985,6 +1003,7 @@ export type KomgaMangaInfoFieldPolicy = {
     missingCount?: FieldPolicy<any> | FieldReadFunction<any>;
     numberHints?: FieldPolicy<any> | FieldReadFunction<any>;
     openUrl?: FieldPolicy<any> | FieldReadFunction<any>;
+    provenance?: FieldPolicy<any> | FieldReadFunction<any>;
     readBooks?: FieldPolicy<any> | FieldReadFunction<any>;
     seriesId?: FieldPolicy<any> | FieldReadFunction<any>;
     sourceEntries?: FieldPolicy<any> | FieldReadFunction<any>;
@@ -994,6 +1013,31 @@ export type KomgaMangaInfoFieldPolicy = {
     unknownSourceEntries?: FieldPolicy<any> | FieldReadFunction<any>;
     unmatchedSourceNumbers?: FieldPolicy<any> | FieldReadFunction<any>;
     unreadBooks?: FieldPolicy<any> | FieldReadFunction<any>;
+};
+export type KomgaScanStatusKeySpecifier = (
+    | 'alreadyLinked'
+    | 'ambiguous'
+    | 'automaticallyLinked'
+    | 'code'
+    | 'indexedSeries'
+    | 'optedOut'
+    | 'processed'
+    | 'running'
+    | 'total'
+    | 'unmatched'
+    | KomgaScanStatusKeySpecifier
+)[];
+export type KomgaScanStatusFieldPolicy = {
+    alreadyLinked?: FieldPolicy<any> | FieldReadFunction<any>;
+    ambiguous?: FieldPolicy<any> | FieldReadFunction<any>;
+    automaticallyLinked?: FieldPolicy<any> | FieldReadFunction<any>;
+    code?: FieldPolicy<any> | FieldReadFunction<any>;
+    indexedSeries?: FieldPolicy<any> | FieldReadFunction<any>;
+    optedOut?: FieldPolicy<any> | FieldReadFunction<any>;
+    processed?: FieldPolicy<any> | FieldReadFunction<any>;
+    running?: FieldPolicy<any> | FieldReadFunction<any>;
+    total?: FieldPolicy<any> | FieldReadFunction<any>;
+    unmatched?: FieldPolicy<any> | FieldReadFunction<any>;
 };
 export type KomgaSearchPageKeySpecifier = (
     | 'code'
@@ -1025,18 +1069,22 @@ export type KomgaSeriesOptionFieldPolicy = {
 };
 export type KomgaSettingsKeySpecifier = (
     | 'apiUrl'
+    | 'autoLink'
     | 'browserUrl'
     | 'canManage'
     | 'credentialConfigured'
     | 'enabled'
+    | 'showCounter'
     | KomgaSettingsKeySpecifier
 )[];
 export type KomgaSettingsFieldPolicy = {
     apiUrl?: FieldPolicy<any> | FieldReadFunction<any>;
+    autoLink?: FieldPolicy<any> | FieldReadFunction<any>;
     browserUrl?: FieldPolicy<any> | FieldReadFunction<any>;
     canManage?: FieldPolicy<any> | FieldReadFunction<any>;
     credentialConfigured?: FieldPolicy<any> | FieldReadFunction<any>;
     enabled?: FieldPolicy<any> | FieldReadFunction<any>;
+    showCounter?: FieldPolicy<any> | FieldReadFunction<any>;
 };
 export type LastUpdateTimestampPayloadKeySpecifier = ('timestamp' | LastUpdateTimestampPayloadKeySpecifier)[];
 export type LastUpdateTimestampPayloadFieldPolicy = {
@@ -1358,6 +1406,7 @@ export type MutationKeySpecifier = (
     | 'resetWebUIUpdateStatus'
     | 'restoreBackup'
     | 'revokeUserCode'
+    | 'scanKomgaLibrary'
     | 'setAdaptiveMangaMode'
     | 'setAdaptiveSource'
     | 'setAdaptiveUpdatesEnabled'
@@ -1464,6 +1513,7 @@ export type MutationFieldPolicy = {
     resetWebUIUpdateStatus?: FieldPolicy<any> | FieldReadFunction<any>;
     restoreBackup?: FieldPolicy<any> | FieldReadFunction<any>;
     revokeUserCode?: FieldPolicy<any> | FieldReadFunction<any>;
+    scanKomgaLibrary?: FieldPolicy<any> | FieldReadFunction<any>;
     setAdaptiveMangaMode?: FieldPolicy<any> | FieldReadFunction<any>;
     setAdaptiveSource?: FieldPolicy<any> | FieldReadFunction<any>;
     setAdaptiveUpdatesEnabled?: FieldPolicy<any> | FieldReadFunction<any>;
@@ -1856,7 +1906,9 @@ export type QueryKeySpecifier = (
     | 'extensions'
     | 'getWebUIUpdateStatus'
     | 'koSyncStatus'
+    | 'komgaLibrarySummaries'
     | 'komgaManga'
+    | 'komgaScanStatus'
     | 'komgaSearch'
     | 'komgaSettings'
     | 'lastSyncStatus'
@@ -1903,7 +1955,9 @@ export type QueryFieldPolicy = {
     extensions?: FieldPolicy<any> | FieldReadFunction<any>;
     getWebUIUpdateStatus?: FieldPolicy<any> | FieldReadFunction<any>;
     koSyncStatus?: FieldPolicy<any> | FieldReadFunction<any>;
+    komgaLibrarySummaries?: FieldPolicy<any> | FieldReadFunction<any>;
     komgaManga?: FieldPolicy<any> | FieldReadFunction<any>;
+    komgaScanStatus?: FieldPolicy<any> | FieldReadFunction<any>;
     komgaSearch?: FieldPolicy<any> | FieldReadFunction<any>;
     komgaSettings?: FieldPolicy<any> | FieldReadFunction<any>;
     lastSyncStatus?: FieldPolicy<any> | FieldReadFunction<any>;
@@ -3717,9 +3771,17 @@ export type StrictTypedTypePolicies = {
         keyFields?: false | KomgaConnectionResultKeySpecifier | (() => undefined | KomgaConnectionResultKeySpecifier);
         fields?: KomgaConnectionResultFieldPolicy;
     };
+    KomgaLibrarySummary?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
+        keyFields?: false | KomgaLibrarySummaryKeySpecifier | (() => undefined | KomgaLibrarySummaryKeySpecifier);
+        fields?: KomgaLibrarySummaryFieldPolicy;
+    };
     KomgaMangaInfo?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
         keyFields?: false | KomgaMangaInfoKeySpecifier | (() => undefined | KomgaMangaInfoKeySpecifier);
         fields?: KomgaMangaInfoFieldPolicy;
+    };
+    KomgaScanStatus?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
+        keyFields?: false | KomgaScanStatusKeySpecifier | (() => undefined | KomgaScanStatusKeySpecifier);
+        fields?: KomgaScanStatusFieldPolicy;
     };
     KomgaSearchPage?: Omit<TypePolicy, 'fields' | 'keyFields'> & {
         keyFields?: false | KomgaSearchPageKeySpecifier | (() => undefined | KomgaSearchPageKeySpecifier);

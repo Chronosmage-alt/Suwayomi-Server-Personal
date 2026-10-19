@@ -15,12 +15,15 @@ const SETTINGS = gql`
         browserUrl
         credentialConfigured
         canManage
+        autoLink
+        showCounter
     }
 `;
 const INFO = gql`
     fragment KOMGA_INFO on KomgaMangaInfo {
         enabled
         linked
+        provenance
         code
         message
         seriesId
@@ -68,8 +71,20 @@ export const KOMGA_SETTINGS = gql`
 `;
 export const SAVE_KOMGA_SETTINGS = gql`
     ${SETTINGS}
-    mutation SaveKomgaSettings($enabled: Boolean!, $apiUrl: String!, $browserUrl: String!) {
-        setKomgaSettings(enabled: $enabled, apiUrl: $apiUrl, browserUrl: $browserUrl) {
+    mutation SaveKomgaSettings(
+        $enabled: Boolean!
+        $apiUrl: String!
+        $browserUrl: String!
+        $autoLink: Boolean
+        $showCounter: Boolean
+    ) {
+        setKomgaSettings(
+            enabled: $enabled
+            apiUrl: $apiUrl
+            browserUrl: $browserUrl
+            autoLink: $autoLink
+            showCounter: $showCounter
+        ) {
             ...KOMGA_SETTINGS
         }
     }
@@ -128,6 +143,50 @@ export const REFRESH_KOMGA = gql`
     mutation RefreshKomga($mangaId: Int!) {
         refreshKomgaManga(mangaId: $mangaId) {
             ...KOMGA_INFO
+        }
+    }
+`;
+
+export const KOMGA_SUMMARIES = gql`
+    query KomgaLibrarySummaries($mangaIds: [Int!]!) {
+        komgaLibrarySummaries(mangaIds: $mangaIds) {
+            mangaId
+            provenance
+            code
+            bookCount
+            fetchedAt
+            stale
+        }
+    }
+`;
+
+const SCAN_STATUS = gql`
+    fragment KOMGA_SCAN_STATUS on KomgaScanStatus {
+        running
+        code
+        processed
+        total
+        automaticallyLinked
+        alreadyLinked
+        ambiguous
+        optedOut
+        unmatched
+        indexedSeries
+    }
+`;
+export const SCAN_KOMGA = gql`
+    ${SCAN_STATUS}
+    mutation ScanKomgaLibrary {
+        scanKomgaLibrary {
+            ...KOMGA_SCAN_STATUS
+        }
+    }
+`;
+export const KOMGA_SCAN_STATUS = gql`
+    ${SCAN_STATUS}
+    query KomgaScanStatus {
+        komgaScanStatus {
+            ...KOMGA_SCAN_STATUS
         }
     }
 `;

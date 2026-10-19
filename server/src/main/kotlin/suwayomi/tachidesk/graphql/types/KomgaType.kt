@@ -6,6 +6,8 @@ data class KomgaSettings(
     val browserUrl: String,
     val credentialConfigured: Boolean,
     val canManage: Boolean,
+    val autoLink: Boolean = false,
+    val showCounter: Boolean = true,
 )
 
 data class KomgaConnectionResult(
@@ -69,4 +71,27 @@ data class KomgaMangaInfo(
     val unknownSourceEntries: Int = 0,
     val duplicateSourceEntries: Int = 0,
     val books: List<KomgaBookInfo> = emptyList(),
+    val provenance: String = "MANUAL",
+)
+
+data class KomgaLibrarySummary(
+    val mangaId: Int,
+    val provenance: String,
+    val code: String,
+    val bookCount: Int? = null,
+    val fetchedAt: Long? = null,
+    val stale: Boolean = false,
+)
+
+data class KomgaScanStatus(
+    val running: Boolean = false,
+    val code: String = "IDLE",
+    val processed: Int = 0,
+    val total: Int = 0,
+    val automaticallyLinked: Int = 0,
+    val alreadyLinked: Int = 0,
+    val ambiguous: Int = 0,
+    val optedOut: Int = 0,
+    val unmatched: Int = 0,
+    val indexedSeries: Int = 0,
 )

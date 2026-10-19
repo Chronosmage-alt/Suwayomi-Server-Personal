@@ -287,6 +287,19 @@ object Manga {
             if (sManga.status == SManga.COMPLETED) CompletedCategories.metadataCompleted(mangaId)
         }
 
+        // Komga uses this already stored metadata; it never requests a source refresh itself.
+        val komgaUsers =
+            transaction {
+                MangaUserTable
+                    .selectAll()
+                    .where { (MangaUserTable.manga eq mangaEntry[MangaTable.id]) and (MangaUserTable.inLibrary eq true) }
+                    .map { it[MangaUserTable.user].value }
+            }
+        komgaUsers.forEach {
+            suwayomi.tachidesk.manga.impl.komga.KomgaIndex
+                .localLibraryChanged(it, mangaEntry[MangaTable.id].value)
+        }
+
         return sManga
     }
 

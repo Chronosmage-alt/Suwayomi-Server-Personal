@@ -8,10 +8,10 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.statements.UpdateBuilder
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.upsert
 import suwayomi.tachidesk.global.model.table.UserAccountTable
 import suwayomi.tachidesk.graphql.types.KomgaConnectionResult
@@ -36,17 +36,20 @@ internal data class KomgaConfig(
     val apiUrl: String = "",
     val browserUrl: String = "",
     val identity: String = "",
+    val autoLink: Boolean = false,
+    val showCounter: Boolean = true,
 )
 
 internal data class KomgaBinding(
     val identity: String,
     val series: String,
     val title: String,
+    val provenance: String = "MANUAL",
 )
 
 /** Database writes are limited to these integration tables. No source, download or tracker updater dependencies. */
 object Komga {
-    private val mutex = Mutex()
+    internal val mutex = Mutex()
 
     private data class Cached(
         val snapshot: KomgaSnapshot?,
@@ -69,6 +72,8 @@ object Komga {
                     it[KomgaConnectionTable.apiUrl],
                     it[KomgaConnectionTable.browserUrl],
                     it[KomgaConnectionTable.identity],
+                    it[KomgaConnectionTable.autoLink],
+                    it[KomgaConnectionTable.showCounter],
                 )
             } ?: KomgaConfig()
         }
@@ -79,7 +84,12 @@ object Komga {
     ): KomgaBinding? =
         transaction {
             KomgaLinkTable.selectAll().where { (KomgaLinkTable.user eq userId) and (KomgaLinkTable.manga eq mangaId) }.firstOrNull()?.let {
-                KomgaBinding(it[KomgaLinkTable.identity], it[KomgaLinkTable.series], it[KomgaLinkTable.title])
+                KomgaBinding(
+                    it[KomgaLinkTable.identity],
+                    it[KomgaLinkTable.series],
+                    it[KomgaLinkTable.title],
+                    it[KomgaLinkTable.provenance],
+                ).takeUnless { binding -> binding.provenance == "OPTED_OUT" }
             }
         }
 
@@ -93,6 +103,8 @@ object Komga {
                 KomgaSecret.read()
             }.isSuccess,
             hasPermission(userId, UserPermission.MANAGE_SETTINGS),
+            config.autoLink,
+            config.showCounter,
         )
     }
 
@@ -101,6 +113,8 @@ object Komga {
         enabled: Boolean,
         apiUrl: String,
         browserUrl: String,
+        autoLink: Boolean? = null,
+        showCounter: Boolean? = null,
     ): KomgaSettings =
         mutex.withLock {
             val api = KomgaClient.normalizeUrl(apiUrl, !enabled)
@@ -112,10 +126,13 @@ object Komga {
                     it[KomgaConnectionTable.enabled] = enabled
                     it[KomgaConnectionTable.apiUrl] = api
                     it[KomgaConnectionTable.browserUrl] = browser
+                    it[KomgaConnectionTable.autoLink] = autoLink ?: old.autoLink
+                    it[KomgaConnectionTable.showCounter] = showCounter ?: old.showCounter
                     it[identity] = if (old.apiUrl == api && old.identity.isNotEmpty()) old.identity else UUID.randomUUID().toString()
                 }
             }
             cache.invalidateAll()
+            KomgaIndex.invalidate(userId)
             settings(userId)
         }
 
@@ -225,7 +242,16 @@ object Komga {
                 try {
                     KomgaClient(config.apiUrl, KomgaSecret.read()).series(seriesId)
                 } catch (error: KomgaFailure) {
-                    return KomgaMangaInfo(true, binding(userId, mangaId) != null, error.code, failure(error.code).message)
+                    val existing = binding(userId, mangaId)
+                    return KomgaMangaInfo(
+                        true,
+                        existing != null,
+                        error.code,
+                        failure(error.code).message,
+                        seriesId = existing?.series,
+                        title = existing?.title,
+                        provenance = existing?.provenance ?: "UNLINKED",
+                    )
                 }
             transaction {
                 KomgaLinkTable.upsert(KomgaLinkTable.user, KomgaLinkTable.manga) {
@@ -234,6 +260,7 @@ object Komga {
                     it[identity] = config.identity
                     it[KomgaLinkTable.series] = seriesId
                     it[title] = series.obj("metadata").text("title") ?: series.text("name").orEmpty()
+                    it[provenance] = "MANUAL"
                 }
             }
         }
@@ -244,23 +271,41 @@ object Komga {
         userId: Int,
         mangaId: Int,
     ): KomgaMangaInfo {
-        mutex.withLock { transaction { KomgaLinkTable.deleteWhere { (user eq userId) and (manga eq mangaId) } } }
+        mutex.withLock {
+            requireManga(mangaId)
+            transaction {
+                KomgaLinkTable.upsert(KomgaLinkTable.user, KomgaLinkTable.manga) {
+                    it[user] = EntityID(userId, UserAccountTable)
+                    it[manga] = EntityID(mangaId, MangaTable)
+                    it[identity] = ""
+                    it[series] = ""
+                    it[title] = ""
+                    it[provenance] = "OPTED_OUT"
+                }
+            }
+        }
         return manga(userId, mangaId)
     }
 
     fun backupConnection(userId: Int): suwayomi.tachidesk.manga.impl.backup.proto.models.BackupKomgaConnection? =
         config(userId).takeIf { it.apiUrl.isNotEmpty() }?.let {
             suwayomi.tachidesk.manga.impl.backup.proto.models
-                .BackupKomgaConnection(it.apiUrl, it.browserUrl, it.identity)
+                .BackupKomgaConnection(it.apiUrl, it.browserUrl, it.identity, it.autoLink, it.showCounter)
         }
 
     fun backupLink(
         userId: Int,
         mangaId: Int,
     ): suwayomi.tachidesk.manga.impl.backup.proto.models.BackupKomgaLink? =
-        binding(userId, mangaId)?.let {
-            suwayomi.tachidesk.manga.impl.backup.proto.models
-                .BackupKomgaLink(it.series, it.title, it.identity)
+        transaction {
+            KomgaLinkTable.selectAll().where { (KomgaLinkTable.user eq userId) and (KomgaLinkTable.manga eq mangaId) }.firstOrNull()?.let {
+                suwayomi.tachidesk.manga.impl.backup.proto.models.BackupKomgaLink(
+                    it[KomgaLinkTable.series],
+                    it[KomgaLinkTable.title],
+                    it[KomgaLinkTable.identity],
+                    it[KomgaLinkTable.provenance],
+                )
+            }
         }
 
     fun restoreConnection(
@@ -276,17 +321,22 @@ object Komga {
                 it[apiUrl] = api
                 it[browserUrl] = browser
                 it[identity] = UUID.randomUUID().toString()
+                it[autoLink] = backup.autoLink
+                it[showCounter] = backup.showCounter
             }
         }
         cache.invalidateAll()
+        KomgaIndex.invalidate(userId)
     }
 
     fun restoreLink(
         userId: Int,
         mangaId: Int,
         backup: suwayomi.tachidesk.manga.impl.backup.proto.models.BackupKomgaLink,
+        confirmedIdentity: String = "restored",
     ) {
-        if (backup.seriesId.length !in 1..256) return
+        if (backup.provenance !in setOf("MANUAL", "AUTOMATIC", "OPTED_OUT")) return
+        if (backup.provenance != "OPTED_OUT" && backup.seriesId.length !in 1..256) return
         transaction {
             // The unique primary key decides atomically; restoration must never update a confirmed link.
             val values: (UpdateBuilder<*>) -> Unit = {
@@ -294,7 +344,8 @@ object Komga {
                 it[KomgaLinkTable.manga] = EntityID(mangaId, MangaTable)
                 it[KomgaLinkTable.series] = backup.seriesId
                 it[KomgaLinkTable.title] = backup.title.take(2048)
-                it[KomgaLinkTable.identity] = "restored"
+                it[KomgaLinkTable.identity] = confirmedIdentity
+                it[KomgaLinkTable.provenance] = backup.provenance
             }
             if (db.dialect is H2Dialect) {
                 // H2 has no INSERT IGNORE. Excluding every update column emits only WHEN NOT MATCHED.
@@ -306,6 +357,14 @@ object Komga {
             } else {
                 // PostgreSQL emits INSERT ... ON CONFLICT DO NOTHING.
                 KomgaLinkTable.insertIgnore { values(it) }
+            }
+            if (backup.provenance != "AUTOMATIC") {
+                // A restored deliberate choice outranks an unconfirmed automatic decision.
+                // The SQL predicate is rechecked under the row lock: concurrent manual choices win.
+                KomgaLinkTable.update({
+                    (KomgaLinkTable.user eq userId) and (KomgaLinkTable.manga eq mangaId) and
+                        (KomgaLinkTable.provenance eq "AUTOMATIC")
+                }) { values(it) }
             }
         }
     }
@@ -387,6 +446,7 @@ object Komga {
                     },
                     seriesId = binding?.series,
                     title = binding?.title,
+                    provenance = binding?.provenance ?: (backupLink(userId, mangaId)?.provenance ?: "UNLINKED"),
                 )
             }
             val now = System.currentTimeMillis()
@@ -428,6 +488,7 @@ object Komga {
                     failure(error ?: "REMOTE_ERROR").message,
                     binding.series,
                     binding.title,
+                    provenance = binding.provenance,
                 )
             }
             val chapters =
@@ -452,6 +513,7 @@ object Komga {
                 stale = error != null,
                 code = if (error == null) "READY" else "STALE",
                 message = if (error == null) comparison.message else "${failure(error).message} Showing cached inventory.",
+                provenance = binding.provenance,
             )
         }
 }

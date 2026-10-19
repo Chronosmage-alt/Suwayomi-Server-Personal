@@ -36,9 +36,7 @@ import type {
     UnlinkKomgaMutation,
     RefreshKomgaMutation,
 } from '@/lib/graphql/generated/graphql.ts';
-
 type KomgaCardProps = { mangaId: number; title: string };
-
 const KomgaCardContent = ({ mangaId, title }: KomgaCardProps) => {
     const { t } = useLingui();
     const { client } = requestManager.graphQLClient;
@@ -87,13 +85,36 @@ const KomgaCardContent = ({ mangaId, title }: KomgaCardProps) => {
         }
         return read ? t`yes` : t`no`;
     };
+    const linkLabel =
+        data?.provenance === 'AUTOMATIC'
+            ? t`Automatically linked — correct or unlink if needed`
+            : t`Manually confirmed link`;
     const list = (values: string[]) => (values.length ? values.join(', ') : t`None`);
     return (
         <Stack
+            id="komga"
             spacing={1}
             sx={{ p: 2, minWidth: 0, overflowWrap: 'anywhere', border: 1, borderColor: 'divider', borderRadius: 1 }}
         >
             <Typography variant="h6">Komga</Typography>
+            {data?.linked && (
+                <Typography variant="caption">
+                    {data.code === 'CONNECTION_CHANGED' ? t`Link requires review` : linkLabel}
+                </Typography>
+            )}
+            {data?.provenance === 'OPTED_OUT' && (
+                <Typography variant="caption">{t`Automatic linking is permanently suppressed. Manually link a series to allow linking again.`}</Typography>
+            )}
+            {data?.linked && data.provenance === 'AUTOMATIC' && data.seriesId && (
+                <Button
+                    disabled={linking.loading}
+                    onClick={() => {
+                        link({ variables: { mangaId, seriesId: data.seriesId! } })
+                            .then((result) => store(result.data?.linkKomgaSeries))
+                            .catch(failure);
+                    }}
+                >{t`Confirm automatic link`}</Button>
+            )}
             {info.loading && !data && <Typography>{t`Loading Komga inventory…`}</Typography>}
             {info.error && <Alert severity="warning">{t`Komga inventory could not be loaded.`}</Alert>}
             {data && (
@@ -262,5 +283,4 @@ const KomgaCardContent = ({ mangaId, title }: KomgaCardProps) => {
         </Stack>
     );
 };
-
 export const KomgaCard = (props: KomgaCardProps) => <KomgaCardContent key={props.mangaId} {...props} />;

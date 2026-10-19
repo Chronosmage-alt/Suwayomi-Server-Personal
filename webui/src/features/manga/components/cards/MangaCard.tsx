@@ -203,6 +203,7 @@ export const MangaCard = memo((props: MangaCardProps) => {
                         }
                         mangaBadges={
                             <MangaBadges
+                                mangaId={id}
                                 inLibraryIndicator={inLibraryIndicator}
                                 isInLibrary={isInLibrary}
                                 unread={unreadCount}

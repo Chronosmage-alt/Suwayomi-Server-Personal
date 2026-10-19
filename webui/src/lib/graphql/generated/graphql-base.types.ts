@@ -1322,6 +1322,16 @@ export type KomgaConnectionResult = {
     success: Scalars['Boolean']['output'];
 };
 
+export type KomgaLibrarySummary = {
+    __typename?: 'KomgaLibrarySummary';
+    bookCount?: Maybe<Scalars['Int']['output']>;
+    code: Scalars['String']['output'];
+    fetchedAt?: Maybe<Scalars['LongString']['output']>;
+    mangaId: Scalars['Int']['output'];
+    provenance: Scalars['String']['output'];
+    stale: Scalars['Boolean']['output'];
+};
+
 export type KomgaMangaInfo = {
     __typename?: 'KomgaMangaInfo';
     ambiguousBooks: Scalars['Int']['output'];
@@ -1343,6 +1353,7 @@ export type KomgaMangaInfo = {
     missingCount?: Maybe<Scalars['Int']['output']>;
     numberHints: Array<Scalars['String']['output']>;
     openUrl?: Maybe<Scalars['String']['output']>;
+    provenance: Scalars['String']['output'];
     readBooks?: Maybe<Scalars['Int']['output']>;
     seriesId?: Maybe<Scalars['String']['output']>;
     sourceEntries: Scalars['Int']['output'];
@@ -1352,6 +1363,20 @@ export type KomgaMangaInfo = {
     unknownSourceEntries: Scalars['Int']['output'];
     unmatchedSourceNumbers: Array<Scalars['String']['output']>;
     unreadBooks?: Maybe<Scalars['Int']['output']>;
+};
+
+export type KomgaScanStatus = {
+    __typename?: 'KomgaScanStatus';
+    alreadyLinked: Scalars['Int']['output'];
+    ambiguous: Scalars['Int']['output'];
+    automaticallyLinked: Scalars['Int']['output'];
+    code: Scalars['String']['output'];
+    indexedSeries: Scalars['Int']['output'];
+    optedOut: Scalars['Int']['output'];
+    processed: Scalars['Int']['output'];
+    running: Scalars['Boolean']['output'];
+    total: Scalars['Int']['output'];
+    unmatched: Scalars['Int']['output'];
 };
 
 export type KomgaSearchPage = {
@@ -1374,10 +1399,12 @@ export type KomgaSeriesOption = {
 export type KomgaSettings = {
     __typename?: 'KomgaSettings';
     apiUrl: Scalars['String']['output'];
+    autoLink: Scalars['Boolean']['output'];
     browserUrl: Scalars['String']['output'];
     canManage: Scalars['Boolean']['output'];
     credentialConfigured: Scalars['Boolean']['output'];
     enabled: Scalars['Boolean']['output'];
+    showCounter: Scalars['Boolean']['output'];
 };
 
 export enum KoreaderSyncChecksumMethod {
@@ -1823,6 +1850,7 @@ export type Mutation = {
     restoreBackup: RestoreBackupPayload;
     /** Revokes an outstanding user code. */
     revokeUserCode: RevokeUserCodePayload;
+    scanKomgaLibrary: KomgaScanStatus;
     setAdaptiveMangaMode: AdaptiveMangaSchedule;
     setAdaptiveSource: AdaptiveUpdateSettings;
     setAdaptiveUpdatesEnabled: AdaptiveUpdateSettings;
@@ -2147,8 +2175,10 @@ export type MutationSetGlobalMetasArgs = {
 
 export type MutationSetKomgaSettingsArgs = {
     apiUrl: Scalars['String']['input'];
+    autoLink?: InputMaybe<Scalars['Boolean']['input']>;
     browserUrl: Scalars['String']['input'];
     enabled: Scalars['Boolean']['input'];
+    showCounter?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 export type MutationSetMangaMetaArgs = {
@@ -2778,7 +2808,9 @@ export type Query = {
     extensions: ExtensionNodeList;
     getWebUIUpdateStatus: WebUiUpdateStatus;
     koSyncStatus: KoSyncStatusPayload;
+    komgaLibrarySummaries: Array<KomgaLibrarySummary>;
     komgaManga: KomgaMangaInfo;
+    komgaScanStatus: KomgaScanStatus;
     komgaSearch: KomgaSearchPage;
     komgaSettings: KomgaSettings;
     lastSyncStatus?: Maybe<SyncStatus>;
@@ -2879,6 +2911,10 @@ export type QueryExtensionsArgs = {
     order?: InputMaybe<Array<ExtensionOrderInput>>;
     orderBy?: InputMaybe<ExtensionOrderBy>;
     orderByType?: InputMaybe<SortOrder>;
+};
+
+export type QueryKomgaLibrarySummariesArgs = {
+    mangaIds: Array<Scalars['Int']['input']>;
 };
 
 export type QueryKomgaMangaArgs = {

@@ -16,10 +16,19 @@ import kotlin.test.assertFalse
 class KomgaGraphQLTest : GraphQLTest() {
     @Test fun defaultUserSettingsPermissionAndSchemaRemainCompatible() {
         try {
-            graphql("query { komgaSettings { enabled apiUrl browserUrl credentialConfigured canManage } }").also {
+            graphql("query { komgaSettings { enabled apiUrl browserUrl credentialConfigured canManage autoLink showCounter } }").also {
                 it.assertNoErrors()
                 assertEquals(false, it.dataPath("komgaSettings", "enabled"))
+                assertEquals(false, it.dataPath("komgaSettings", "autoLink"))
+                assertEquals(true, it.dataPath("komgaSettings", "showCounter"))
             }
+            graphql("query { komgaLibrarySummaries(mangaIds:[1]) { mangaId bookCount provenance code stale } }").assertNoErrors()
+            graphql("mutation { scanKomgaLibrary { running code } }").also {
+                it.assertNoErrors()
+                assertEquals("DISABLED", it.dataPath("scanKomgaLibrary", "code"))
+            }
+            assertFalse(graphql("mutation { scanKomgaLibrary { running } }", user = UserType.User(1, emptyList())).errors.isNullOrEmpty())
+            assertFalse(graphql("query { komgaLibrarySummaries(mangaIds:[1]) { code } }", user = UserType.Visitor).errors.isNullOrEmpty())
             graphql(
                 "mutation { setKomgaSettings(enabled:false, apiUrl: \"http://komga:25600\", browserUrl: \"http://nas:8080\") { enabled } }",
             ).assertNoErrors()

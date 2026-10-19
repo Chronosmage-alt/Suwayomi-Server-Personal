@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit
 /** Deliberately independent of extension HTTP clients, cookies, interceptors and source scheduling. */
 internal class KomgaFailure(
     val code: String,
+    val retryAfterMs: Long = 30_000,
 ) : RuntimeException(code)
 
 internal fun JsonObject.text(key: String): String? = (get(key) as? JsonPrimitive)?.content?.takeUnless { it == "null" }
@@ -115,6 +116,17 @@ internal class KomgaClient(
                             in 300..399 -> "REDIRECT"
                             else -> "REMOTE_ERROR"
                         },
+                        response.header("Retry-After")?.let { value ->
+                            value.toLongOrNull()?.coerceIn(0, 3600)?.times(1000)
+                                ?: runCatching {
+                                    (
+                                        java.time.ZonedDateTime
+                                            .parse(value, java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME)
+                                            .toInstant()
+                                            .toEpochMilli() - System.currentTimeMillis()
+                                    ).coerceIn(0, 3_600_000)
+                                }.getOrNull()
+                        } ?: 30_000,
                     )
                 }
                 val bytes = response.body.byteStream().readNBytes(4 * 1024 * 1024 + 1)
@@ -205,4 +217,19 @@ internal class KomgaClient(
                 )
             },
         )
+
+    private var legacyIndex = false
+
+    fun indexPage(page: Int): JsonObject {
+        val query = mapOf("page" to "$page", "size" to "200", "sort" to "name,asc")
+        if (!legacyIndex) {
+            try {
+                return request(listOf("api", "v1", "series", "list"), query, buildJsonObject {})
+            } catch (failure: KomgaFailure) {
+                if (failure.code != "NOT_FOUND") throw failure
+                legacyIndex = true
+            }
+        }
+        return request(listOf("api", "v1", "series"), query + ("deleted" to "false"))
+    }
 }

@@ -3,12 +3,17 @@ package suwayomi.tachidesk.manga.impl.komga
 import com.sun.net.httpserver.HttpServer
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.upsert
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -18,6 +23,8 @@ import suwayomi.tachidesk.manga.impl.backup.proto.models.Backup
 import suwayomi.tachidesk.manga.model.table.ChapterTable
 import suwayomi.tachidesk.manga.model.table.ChapterUserTable
 import suwayomi.tachidesk.manga.model.table.KomgaConnectionTable
+import suwayomi.tachidesk.manga.model.table.KomgaIndexTable
+import suwayomi.tachidesk.manga.model.table.KomgaLinkTable
 import suwayomi.tachidesk.manga.model.table.MangaTable
 import suwayomi.tachidesk.manga.model.table.MangaUserTable
 import suwayomi.tachidesk.test.ApplicationTest
@@ -51,6 +58,12 @@ class KomgaTest : ApplicationTest() {
     private var dropNextRequest = false
     private var changingTotals = false
     private var repeatedBook = false
+    private var indexInvalid = false
+    private var invalidIndexId = false
+    private var duplicateTitle = false
+    private var deletedSeries = false
+    private var largeIndex = false
+    private val extraManga = mutableListOf<Int>()
     private val api get() = "http://127.0.0.1:${server.address.port}/komga"
 
     @BeforeEach fun setup() {
@@ -72,6 +85,16 @@ class KomgaTest : ApplicationTest() {
                     .orEmpty()
                     .contains("page=1")
             var code = status
+            if (exchange.requestURI.query
+                    .orEmpty()
+                    .contains("size=200") &&
+                (path.endsWith("/series") || path.endsWith("/series/list")) &&
+                !exchange.requestURI.query
+                    .orEmpty()
+                    .contains("sort=name,asc")
+            ) {
+                code = 400
+            }
             if (exchange.requestHeaders.getFirst("X-API-Key") != Files.readString(secret).trim()) code = 401
             if (legacy && path == "/komga/api/v2/users/me") code = 404
             if (postOnly && exchange.requestMethod == "GET" && (path.endsWith("/books") || path.endsWith("/series"))) code = 405
@@ -87,6 +110,23 @@ class KomgaTest : ApplicationTest() {
 
                     code != 200 -> {
                         """{"error":"test-only-key must not be echoed"}"""
+                    }
+
+                    exchange.requestURI.query
+                        .orEmpty()
+                        .contains("size=200") && path.contains("/series") && !path.endsWith("/books") -> {
+                        if (largeIndex) {
+                            val content =
+                                (if (page) 200..200 else 0..199).joinToString(",") {
+                                    """{"id":"series-$it","name":"Item $it","booksCount":$it}"""
+                                }
+                            """{"content":[$content],"last":$page,"totalPages":2,"totalElements":201,"size":200,"number":${if (page) 1 else 0}}"""
+                        } else {
+                            val count = if (duplicateTitle) 2 else 1
+                            """{"content":[{"id":"${if (invalidIndexId) " " else "s"}","name":"Fixture","booksCount":7,"deleted":$deletedSeries}
+                        ${if (duplicateTitle) ",{\"id\":\"other\",\"name\":\"Fixture\",\"booksCount\":2}" else ""}],
+                        "last":true,"totalPages":1,"totalElements":${if (indexInvalid) 99 else count},"size":200,"number":0}"""
+                        }
                     }
 
                     path.endsWith("/me") -> {
@@ -171,6 +211,7 @@ class KomgaTest : ApplicationTest() {
         transaction {
             KomgaConnectionTable.deleteWhere { user eq 1 }
             MangaTable.deleteWhere { MangaTable.id eq mangaId }
+            MangaTable.deleteWhere { MangaTable.id inList extraManga }
         }
         if (oldSecret ==
             null
@@ -183,6 +224,277 @@ class KomgaTest : ApplicationTest() {
     }
 
     private suspend fun enable() = Komga.configure(1, true, api, "http://nas.invalid:8080/reader")
+
+    private fun libraryFixture() =
+        transaction {
+            MangaTable.update({ MangaTable.id eq mangaId }) { it[title] = "  FIXTURE  " }
+            MangaUserTable.upsert(MangaUserTable.manga, MangaUserTable.user) {
+                it[manga] = mangaId
+                it[user] = 1
+                it[inLibrary] = true
+            }
+        }
+
+    private suspend fun scan(): suwayomi.tachidesk.graphql.types.KomgaScanStatus {
+        KomgaIndex.start(1)
+        withTimeout(10_000) { while (KomgaIndex.status(1).running) delay(10) }
+        return KomgaIndex.status(1)
+    }
+
+    @Test fun sharedIndexScanUsesOneRequestAndSummariesNeverFetchInventories() =
+        runBlocking<Unit> {
+            enable()
+            libraryFixture()
+            assertFalse(Komga.settings(1).autoLink)
+            assertTrue(Komga.settings(1).showCounter)
+            (1..20).map { async(kotlinx.coroutines.Dispatchers.IO) { KomgaIndex.start(1) } }.awaitAll()
+            val result = scan()
+            assertEquals("COMPLETE", result.code)
+            assertEquals(1, result.automaticallyLinked)
+            assertEquals("AUTOMATIC", Komga.binding(1, mangaId)?.provenance)
+            val count = requests.size
+            repeat(20) {
+                val summary = KomgaIndex.summaries(1, List(200) { mangaId }).single()
+                assertEquals(7, summary.bookCount)
+                assertFalse(summary.stale)
+            }
+            assertEquals(count, requests.size)
+            assertEquals(1, count)
+            assertFailsWith<IllegalArgumentException> { KomgaIndex.summaries(1, List(201) { mangaId }) }
+        }
+
+    @Test fun duplicateOrInvalidIndexNeverCreatesLinks() =
+        runBlocking {
+            enable()
+            libraryFixture()
+            duplicateTitle = true
+            assertEquals(1, scan().ambiguous)
+            assertEquals(null, Komga.binding(1, mangaId))
+            transaction { KomgaIndexTable.deleteWhere { user eq 1 } }
+            KomgaIndex.invalidate(1)
+            indexInvalid = true
+            assertEquals("INVALID_RESPONSE", scan().code)
+            assertEquals(null, Komga.binding(1, mangaId))
+        }
+
+    @Test fun permanentUnlinkOptOutSurvivesRestoreAndFreshScans() =
+        runBlocking {
+            enable()
+            libraryFixture()
+            Komga.unlink(1, mangaId)
+            val backup = assertNotNull(Komga.backupLink(1, mangaId))
+            assertEquals("OPTED_OUT", backup.provenance)
+            Komga.restoreLink(1, mangaId, backup.copy(seriesId = "s", provenance = "AUTOMATIC"))
+            assertEquals(1, scan().optedOut)
+            assertEquals(null, Komga.binding(1, mangaId))
+            KomgaIndex.invalidate(1)
+            assertEquals(1, scan().optedOut)
+            Komga.link(1, mangaId, "s")
+            assertEquals("MANUAL", Komga.binding(1, mangaId)?.provenance)
+            Komga.restoreLink(1, mangaId, backup)
+            assertEquals("MANUAL", Komga.binding(1, mangaId)?.provenance)
+        }
+
+    @Test fun malformedSeriesIdentityCannotBeAutomaticallyLinked() =
+        runBlocking {
+            enable()
+            libraryFixture()
+            invalidIndexId = true
+            assertEquals("INVALID_RESPONSE", scan().code)
+            assertEquals(null, Komga.binding(1, mangaId))
+        }
+
+    @Test fun staleOutagesRetainLinksAndCredentialChangesHideCachedCounts() =
+        runBlocking {
+            enable()
+            libraryFixture()
+            scan()
+            transaction { KomgaIndexTable.update({ KomgaIndexTable.user eq 1 }) { it[fetchedAt] = 0 } }
+            KomgaIndex.invalidate(1)
+            status = 503
+            val rejectedCorrection = Komga.link(1, mangaId, "s")
+            assertEquals("AUTOMATIC", rejectedCorrection.provenance)
+            assertEquals("s", rejectedCorrection.seriesId)
+            assertEquals("REMOTE_ERROR", scan().code)
+            val stale = KomgaIndex.summaries(1, listOf(mangaId)).single()
+            assertTrue(stale.stale)
+            assertEquals(7, stale.bookCount)
+            assertNotNull(Komga.binding(1, mangaId))
+            Files.writeString(secret, "rotated-key")
+            assertEquals(null, KomgaIndex.summaries(1, listOf(mangaId)).single().bookCount)
+        }
+
+    @Test fun deletedSeriesHideCountsWithoutRemovingManualLinks() =
+        runBlocking {
+            enable()
+            libraryFixture()
+            Komga.link(1, mangaId, "s")
+            deletedSeries = true
+            assertEquals(1, scan().alreadyLinked)
+            val summary = KomgaIndex.summaries(1, listOf(mangaId)).single()
+            assertEquals("REVIEW", summary.code)
+            assertEquals(null, summary.bookCount)
+            assertEquals("MANUAL", Komga.binding(1, mangaId)?.provenance)
+        }
+
+    @Test fun largeLibraryUsesPagedSharedIndexAndBoundedLocalBatches() =
+        runBlocking {
+            enable()
+            largeIndex = true
+            val baseline =
+                transaction {
+                    MangaUserTable
+                        .selectAll()
+                        .where {
+                            (MangaUserTable.user eq 1) and
+                                (MangaUserTable.inLibrary eq true)
+                        }.count()
+                        .toInt()
+                }
+            transaction {
+                repeat(401) { number ->
+                    val id =
+                        MangaTable
+                            .insertAndGetId {
+                                it[url] = "/large-index-$number-${System.nanoTime()}"
+                                it[title] = "Item $number"
+                                it[sourceReference] = 0
+                            }.value
+                    extraManga.add(id)
+                    MangaUserTable.upsert(MangaUserTable.manga, MangaUserTable.user) {
+                        it[manga] = id
+                        it[user] = 1
+                        it[inLibrary] = true
+                    }
+                }
+            }
+            val result = scan()
+            assertEquals("COMPLETE", result.code)
+            assertEquals(401 + baseline, result.processed)
+            assertEquals(201, result.automaticallyLinked)
+            assertEquals(200 + baseline, result.unmatched)
+            assertEquals(2, requests.size)
+            assertEquals(0, KomgaIndex.summaries(1, extraManga.take(200)).first().bookCount)
+            assertEquals(2, requests.size)
+        }
+
+    @Test fun metadataEventsUseOnlyChangedMangaAndDoNotRefetchFreshIndex() =
+        runBlocking {
+            Komga.configure(1, true, api, "", autoLink = true)
+            libraryFixture()
+            scan()
+            val count = requests.size
+            val added =
+                transaction {
+                    val id =
+                        MangaTable
+                            .insertAndGetId {
+                                it[url] = "/incremental-${System.nanoTime()}"
+                                it[title] = "No match"
+                                it[sourceReference] =
+                                    0
+                            }.value
+                    extraManga.add(id)
+                    MangaUserTable.upsert(MangaUserTable.manga, MangaUserTable.user) {
+                        it[manga] = id
+                        it[user] = 1
+                        it[inLibrary] = true
+                    }
+                    id
+                }
+            // Simulate a later demand without a real 30-second wait; keep the persisted fresh index.
+            KomgaIndex.invalidate(1)
+            KomgaIndex.localLibraryChanged(1, added)
+            withTimeout(10_000) { while (KomgaIndex.status(1).running) delay(10) }
+            assertEquals("COMPLETE", KomgaIndex.status(1).code)
+            assertEquals(1, KomgaIndex.status(1).processed)
+            assertEquals(1, KomgaIndex.status(1).unmatched)
+            assertEquals(count, requests.size)
+        }
+
+    @Test fun restoredDeliberateChoicesOutrankOnlyUnconfirmedAutomaticLinks() =
+        runBlocking<Unit> {
+            enable()
+            libraryFixture()
+            scan()
+            val manualBackup =
+                suwayomi.tachidesk.manga.impl.backup.proto.models.BackupKomgaLink(
+                    "backup-series",
+                    "Backup",
+                    provenance = "MANUAL",
+                )
+            Komga.restoreLink(1, mangaId, manualBackup)
+            assertEquals("backup-series", Komga.binding(1, mangaId)?.series)
+            assertEquals("MANUAL", Komga.binding(1, mangaId)?.provenance)
+            Komga.restoreLink(1, mangaId, manualBackup.copy(seriesId = "automatic", provenance = "AUTOMATIC"))
+            assertEquals("backup-series", Komga.binding(1, mangaId)?.series)
+            val second =
+                transaction {
+                    MangaTable
+                        .insertAndGetId {
+                            it[url] = "/restore-choice-${System.nanoTime()}"
+                            it[title] = "Fixture"
+                            it[sourceReference] = 0
+                        }.value
+                }
+            extraManga.add(second)
+            Komga.restoreLink(1, second, manualBackup.copy(seriesId = "s", provenance = "AUTOMATIC"), Komga.config(1).identity)
+            val optOut = manualBackup.copy(seriesId = "", provenance = "OPTED_OUT")
+            Komga.restoreLink(1, second, optOut)
+            assertEquals(null, Komga.binding(1, second))
+            assertEquals("OPTED_OUT", Komga.backupLink(1, second)?.provenance)
+            Komga.link(1, second, "s")
+            Komga.restoreLink(1, second, optOut)
+            assertEquals("MANUAL", Komga.binding(1, second)?.provenance)
+            assertEquals("s", Komga.binding(1, second)?.series)
+        }
+
+    @Test fun restoredOptOutNeverOverwritesConcurrentManualConfirmationOfAutomaticLink() =
+        runBlocking<Unit> {
+            enable()
+            val auto =
+                suwayomi.tachidesk.manga.impl.backup.proto.models
+                    .BackupKomgaLink("s", "Fixture", provenance = "AUTOMATIC")
+            repeat(20) {
+                transaction { KomgaLinkTable.deleteWhere { manga eq mangaId } }
+                Komga.restoreLink(1, mangaId, auto, Komga.config(1).identity)
+                val ready = CountDownLatch(2)
+                val start = CountDownLatch(1)
+                val tasks =
+                    listOf(
+                        async(kotlinx.coroutines.Dispatchers.IO) {
+                            ready.countDown()
+                            check(start.await(5, TimeUnit.SECONDS))
+                            Komga.link(1, mangaId, "s")
+                        },
+                        async(kotlinx.coroutines.Dispatchers.IO) {
+                            ready.countDown()
+                            check(start.await(5, TimeUnit.SECONDS))
+                            Komga.restoreLink(1, mangaId, auto.copy(seriesId = "", provenance = "OPTED_OUT"))
+                        },
+                    )
+                check(ready.await(5, TimeUnit.SECONDS))
+                start.countDown()
+                tasks.awaitAll()
+                assertEquals("MANUAL", Komga.binding(1, mangaId)?.provenance)
+                assertEquals("s", Komga.binding(1, mangaId)?.series)
+            }
+        }
+
+    @Test fun unlinkedSuppressedAndEmptySummaryBatchesDoNotFetchAnUnneededIndex() =
+        runBlocking<Unit> {
+            enable()
+            libraryFixture()
+            val unlinked = KomgaIndex.summaries(1, listOf(mangaId)).single()
+            assertEquals("UNLINKED", unlinked.code)
+            assertEquals(null, unlinked.bookCount)
+            assertFalse(unlinked.stale)
+            Komga.unlink(1, mangaId)
+            assertEquals("OPTED_OUT", KomgaIndex.summaries(1, listOf(mangaId)).single().code)
+            assertTrue(KomgaIndex.summaries(1, emptyList()).isEmpty())
+            assertTrue(requests.isEmpty())
+            assertFalse(KomgaIndex.status(1).running)
+        }
 
     @Test fun changedTotalsAndRepeatedBooksCannotProduceCompleteInventory() =
         runBlocking {
@@ -280,6 +592,18 @@ class KomgaTest : ApplicationTest() {
             val excluded = decode(false)
             assertEquals(null, excluded.komgaConnection)
             assertEquals(null, excluded.backupManga.single { it.title == "Komga fixture" }.komgaLink)
+            Komga.configure(1, true, api, "", autoLink = true, showCounter = false)
+            Komga.unlink(1, mangaId)
+            val optedOut = decode(true)
+            assertEquals(true, optedOut.komgaConnection?.autoLink)
+            assertEquals(false, optedOut.komgaConnection?.showCounter)
+            assertEquals(
+                "OPTED_OUT",
+                optedOut.backupManga
+                    .single { it.title == "Komga fixture" }
+                    .komgaLink
+                    ?.provenance,
+            )
         }
 
     @Test fun disabledAndUnlinkedDoNotContactKomgaAndCredentialsNeverAppearInSettings() =
@@ -409,6 +733,11 @@ class KomgaTest : ApplicationTest() {
             Komga.restoreLink(1, mangaId, link.copy(seriesId = "other"))
             assertEquals("s", Komga.binding(1, mangaId)?.series)
             Komga.unlink(1, mangaId)
+            Komga.restoreLink(1, mangaId, link)
+            assertEquals(null, Komga.binding(1, mangaId))
+            assertEquals("OPTED_OUT", Komga.backupLink(1, mangaId)?.provenance)
+            // Simulate a fresh installation with no decision, rather than undoing a deliberate unlink.
+            transaction { KomgaLinkTable.deleteWhere { manga eq mangaId } }
             Komga.restoreLink(1, mangaId, link)
             assertEquals("restored", Komga.binding(1, mangaId)?.identity)
             enable()
