@@ -168,8 +168,8 @@ cannot update an existing link, including one confirmed concurrently during a
 backup restore. A manual confirmation takes precedence whichever operation starts
 first. H2 uses `MERGE` with only a `WHEN NOT MATCHED` clause; PostgreSQL uses
 `INSERT ... ON CONFLICT DO NOTHING`. No migration change is needed for this
-correction. Concurrent H2 behavior is regression-tested; a live PostgreSQL instance
-was not exercised locally.
+correction. Concurrent H2 and isolated PostgreSQL 17.11 behavior are regression-tested;
+the PostgreSQL validation includes 20 manual-confirmation/restoration races.
 
 The client uses established GET series/book endpoints, falling back to documented
 read-only POST list searches on 404/405, and current-user v2 → v1 fallback. It does
@@ -187,44 +187,79 @@ See the current Phase 2 section in `CODEX_HANDOVER.md` for final regression coun
 commands and remaining environment limitations. All integration tests use mock
 HTTP responses and disposable local data. No NAS or production Komga is contacted.
 
-## Safest next validation stages (not executed)
+## Isolated PostgreSQL validation
 
-### PostgreSQL migration and concurrency
+The opt-in Windows/PowerShell 7 runner is `scripts/test-postgres.ps1`. Supply a
+local PostgreSQL `bin` directory (containing `initdb.exe`, `pg_ctl.exe` and
+`psql.exe`) and Java 21 via `JAVA_HOME`, then run:
 
-1. Use a disposable PostgreSQL instance on a workstation, matching the intended
-   PostgreSQL major version. Give it a new volume, database and dedicated user
-   whose credentials cannot access production. Give Suwayomi a separate temporary
-   root and no production download/configuration mounts. Keep background updates,
-   downloads, sync and external tracker activity disabled; do not copy a live
-   server configuration or its credentials into this environment.
-2. Check a fresh installation through M0070. Separately create a pre-M0070 database
-   using the Phase 1 parent `b952d64e` in an isolated checkout/runtime and seed
-   synthetic manga, chapters, read/bookmark/download flags, adaptive history and
-   Completed rules. Save a baseline database export before starting Phase 2 against
-   that disposable database. This checks the actual M0069 → M0070 upgrade, rather
-   than only creating empty Komga tables.
-3. Confirm that migration 70 is recorded once; both new tables, composite primary
-   key and cascading foreign keys match the models. Compare existing application
-   rows/flags with the baseline, excluding genuinely volatile timestamps/logs.
-   Confirm Komga starts disabled and secrets are absent from the database.
-4. Add an opt-in PostgreSQL test harness; the existing default ApplicationTest
-   setup uses H2. Run the Komga GraphQL/client/inventory/backup tests against
-   PostgreSQL as well as H2. Exercise simultaneous manual confirmation and backup restoration using
-   separate database connections; assert the manual link wins and SQL uses
-   `ON CONFLICT DO NOTHING`. Check FK cleanup, portable backup flags and persistence
-   across restarts, all using disposable records.
-5. If a realistic PostgreSQL library copy is subsequently needed, use a consistent
-   `pg_dump -Fc` archive and restore it with `pg_restore` into a separate empty
-   disposable database, with an explicit destination and `--no-owner --no-acl
-   --exit-on-error`. Inspect configuration/credentials offline and block external
-   network access before starting its Suwayomi clone. Never restore over the live
-   database. A live H2 database is not input for pg_restore: use synthetic fixtures
-   or an application backup imported only into the disposable PostgreSQL server.
-6. Rollback consists of discarding the disposable environment or restoring its
+```powershell
+./scripts/test-postgres.ps1 -PostgresBin 'C:/tools/pgsql/bin'
+```
+
+It never accepts a database URL, existing cluster, Docker context or application
+data directory. Each run creates an ACL-restricted, randomly named directory in
+the current user's temporary directory and a new loopback-only PostgreSQL
+cluster. Generated SCRAM credentials, ownership tokens, separate fresh/upgrade
+databases and a non-superuser application role prevent accidental reuse of an
+existing installation. Ambient PostgreSQL/Suwayomi/Java-option environment
+variables are removed for the run and restored afterwards. The test JVM blocks
+non-loopback sockets, uses private downloads/local-source directories and a
+nonexistent Komga secret; Komga requests go only to local mock servers. No server
+scheduler or downloader is started. The normal `:server:test` task stays on H2.
+
+The upgrade uses the repository's frozen migrations through M0069, seeds
+synthetic library/reading/download/adaptive/Completed data, then runs the normal
+migration entry point through M0070 and compares every legacy table's rows.
+The fresh database runs the full migration chain. Checks cover migration records,
+disabled defaults, primary/foreign keys, nullability/length constraints and
+cascades. Existing Komga service/GraphQL tests run against PostgreSQL, including
+the 20-race manual-confirmation/backup-restoration regression. The runner compares
+sorted snapshots of every application table across an actual PostgreSQL
+stop/start, then reruns persistence checks in a new test JVM.
+
+The cluster is stopped and plaintext credential files are removed in `finally`;
+the stopped disposable cluster, snapshots, Gradle logs and per-phase JUnit XML
+reports remain in the printed `suwayomi-pg-<random>` directory for review. If the
+shell is forcibly killed, inspect that exact directory's ownership marker before
+stopping its cluster with `pg_ctl -D <that-directory>/cluster -m fast -w stop`.
+Do not point this command at another cluster. Delete only that disposable
+directory after review. Java 21 is required for the test-only socket guard;
+newer Java versions that remove SecurityManager fail closed before DB migration.
+The runner does not install or modify a Windows PostgreSQL service.
+
+See `CODEX_HANDOVER.md` for executed results and remaining limitations. A synthetic
+upgrade is not a restore rehearsal of a real library, and a workstation database
+version does not establish compatibility with an unconfirmed NAS version.
+
+Validated on 19 October 2026 with PostgreSQL 17.11 and Java 21: **14 prepare-phase
+tests and 1 restart-phase test passed**, with no failures, errors or skips. Both
+databases' complete table snapshots matched across the PostgreSQL restart. The
+20 concurrent manual-confirmation/restoration races passed using PostgreSQL's
+`ON CONFLICT DO NOTHING`. The normal **452 server tests**, server formatting and
+ktlint checks also passed. Generated credentials were absent from logs/reports,
+plaintext credential files were removed, and all disposable clusters were stopped.
+No production server change was necessary. NAS access and real-data restore
+rehearsals remain outside this validation.
+
+## Further validation stages
+
+### Additional PostgreSQL rehearsals
+
+1. Run the isolated harness with the intended PostgreSQL major version once that
+   version is confirmed. Its synthetic M0069 baseline uses the frozen migration
+   classes from this branch, rather than running a separate Phase 1 executable.
+2. If a realistic library copy is needed later, use a consistent `pg_dump -Fc`
+   archive and restore it into a separate empty disposable database with an
+   explicit destination and `--no-owner --no-acl --exit-on-error`. Inspect its
+   configuration/credentials offline and block external network access before
+   starting its Suwayomi clone. Never restore over the live database. A live H2
+   database is not input for pg_restore: use synthetic fixtures or an application
+   backup imported only into disposable PostgreSQL.
+3. Rollback consists of discarding the disposable environment or restoring its
    pre-migration copy. Do not downgrade an app against a migrated production DB or
    remove live migration/table records manually. Keep the existing installation
-   untouched until the upgrade rehearsal and restore rehearsal both pass.
-
+   untouched until the upgrade and restore rehearsals both pass.
 References: [PostgreSQL pg_dump](https://www.postgresql.org/docs/current/app-pgdump.html)
 and [pg_restore](https://www.postgresql.org/docs/current/app-pgrestore.html).
 

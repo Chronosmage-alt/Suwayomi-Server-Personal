@@ -2,14 +2,150 @@
 
 Updated 19 October 2026. This document is context for a fresh Codex conversation.
 
-## Current local work: Phase 2 optional read-only Komga integration
+## Publication approved: combined r3549 and Komga development image
+
+The user now explicitly authorizes committing the seven reviewed PostgreSQL
+harness/documentation files, extending packaged Komga smoke checks, a normal push
+of investigate/adaptive-library-updates and publication by the existing workflow.
+Earlier no-commit/no-push restrictions below are historical and superseded for
+this publication only. No master merge, extension changes or NAS/production access
+is allowed. If origin changes or push is rejected, stop rather than rewrite work.
+Starting HEAD: ec69f7d483e1a713eff8bb78dacdd6c4d1878ca9; last fetched origin:
+639355fbad51cd663ab619731453d7b0a08d361c. First commit the seven reviewed files as
+a focused PostgreSQL-validation commit; keep workflow/smoke changes separate.
+Then fetch, verify ancestry and unchanged remote, push normally, and monitor the
+Linux server/WebUI/packaged smoke gates before reporting publication readiness.
+Record exact source SHA, immutable image tag/digest and run URL here afterwards.
+No image is yet declared ready by this new publication task.
+
+## Completed: final integration and Git readiness review
+
+User requested a full integration review and fresh server/WebUI validation before
+another image. Do not commit, push, merge, publish, deploy, touch the extension
+repository or access the NAS. Existing uncommitted PostgreSQL work is preserved.
+Fetched the actual remote development branch successfully and independently
+checked it with git ls-remote: origin remains 639355fbad51cd663ab619731453d7b0a08d361c.
+HEAD remains ec69f7d483e1a713eff8bb78dacdd6c4d1878ca9, with b952d64e (pinned r3549)
+as parent. Remote is an ancestor: 2 local-only commits, 0 remote-only, no divergence.
+Fetch/read synchronization works; push permissions have not been exercised.
+Normal push would trigger the adaptive image publishing workflow; no push is
+authorized. No reconciliation merge/rebase/reset is needed with this remote state.
+
+Fresh WebUI tests (50), TypeScript, lint, full formatting and production build
+passed (all exit 0, including PWA generation). Every WebUI GraphQL operation also
+validated against the exported custom server schema, generating only in memory.
+Build warnings: legacy OXC minification unsupported by pinned Vite (legacy plugin
+falls back to Terser), plugin timings and >500 kB chunks. No dependency upgrade
+was made. Fresh full server validation passed: 452 tests, zero failures/errors/skips,
+ktlintCheck passed, BUILD SUCCESSFUL in 4m 24s, exit 0. No production code changed.
+Logs: C:/Users/bayleeh/.codex/tmp/suwayomi-postgres/readiness-*
+Rechecked existing PostgreSQL evidence: 14 prepare + 1 restart tests, zero failures,
+both database snapshots identical across restart, cluster stopped. No rerun is
+needed for documentation-only review changes; production source is unchanged.
+Source review confirms server service/GraphQL, settings/Test Connection, manual
+link/search/unlink, inventory/progress display, cache/manual refresh and backups.
+Outstanding: installed Komga version, secret mount, actual Docker/Gluetun route,
+real API/disposable packaged-container smoke tests, and real-data restore rehearsal.
+The Windows/Java 21 PostgreSQL harness is opt-in and not run by Linux/Java 25 CI.
+Current Docker smoke tests cover adaptive/Completed/WebUI, not explicit Komga
+operations; add a disposable Komga smoke check when image preparation is approved.
+Corrected one stale documentation statement saying PostgreSQL was not tested.
+All validation runs completed successfully. No blocking implementation defect was
+found. Adaptive scheduling/history/provenance, Completed automation, source-language
+filtering, r3549 startup/notifications/navigation and existing tracker code remain
+intact. Their dedicated tests passed and relevant source files are unchanged from
+the approved r3549 baseline. Komga backup additions are additive. All five review
+fixes remain: supported stable URL sorting, encoded separators, atomic restore,
+manga/series pagination reset and contradictory-metadata rejection.
+
+Implemented Phase 2 functionality is complete for the approved read-only scope.
+No automatic linking, progress synchronization, download-flag synchronization,
+metadata/file edits or new source requests were added; those are outside scope.
+Exact chapter comparisons depend on explicit book metadata links; filename/title
+or book numbers alone remain hints. Large/changing inventories can be incomplete.
+No live Komga, Docker image build/run, Linux/Java 25 CI or NAS validation occurred
+in this review. PostgreSQL evidence was rechecked, not rerun; harness/source were
+unchanged since its passing run. A real-data restore rehearsal remains outstanding.
+
+Final Git state: same branch/HEAD, ahead 2 and behind 0 after fetch. Four modified
+files: CODEX_HANDOVER.md, docs/komga-integration.md, server/build.gradle.kts and
+ApplicationTest.kt. Three untracked additions: scripts/test-postgres.ps1,
+PostgresValidation.kt and PostgresValidationTest.kt. They comprise the PostgreSQL
+harness and documentation; no work was stashed, reset, discarded or rewritten.
+git diff --check passed. No extension-repository or production-NAS changes.
+
+Safe next steps, requiring the user's subsequent approval:
+
+1. Review the seven uncommitted files, then commit the PostgreSQL harness and
+   associated documentation as one focused local commit when explicitly approved.
+2. Before any push, fetch and recheck ancestry again. With the current history,
+   an ordinary fast-forward push suffices; no merge, rebase or force-push is needed.
+   If remote-only commits appear, stop and review them while preserving all work.
+3. Obtain explicit push/publication approval together: the branch push triggers
+   image publication. During approved image preparation, add/run a disposable
+   packaged Komga smoke check before publication and retain migration evidence.
+4. Only with separate NAS permission, rehearse real connectivity/API behavior
+   using disposable Suwayomi data and a revocable mounted secret, as documented.
+
+Review this section and git status/diff before resuming; do not overwrite work.
+
+## Completed, uncommitted: isolated PostgreSQL validation (19 October 2026)
+
+User authorized an opt-in local PostgreSQL harness, fresh installation and M0069
+upgrade checks, preservation/constraints/restart/concurrent restoration tests.
+All new changes must remain UNCOMMITTED. No NAS or production access is allowed.
+Starting state: clean `investigate/adaptive-library-updates`, HEAD
+`ec69f7d483e1a713eff8bb78dacdd6c4d1878ca9`, ahead of origin by 2 commits.
+Pinned r3549 integration is parent `b952d64ea5ef403ba17e68f1648a4793d4148cb7`.
+Existing tests already accept PostgreSQL Gradle properties, but lack an isolated
+provisioning/safety harness. No Docker or PostgreSQL executable is on PATH.
+Implemented (uncommitted): scripts/test-postgres.ps1, opt-in Gradle task, test-only
+PostgreSQL setup hooks and migration/constraint/persistence tests. Runner creates
+its own ACL-restricted loopback cluster, limited role, token-verified databases,
+private application paths and a Java 21 non-loopback socket guard.
+Run 5 validation: fresh installation, M0069 -> M0070 preservation, constraints,
+loopback socket guard and all 13 Komga tests passed (14 tests in prepare phase).
+The 20 manual-link/restoration races passed on PostgreSQL; emitted SQL contains
+ON CONFLICT DO NOTHING. Both databases' complete sorted table snapshots were
+identical across an actual PostgreSQL stop/start. New-JVM restart persistence
+checks passed (1 test). Both Gradle phases and the runner exited successfully.
+Credential scanning passed; all five disposable clusters (including earlier
+attempts) are stopped, with no plaintext credential files remaining.
+Full normal H2 suite: 452 tests, zero failures/errors/skips; ktlintFormat and
+ktlintCheck passed, BUILD SUCCESSFUL in 5m 5s, exit 0.
+Runtime: PostgreSQL 17.11, Java 21, PowerShell 7 on Windows. Binaries are outside
+Git at C:/Users/bayleeh/.codex/tmp/suwayomi-postgres/pgsql/bin. Run log:
+C:/Users/bayleeh/.codex/tmp/suwayomi-postgres/harness-run5.log; regression log:
+C:/Users/bayleeh/.codex/tmp/suwayomi-postgres/server-regression.log.
+Run root: C:/Users/bayleeh/AppData/Local/Temp/suwayomi-pg-1d541ddcf13145e3a45c63657c6b88e8
+(prepare/restart Gradle logs, per-phase XML reports, snapshots and stopped cluster
+will remain for review; plaintext generated credentials are removed on exit).
+Issues fixed during harness development: Windows pg_ctl descendant-process wait,
+and a new assertion's JDBC t/f boolean representation. No production server
+bug or migration change was needed. Earlier failed-run clusters are stopped and
+credential files removed. No production/NAS access occurred.
+Next steps, in priority order:
+1. Review this handover and git status/diff before resuming.
+2. User reviews the seven uncommitted files; commit only with explicit approval.
+3. To repeat validation, set JAVA_HOME to the Java 21 JDK below and run
+   ./scripts/test-postgres.ps1 -PostgresBin C:/Users/bayleeh/.codex/tmp/suwayomi-postgres/pgsql/bin.
+Final Git/diff checks passed; no remaining implementation or test blocker. Further
+validation is optional and needs separate scope: match actual PostgreSQL major,
+real-data restore rehearsal, and NAS-specific connectivity/API behavior. This
+harness is Windows/PowerShell 7 + Java 21 only; frozen M0001..M0069 migrations
+create its synthetic baseline, not a separate Phase 1 server process.
+Uncommitted files: this handover, docs/komga-integration.md, server/build.gradle.kts,
+ApplicationTest.kt, scripts/test-postgres.ps1, PostgresValidation.kt and
+PostgresValidationTest.kt. Production code and WebUI are unchanged. Review Git
+and this section before resuming; do not duplicate or overwrite this work.
+## Historical Phase 2 commit validation (before PostgreSQL harness)
 
 User approved the completed Phase 2 work and a local commit on 19 October 2026.
 The commit is named `Add optional read-only Komga library integration`; identify
 its hash with `git log -1`. It includes the five review fixes and documentation.
-No push, merge, publication, NAS access or deployment is authorized. A staged
-PostgreSQL/NAS validation plan is in `docs/komga-integration.md`; it is a future
-plan, not validation already performed.
+No push, merge, publication, NAS access or deployment is authorized. The newer
+PostgreSQL results above supersede the PostgreSQL limitations recorded in this
+historical section. NAS validation is still a future plan.
 
 Pre-commit review follow-up: user authorized fixing all five review findings while
 initially leaving Phase 2 uncommitted for review. Supported `url,asc` sorting replaces unsupported

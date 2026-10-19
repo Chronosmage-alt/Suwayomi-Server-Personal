@@ -52,7 +52,7 @@ open class ApplicationTest {
         @JvmStatic
         fun beforeAll() {
             if (!initializedTheApp) {
-                val dataRoot = Path(BASE_PATH).absolutePathString()
+                val dataRoot = PostgresValidation.configure() ?: Path(BASE_PATH).absolutePathString()
                 System.setProperty("$CONFIG_PREFIX.server.rootDir", dataRoot)
                 // Delete if previous config to restart from a fresh state
                 (Path(dataRoot) / "server.conf").deleteIfExists()
@@ -201,7 +201,9 @@ open class ApplicationTest {
                     }
                 }
 
+            PostgresValidation.beforeMigration(db)
             databaseUp(db)
+            PostgresValidation.afterMigration(db)
 
             LocalSource.register()
         }

@@ -199,6 +199,7 @@ tasks {
 
     test {
         useJUnitPlatform {
+            excludeTags("postgres-validation")
             if (!project.hasProperty("masstest")) {
                 exclude("**/masstest/*")
             }
@@ -225,6 +226,34 @@ tasks {
                 systemProperty("suwayomi.tachidesk.config.server.$configProp", it)
             }
         }
+    }
+
+    register<Test>("postgresValidation") {
+        description = "Opt-in disposable PostgreSQL checks; invoke through scripts/test-postgres.ps1"
+        group = "verification"
+        testClassesDirs =
+            sourceSets.test
+                .get()
+                .output.classesDirs
+        classpath = sourceSets.test.get().runtimeClasspath
+        useJUnitPlatform()
+        // Java 21 test-only egress guard; the production server is unchanged.
+        jvmArgs("-Djava.security.manager=allow")
+        systemProperty("suwayomi.postgresValidation", "true")
+        filter {
+            includeTestsMatching("*.PostgresValidationTest")
+            if (System.getenv("SUWAYOMI_PG_PHASE") == "prepare") {
+                includeTestsMatching("*.KomgaTest")
+                includeTestsMatching("*.KomgaGraphQLTest")
+            }
+        }
+        outputs.upToDateWhen { false }
+        doFirst {
+            require(System.getenv("SUWAYOMI_PG_MANIFEST") != null) {
+                "Use scripts/test-postgres.ps1; external database URLs are not accepted."
+            }
+        }
+        testLogging { events("passed", "skipped", "failed") }
     }
 
     withType<KotlinJvmCompile> {
