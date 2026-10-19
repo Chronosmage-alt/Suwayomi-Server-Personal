@@ -306,6 +306,7 @@ export type CategoryBaseFieldsFragment = {
     name: string;
     default: boolean;
     order: number;
+    isDefaultCategory: boolean;
 };
 
 export type CategoryLibraryFieldsFragment = {
@@ -314,6 +315,7 @@ export type CategoryLibraryFieldsFragment = {
     name: string;
     default: boolean;
     order: number;
+    isDefaultCategory: boolean;
     meta: Array<{ __typename: 'CategoryMetaType'; categoryId: number; key: string; value: string }>;
     mangas: { __typename: 'MangaNodeList'; totalCount: number };
 };
@@ -326,6 +328,7 @@ export type CategorySettingFieldsFragment = {
     name: string;
     default: boolean;
     order: number;
+    isDefaultCategory: boolean;
 };
 
 export type CreateCategoryMutationVariables = Exact<{
@@ -344,6 +347,7 @@ export type CreateCategoryMutation = {
             name: string;
             default: boolean;
             order: number;
+            isDefaultCategory: boolean;
         };
     } | null;
 };
@@ -465,7 +469,14 @@ export type GetCategoriesBaseQuery = {
     categories: {
         __typename: 'CategoryNodeList';
         totalCount: number;
-        nodes: Array<{ __typename: 'CategoryType'; id: number; name: string; default: boolean; order: number }>;
+        nodes: Array<{
+            __typename: 'CategoryType';
+            id: number;
+            name: string;
+            default: boolean;
+            order: number;
+            isDefaultCategory: boolean;
+        }>;
         pageInfo: {
             __typename: 'PageInfo';
             endCursor: string | null;
@@ -498,6 +509,7 @@ export type GetCategoriesLibraryQuery = {
             name: string;
             default: boolean;
             order: number;
+            isDefaultCategory: boolean;
             meta: Array<{ __typename: 'CategoryMetaType'; categoryId: number; key: string; value: string }>;
             mangas: { __typename: 'MangaNodeList'; totalCount: number };
         }>;
@@ -535,6 +547,7 @@ export type GetCategoriesSettingsQuery = {
             name: string;
             default: boolean;
             order: number;
+            isDefaultCategory: boolean;
         }>;
         pageInfo: {
             __typename: 'PageInfo';
@@ -5447,11 +5460,11 @@ export type UserLoginMutation = {
     login: { __typename: 'LoginPayload'; accessToken: string; refreshToken: string };
 };
 
-export type UserRefreshMutationVariables = Exact<{
+export type RefreshAccessTokenMutationVariables = Exact<{
     refreshToken: string;
 }>;
 
-export type UserRefreshMutation = {
+export type RefreshAccessTokenMutation = {
     __typename: 'Mutation';
     refreshToken: { __typename: 'RefreshTokenPayload'; accessToken: string };
 };

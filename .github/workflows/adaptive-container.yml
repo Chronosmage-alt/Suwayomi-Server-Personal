@@ -78,7 +78,7 @@ jobs:
           pnpm lint
           pnpm test:ui
           pnpm exec vite build
-          printf 'r3518\n' > build/revision
+          printf 'r3549\n' > build/revision
           cp -R build ../docker/adaptive/webui
 
       - uses: docker/setup-buildx-action@v4

@@ -1,6 +1,67 @@
 # Suwayomi adaptive updates — handover
 
-Updated 17 October 2026. This document is context for a fresh Codex conversation.
+Updated 19 October 2026. This document is context for a fresh Codex conversation.
+
+## Current local work: bundled WebUI r3549 integration
+
+User approved the completed Phase 1 integration, validation results and a focused
+local commit on 19 October 2026. Phase 2 architecture is approved for final planning
+only; implementation must wait for review of that plan.
+Stay on `investigate/adaptive-library-updates`; no pushing, image publication,
+upstream server merging, NAS deployment, extension edits or Komga implementation
+is authorized. This section supersedes historical branch/release and pending-work
+statements below.
+
+The supplied checkout is `C:\Users\bayleeh\Documents\Suwayomi-Server-Personal`;
+the previously documented `D:\Git` location is unavailable on this machine.
+Starting HEAD and remote branch: `639355fbad51cd663ab619731453d7b0a08d361c`.
+Its successful publication was run 39068902209, SHA tag `sha-639355fbad51`, digest
+`sha256:d6746bb348b065c57b5a3842686a9ab3edcd2c305274beae66115932f76b95de`.
+This is the preceding published image, not the new local integration.
+
+The original bundled ancestor remains official r3518,
+`41443eaba44bcbdf45d666fe27471b50d41fd994`. The new integrated baseline is pinned
+r3549, `8ab2f3385d643f36a415bc8df0c414f86c8a97b1`. See
+`docs/webui-r3549-integration.md` and `webui/PERSONAL_BUILD.md` for the comparison,
+custom conflict resolutions, lifecycle fixes and unchanged server/packaging scope.
+The custom server remains based on upstream r2422 (`d4f88a34`); upstream's only
+subsequent changes at investigation time were two README edits. No new SQL migration.
+
+Local validation completed: **428 server tests**, zero failures/errors/skips,
+including all ten Completed-category tests; server ktlint passed. **39 WebUI
+tests** in ten files passed (18 added regressions), as did TypeScript, lint,
+full WebUI formatting, English catalogue extraction, production Vite/PWA build
+and `git diff --check`. All three GraphQL outputs were regenerated from
+`server/build/adaptive-schema.graphql`, exported by the actual custom-server
+GraphQL regression test. Only operation types changed; schema/helper output
+remained identical. Custom operations and diagnostic fields remain present.
+
+Real headless Chrome checks against the built production UI and a fresh local
+no-login server passed at 1440x1000 and 390x844: direct startup, settings navigation,
+custom adaptive/Completed controls, source settings and tracker settings, no
+horizontal overflow or uncaught browser errors. A forced TCP disconnect recovered
+all four permanent subscriptions and received new data. Notification enable/disable
+and an update of the verified empty test library used stored chapter queries only;
+no manga source requests were needed. Screenshots and JSON reports are outside the
+checkout at `C:\Users\bayleeh\.codex\tmp\suwayomi-r3549`. The temporary QA proxy
+was corrected to close both socket ends before judging reconnection behavior.
+The temporary QA server, build proxy and headless browsers were stopped afterward.
+
+Local tooling: isolated Node 24.22.0/pnpm 11.1.2 and JDK 21.0.12.1+1 under that
+temporary directory. The default Kotlin compiler heap was insufficient; the
+successful full check used `-Dorg.gradle.jvmargs=-Xmx3072m`,
+`-Pkotlin.compiler.execution.strategy=in-process` and `--max-workers=1` with the
+existing Docker Gradle init script. No application/build-source change was needed.
+
+The approved integration is recorded by this local commit on this branch;
+identify it with `git log -1` rather than the preceding published image SHA.
+No push or publication is authorized. No Docker image build,
+Linux/Java 25 CI run, NAS deployment, production-library test or live tracker
+authorization was performed. Migration navigation/provider behavior is covered by
+fixtures; no real source migration or reading/download transfer was attempted.
+The existing build emits legacy-minifier fallback and chunk-size warnings but
+completes successfully. The existing update checker can offer an official preview
+on a custom server; QA ignored that notice without downloading an update.
 
 ## Current release: historical diagnostics and date provenance
 

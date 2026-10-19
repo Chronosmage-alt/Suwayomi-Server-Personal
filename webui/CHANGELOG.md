@@ -8,15 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
--
+- (**Library**) Add setting to notify about new chapters of library entries
 
 ### Changed
 
--
+- (**Global**) Force the navigation bar to be collapsed on smaller devices
+- (**Global/Manga/Chapter**) Show app context menu on the first right click and the native context menu on the second right click
+- (**Manga**) Show the `Default` category in the category selection dialog
+- (**Migration**) Use the bulk migration flow for single entry migrations
+- (**Settings**) Show settings as "two-pane layout" on large screens
 
 ### Fixed
 
--
+- (**Source**) Fix potential white screen when opening the language/source filter in the browse source page
+- (**Manga**) Fix incorrect markdown parsing of descriptions (e.g., \~text\~ being shown as ~~text~~)
+- (**Reader**) Fix entering fullscreen when opening the reader from the library continue read button
 
 ## [20260929.01] (r3518) - 2026-09-29
 
@@ -86,6 +92,12 @@ Thanks to everyone that contributed to the translation of this project.
 - Russian (by Sazuru)
 - Vietnamese (by Durin)
 - Chinese (Traditional) (by js850604)
+
+### Contributors
+
+Thanks to everyone that contributed to this release
+
+@schroda, @weblate, @cpiber, @Daemonhellz, @Kisnov, @leollo98, @js850604, @kofzhanganguo, @Aryan795, @github-actions[bot], @CyberMageIL, @Sazuru, @Durin-Code, @aitiotekt, @kaiserbh, @dollproxy, @UnknownSkyrimPasserby, @Seanstoppable, @web-flow, @Copilot, @manilkadev3-max, @arifpedia, @NagaYZ
 
 ## [20260726.01] (r3379) - 2026-07-26
 
