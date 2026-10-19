@@ -4,6 +4,17 @@ Updated 19 October 2026. This document is context for a fresh Codex conversation
 
 ## Latest follow-up: Docker publication and missing Komga labels
 
+Additional user-provided log contained MAL tracker HTTP 401s, followed by a
+successful OAuth token/account response (200); no Komga error was present.
+Do not change tracker code or claim the manga refresh succeeded from that alone.
+A separate confirmed error was checkForWebUIUpdate trying to read CUSTOM's
+relative version-mapping URL. This follow-up returns the installed version and
+false for CUSTOM without network/release-mapping lookup; standard flavors retain
+the existing path. Regression covers raiseError=true, and packaged smoke checks
+the real GraphQL query reports r3549 with updateAvailable=false. User NAS and
+credentials remain untouched. Label correction itself was pushed as 71039868;
+its image precedes this additional updater correction.
+
 The user authorized publishing latest dev and deleting the old investigation
 branch only after successful publication. PR #1 had merged dev INTO
 investigate/adaptive-library-updates, not the reverse; its tree equalled

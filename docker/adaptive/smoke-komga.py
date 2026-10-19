@@ -54,6 +54,12 @@ def bundled_scripts(html):
 
 def main():
     results = {}
+    results["customWebUIUpdate"] = graphql(
+        "query { checkForWebUIUpdate { tag updateAvailable } }"
+    )
+    assert results["customWebUIUpdate"]["data"]["checkForWebUIUpdate"] == {
+        "tag": "r3549", "updateAvailable": False
+    }, results["customWebUIUpdate"]
     results["schema"] = graphql(
         """query {
           komgaSettings { enabled apiUrl browserUrl credentialConfigured canManage autoLink showCounter }

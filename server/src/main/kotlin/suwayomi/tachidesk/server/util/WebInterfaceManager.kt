@@ -842,12 +842,18 @@ object WebInterfaceManager {
         raiseError: Boolean = false,
     ): Pair<String, Boolean> =
         try {
-            val isServedWebUIForCurrentFlavor = flavor.uiName == getServedWebUIFlavor().uiName
-            val latestCompatibleVersion = getLatestCompatibleVersion(flavor)
-            val isVersionUpdateAvailable = latestCompatibleVersion != currentVersion
+            if (flavor == WebUIFlavor.CUSTOM) {
+                // Custom files are managed externally (our image bundles r3549),
+                // so there is no release mapping or standalone WebUI update.
+                Pair(currentVersion, false)
+            } else {
+                val isServedWebUIForCurrentFlavor = flavor.uiName == getServedWebUIFlavor().uiName
+                val latestCompatibleVersion = getLatestCompatibleVersion(flavor)
+                val isVersionUpdateAvailable = latestCompatibleVersion != currentVersion
 
-            val isUpdateAvailable = !isServedWebUIForCurrentFlavor || isVersionUpdateAvailable
-            Pair(latestCompatibleVersion, isUpdateAvailable)
+                val isUpdateAvailable = !isServedWebUIForCurrentFlavor || isVersionUpdateAvailable
+                Pair(latestCompatibleVersion, isUpdateAvailable)
+            }
         } catch (e: Exception) {
             logger.warn(e) { "isUpdateAvailable: check failed due to" }
 
