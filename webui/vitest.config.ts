@@ -9,9 +9,10 @@
 import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react-swc';
+import { lingui } from '@lingui/vite-plugin';
 
 export default defineConfig({
-    plugins: [react({ plugins: [['@lingui/swc-plugin', {}]] })],
+    plugins: [react({ plugins: [['@lingui/swc-plugin', {}]] }), lingui({ failOnCompileError: true })],
     resolve: { alias: { '@': path.resolve(import.meta.dirname, './src') } },
     test: {
         environment: 'jsdom',

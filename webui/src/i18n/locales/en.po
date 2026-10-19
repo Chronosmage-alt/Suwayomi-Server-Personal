@@ -660,6 +660,10 @@ msgstr "Automatic checks skipped until {0}."
 msgid "Automatic library updates are disabled."
 msgstr "Automatic library updates are disabled."
 
+#: src/features/komga/KomgaCard.tsx
+msgid "Automatic linking is permanently suppressed. Manually link a series to allow linking again."
+msgstr "Automatic linking is permanently suppressed. Manually link a series to allow linking again."
+
 #: src/features/reader/overlay/progress-bar/settings/components/ReaderSettingProgressBarPosition.tsx
 msgid "Automatic progress bar vertical position"
 msgstr "Automatic progress bar vertical position"
@@ -683,6 +687,15 @@ msgstr "Automatically categorise completed manga"
 #: src/features/settings/components/webUI/WebUIUpdateIntervalSetting.tsx
 msgid "Automatically download the latest version"
 msgstr "Automatically download the latest version"
+
+#: src/features/komga/KomgaLocalization.test.tsx
+#: src/features/komga/KomgaSettings.tsx
+msgid "Automatically link matching Komga series"
+msgstr "Automatically link matching Komga series"
+
+#: src/features/komga/KomgaCard.tsx
+msgid "Automatically linked — correct or unlink if needed"
+msgstr "Automatically linked — correct or unlink if needed"
 
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "Automatically mark chapters as read when you download them."
@@ -1126,6 +1139,11 @@ msgid "Compression level"
 msgstr "Compression level"
 
 #: src/features/komga/KomgaCard.tsx
+#: src/features/komga/KomgaLocalization.test.tsx
+msgid "Confirm automatic link"
+msgstr "Confirm automatic link"
+
+#: src/features/komga/KomgaCard.tsx
 msgid "Confirm link"
 msgstr "Confirm link"
 
@@ -1341,6 +1359,10 @@ msgstr "Could not migrate manga"
 msgid "Could not open random entry"
 msgstr "Could not open random entry"
 
+#: src/features/komga/KomgaSettings.tsx
+msgid "Could not read scan progress. The server may still be processing."
+msgstr "Could not read scan progress. The server may still be processing."
+
 #: src/features/downloads/screens/DownloadQueue.tsx
 msgid "Could not remove all downloads from the queue"
 msgstr "Could not remove all downloads from the queue"
@@ -1403,6 +1425,10 @@ msgstr "Could not save theme changes"
 msgid "Could not search source"
 msgstr "Could not search source"
 
+#: src/features/komga/KomgaSettings.tsx
+msgid "Could not start Komga scan."
+msgstr "Could not start Komga scan."
+
 #: src/features/settings/screens/ServerSettings.tsx
 #: src/features/sync/components/SyncButton.tsx
 msgid "Could not start sync"
@@ -1428,6 +1454,10 @@ msgstr "Could not update WebUI"
 #: src/features/backup/screens/Backup.tsx
 msgid "Could not validate backup"
 msgstr "Could not validate backup"
+
+#: src/features/komga/KomgaSettings.tsx
+msgid "Counts represent stored books, not verified chapters. Manual unlinking permanently prevents automatic relinking; manually link a series to allow it again."
+msgstr "Counts represent stored books, not verified chapters. Manual unlinking permanently prevents automatic relinking; manually link a series to allow it again."
 
 #: src/features/category/components/CategorySelect.tsx
 #: src/features/device/screens/DeviceSetting.tsx
@@ -2598,6 +2628,15 @@ msgstr "Komga books: {0}. Read: {1}, unread: {2}, in progress: {3}."
 msgid "Komga inventory could not be loaded."
 msgstr "Komga inventory could not be loaded."
 
+#: src/features/komga/KomgaLocalization.test.tsx
+#: src/features/manga/components/MangaBadges.tsx
+msgid "Komga link requires review"
+msgstr "Komga link requires review"
+
+#: src/features/manga/components/MangaBadges.tsx
+msgid "Komga link requires review. Open the manga's Komga section to confirm or correct it."
+msgstr "Komga link requires review. Open the manga's Komga section to confirm or correct it."
+
 #: src/features/komga/KomgaCard.tsx
 msgid "Komga request failed. Try again or check the connection settings."
 msgstr "Komga request failed. Try again or check the connection settings."
@@ -2613,6 +2652,19 @@ msgstr "Komga settings could not be loaded."
 #: src/features/komga/KomgaSettings.tsx
 msgid "Komga settings saved. Changing the internal URL requires confirming existing links again."
 msgstr "Komga settings saved. Changing the internal URL requires confirming existing links again."
+
+#. placeholder {0}: komga.bookCount
+#. placeholder {1}: komga.stale ? 'Cached; information is stale.' : ''
+#. placeholder {2}: komga.provenance === 'AUTOMATIC' ? 'Automatically linked.' : 'Manually confirmed.'
+#: src/features/manga/components/MangaBadges.tsx
+msgid "Komga: {0} stored books (not verified chapters). {1} {2}"
+msgstr "Komga: {0} stored books (not verified chapters). {1} {2}"
+
+#. placeholder {0}: komga.bookCount
+#. placeholder {1}: komga.stale ? ' (stale)' : ''
+#: src/features/manga/components/MangaBadges.tsx
+msgid "Komga: {0} stored books{1}"
+msgstr "Komga: {0} stored books{1}"
 
 #: src/features/settings/components/koreaderSync/KoreaderSyncSettings.tsx
 msgid "KOReader Sync"
@@ -2776,6 +2828,10 @@ msgstr "Link a Komga series"
 msgid "Link Komga series"
 msgstr "Link Komga series"
 
+#: src/features/komga/KomgaCard.tsx
+msgid "Link requires review"
+msgstr "Link requires review"
+
 #: src/features/settings/screens/About.tsx
 msgid "Links"
 msgstr "Links"
@@ -2922,6 +2978,11 @@ msgstr "Manual migration search for \"{title}\""
 #: src/features/migration/components/migration-entry/MigrationEntrySearchExcludeActions.tsx
 msgid "Manual search"
 msgstr "Manual search"
+
+#: src/features/komga/KomgaCard.tsx
+#: src/features/komga/KomgaLocalization.test.tsx
+msgid "Manually confirmed link"
+msgstr "Manually confirmed link"
 
 #: src/features/chapter/components/ChaptersToolbarMenu.tsx
 msgid "Mark all as read"
@@ -3815,6 +3876,24 @@ msgstr "Saving theme changes…"
 msgid "Scale type"
 msgstr "Scale type"
 
+#: src/features/komga/KomgaLocalization.test.tsx
+#: src/features/komga/KomgaSettings.tsx
+msgid "Scan for matching Komga series"
+msgstr "Scan for matching Komga series"
+
+#. placeholder {0}: scanStatus.code
+#. placeholder {1}: scanStatus.indexedSeries
+#. placeholder {2}: scanStatus.processed
+#. placeholder {3}: scanStatus.total
+#. placeholder {4}: scanStatus.automaticallyLinked
+#. placeholder {5}: scanStatus.alreadyLinked
+#. placeholder {6}: scanStatus.ambiguous
+#. placeholder {7}: scanStatus.optedOut
+#. placeholder {8}: scanStatus.unmatched
+#: src/features/komga/KomgaSettings.tsx
+msgid "Scan: {0}. Indexed series: {1}. Processed {2} / {3}. Automatically linked: {4}; already linked: {5}; ambiguous or requiring review: {6}; opted out: {7}; unmatched: {8}."
+msgstr "Scan: {0}. Indexed series: {1}. Processed {2} / {3}. Automatically linked: {4}; already linked: {5}; ambiguous or requiring review: {6}; opted out: {7}; unmatched: {8}."
+
 #: src/features/chapter/components/ChapterExcludeSanlatorsFilter.tsx
 msgid "Scanlator"
 msgstr "Scanlator"
@@ -4042,6 +4121,11 @@ msgstr "Show all duplicated entries in your library"
 #: src/features/settings/components/globalUpdate/AdaptiveUpdateSettings.tsx
 msgid "Show all languages"
 msgstr "Show all languages"
+
+#: src/features/komga/KomgaLocalization.test.tsx
+#: src/features/komga/KomgaSettings.tsx
+msgid "Show blue Komga book counter"
+msgstr "Show blue Komga book counter"
 
 #: src/features/library/components/LibraryOptionsPanel.tsx
 msgid "Show continue reading button"

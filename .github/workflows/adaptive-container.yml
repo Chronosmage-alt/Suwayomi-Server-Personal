@@ -77,6 +77,8 @@ jobs:
         working-directory: webui
         run: |
           pnpm install --frozen-lockfile
+          pnpm i18n:extract
+          git diff --exit-code -- src/i18n/locales/en.po
           pnpm tsc
           pnpm lint
           pnpm format:check

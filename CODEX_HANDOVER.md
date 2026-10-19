@@ -2,6 +2,41 @@
 
 Updated 19 October 2026. This document is context for a fresh Codex conversation.
 
+## Latest follow-up: Docker publication and missing Komga labels
+
+The user authorized publishing latest dev and deleting the old investigation
+branch only after successful publication. PR #1 had merged dev INTO
+investigate/adaptive-library-updates, not the reverse; its tree equalled
+63519fcf, so no merge/rewrite was needed. A workflow-comment trigger commit
+60c01afd built the correct source but failed the packaged smoke test because
+its exact KomgaSettings field assertion predated autoLink/showCounter.
+Commit 9e8cc37e fixed smoke checks and published successfully in Actions run
+39287177128. Both adaptive-test and sha-9e8cc37e988b were registry-verified at
+sha256:2f8fa850362aa45a51684c5ebceb3ec674a489710bc75c7410ca0f7de693cfbb,
+with OCI revision 9e8cc37e988bf24c94ba08e529babb66b9b1fc05. The old remote
+investigation branch was then deleted with explicit user authorization.
+No NAS deployment or extension-repository change occurred.
+
+The user subsequently reported hashed labels for the two new switches and no
+readable scan button. Root cause: newly introduced Lingui strings had never
+been extracted into the English PO catalogue; development macro fallback hid
+this in earlier tests. This follow-up adds all missing English messages, real
+compiled-catalogue regressions (66 UI tests total), PO import typings and the
+Lingui Vite plugin in tests. CI now extracts English and rejects catalogue drift
+before building. All 66 UI tests, TypeScript, lint, formatting and the local
+production/PWA build passed. The correction does not change matching or application logic.
+The fresh image for this follow-up must be verified from its new Actions run;
+the 9e8cc37e image above predates the label correction.
+
+User also showed manual search finding Absolute Regression, and says automatic
+linking is enabled and it was never unlinked. No completed scan result or source
+metadata has yet been supplied; do not claim a matching defect or loosen safety
+rules from the title screenshot alone. The manual scan button is below the two
+switches/help and before Browser-facing Komga URL, but its label is hashed in
+the affected image. Save preferences first, then run that action and inspect
+counts. Manual search suggestions require confirmation. No live NAS inspection
+is authorized or has been performed.
+
 ## Komga automatic linking and blue counters — implementation / final validation
 
 Updated 19 October 2026. This section supersedes the investigation-only approval
