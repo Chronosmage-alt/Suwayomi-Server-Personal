@@ -56,7 +56,7 @@ def main():
     results = {}
     results["schema"] = graphql(
         """query {
-          komgaSettings { enabled apiUrl browserUrl credentialConfigured canManage }
+          komgaSettings { enabled apiUrl browserUrl credentialConfigured canManage autoLink showCounter }
         }"""
     )
     data = results["schema"]["data"]
@@ -66,6 +66,8 @@ def main():
         "browserUrl": "",
         "credentialConfigured": False,
         "canManage": True,
+        "autoLink": False,
+        "showCounter": True,
     }, data["komgaSettings"]
     # GraphQL Java limits repeated __Type.fields in one request. Keep each
     # introspection lookup separate, preserving the server's good-faith guard.
@@ -78,16 +80,18 @@ def main():
     results["settingsType"] = graphql('query { __type(name:"KomgaSettings") { fields { name } } }')
     queries = {field["name"] for field in results["queryType"]["data"]["__type"]["fields"]}
     mutations = {field["name"] for field in results["mutationType"]["data"]["__type"]["fields"]}
-    assert {"komgaSettings", "komgaSearch", "komgaManga"} <= queries
+    assert {"komgaSettings", "komgaSearch", "komgaManga", "komgaScanStatus", "komgaLibrarySummaries"} <= queries
     assert {
         "setKomgaSettings",
         "testKomgaConnection",
         "linkKomgaSeries",
         "unlinkKomgaSeries",
         "refreshKomgaManga",
+        "scanKomgaLibrary",
     } <= mutations
     assert {field["name"] for field in results["settingsType"]["data"]["__type"]["fields"]} == {
-        "enabled", "apiUrl", "browserUrl", "credentialConfigured", "canManage"
+        "enabled", "apiUrl", "browserUrl", "credentialConfigured", "canManage",
+        "autoLink", "showCounter"
     }, results["settingsType"]
 
     results["save"] = graphql(

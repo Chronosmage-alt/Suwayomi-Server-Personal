@@ -145,7 +145,7 @@ jobs:
           python3 docker/adaptive/smoke-komga.py
           docker exec adaptive-smoke sh -ec '
             test "$(cat /home/suwayomi/.local/share/Tachidesk/webUI/revision)" = r3549
-            for feature in setAdaptiveUpdatesEnabled provisionalIntervalDays historicalConfirmations setCompletedCategorySettings organiseCompletedManga komgaSettings komgaSearch komgaManga setKomgaSettings testKomgaConnection linkKomgaSeries unlinkKomgaSeries refreshKomgaManga; do
+            for feature in setAdaptiveUpdatesEnabled provisionalIntervalDays historicalConfirmations setCompletedCategorySettings organiseCompletedManga komgaSettings komgaSearch komgaManga setKomgaSettings testKomgaConnection linkKomgaSeries unlinkKomgaSeries refreshKomgaManga scanKomgaLibrary komgaScanStatus komgaLibrarySummaries; do
               grep -R -q "$feature" /home/suwayomi/.local/share/Tachidesk/webUI/assets
             done
           '
