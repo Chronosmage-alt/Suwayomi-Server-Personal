@@ -33,6 +33,7 @@ import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 import { assertIsDefined } from '@/base/Asserts.ts';
 import { usePress } from '@/base/hooks/usePress.ts';
 import { Confirmation } from '@/base/AppAwaitableComponent.ts';
+import { useBrowseLibraryTitle } from '@/features/manga/components/BrowseLibraryTitles.tsx';
 
 const getMangaLinkTo = (mode: MangaCardMode, mangaId: number): string => {
     switch (mode) {
@@ -68,6 +69,7 @@ export const MangaCard = memo((props: MangaCardProps) => {
     } = useMetadataServerSettings();
 
     const { updateLibraryState, isInLibrary } = useManageMangaLibraryState(manga, mode === 'source');
+    const hasLibraryTitle = useBrowseLibraryTitle(manga.title);
 
     const mangaLinkTo = getMangaLinkTo(mode, manga.id);
 
@@ -203,6 +205,7 @@ export const MangaCard = memo((props: MangaCardProps) => {
                         }
                         mangaBadges={
                             <MangaBadges
+                                hasLibraryTitle={hasLibraryTitle}
                                 mangaId={id}
                                 inLibraryIndicator={inLibraryIndicator}
                                 isInLibrary={isInLibrary}

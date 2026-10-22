@@ -22,6 +22,7 @@ import { AppRoutes } from '@/base/AppRoute.constants.ts';
 import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 import { CategorySelect } from '@/features/category/components/CategorySelect';
 import { Confirmation } from '@/base/AppAwaitableComponent.ts';
+import { BROWSE_LIBRARY_TITLES } from '@/features/manga/components/BrowseLibraryTitles.tsx';
 import type { MangaIdInfo, MangaInLibraryInfo, MangaTitleInfo } from '@/features/manga/Manga.types.ts';
 
 export const useManageMangaLibraryState = (
@@ -44,7 +45,12 @@ export const useManageMangaLibraryState = (
                     updateMangaCategories: { addToCategories, removeFromCategories },
                 })
                 .response.then(() => makeToast(t`Added manga to library!`, 'success'))
-                .then(() => setIsInLibrary(true))
+                .then(() => {
+                    setIsInLibrary(true);
+                    requestManager.graphQLClient.client
+                        .refetchQueries({ include: [BROWSE_LIBRARY_TITLES] })
+                        .catch(defaultPromiseErrorHandler('refresh browse library titles'));
+                })
                 .catch((e) => {
                     makeToast(t`Could not add manga to library!`, 'error', getErrorMessage(e));
                 });
@@ -70,6 +76,9 @@ export const useManageMangaLibraryState = (
 
         await Mangas.removeFromLibrary([manga.id], true);
         setIsInLibrary(false);
+        requestManager.graphQLClient.client
+            .refetchQueries({ include: [BROWSE_LIBRARY_TITLES] })
+            .catch(defaultPromiseErrorHandler('refresh browse library titles'));
     }, [manga.id, confirmRemoval]);
 
     const updateLibraryState = useCallback(() => {

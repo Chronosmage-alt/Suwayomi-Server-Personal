@@ -565,6 +565,10 @@ msgstr "An administrator controls this shared title setting."
 msgid "An entry can not be in the Default category and other categories at the same time"
 msgstr "An entry can not be in the Default category and other categories at the same time"
 
+#: src/features/manga/components/MangaBadges.tsx
+msgid "An entry with the same title is already in your library."
+msgstr "An entry with the same title is already in your library."
+
 #: src/features/library/components/LibraryOptionsPanel.tsx
 msgid "and"
 msgstr "and"
@@ -4661,6 +4665,10 @@ msgstr "This will remove the tracking locally."
 #: src/features/reader/settings/behaviour/components/ReaderSettingScrollAmount.tsx
 msgid "Tiny"
 msgstr "Tiny"
+
+#: src/features/manga/components/MangaBadges.tsx
+msgid "Title in library"
+msgstr "Title in library"
 
 #: src/base/utils/DateHelper.ts
 msgid "Today"

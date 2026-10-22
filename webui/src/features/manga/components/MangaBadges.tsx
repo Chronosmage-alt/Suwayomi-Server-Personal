@@ -31,6 +31,7 @@ const Badge = styled(Typography)(({ theme }) => ({
 }));
 
 export const MangaBadges = ({
+    hasLibraryTitle,
     inLibraryIndicator,
     updateLibraryState,
     isInLibrary,
@@ -39,6 +40,7 @@ export const MangaBadges = ({
     mode,
     mangaId,
 }: {
+    hasLibraryTitle?: boolean;
     inLibraryIndicator?: boolean;
     updateLibraryState: () => void;
     isInLibrary: boolean;
@@ -122,6 +124,13 @@ export const MangaBadges = ({
                 >
                     {isInLibrary ? t`Remove from the library` : t`Add To Library`}
                 </Button>
+            )}
+            {inLibraryIndicator && !isInLibrary && hasLibraryTitle && (
+                <CustomTooltip title={t`An entry with the same title is already in your library.`}>
+                    <Typography sx={{ backgroundColor: 'secondary.dark', color: 'secondary.contrastText', p: 0.3 }}>
+                        {t`Title in library`}
+                    </Typography>
+                </CustomTooltip>
             )}
             {inLibraryIndicator && isInLibrary && (
                 <Typography

@@ -34,6 +34,7 @@ import { useMetadataServerSettings } from '@/features/settings/services/ServerSe
 import { VirtuosoGridPersisted } from '@/lib/virtuoso/Component/VirtuosoGridPersisted.tsx';
 import { MUIUtil } from '@/lib/mui/MUI.util.ts';
 import { KomgaLibrary } from '@/features/komga/KomgaLibrary.tsx';
+import { BrowseLibraryTitles } from '@/features/manga/components/BrowseLibraryTitles.tsx';
 
 const GridContainer = ({ children, ref, ...props }: GridTypeMap['props'] & { ref?: Ref<HTMLDivElement> }) => (
     <Grid {...props} ref={ref} container spacing={1}>
@@ -339,44 +340,46 @@ export const MangaGrid: React.FC<IMangaGridProps> = ({
     }
 
     return (
-        <KomgaLibrary mangaIds={mangas.map((manga) => manga.id)} active={!mode || mode === 'default'}>
-            <Box
-                {...gridWrapperProps}
-                ref={gridWrapperRef}
-                sx={MUIUtil.mergeSx(gridWrapperProps?.sx, { overflow: 'hidden' })}
-            >
-                {horizontal ? (
-                    <HorizontalGrid
-                        ref={gridRef}
-                        isLoading={isLoading}
-                        mangas={mangas}
-                        inLibraryIndicator={inLibraryIndicator}
-                        GridItemContainer={GridItemContainer}
-                        gridLayout={gridLayout}
-                        isSelectModeActive={isSelectModeActive}
-                        selectedMangaIds={selectedMangaIds}
-                        handleSelection={handleSelection}
-                        mode={mode}
-                        onMigrateSelect={onMigrateSelect}
-                    />
-                ) : (
-                    <VerticalGrid
-                        ref={gridRef}
-                        isLoading={isLoading}
-                        mangas={mangas}
-                        inLibraryIndicator={inLibraryIndicator}
-                        GridItemContainer={GridItemContainer}
-                        hasNextPage={hasNextPage}
-                        loadMore={loadMore}
-                        gridLayout={gridLayout}
-                        isSelectModeActive={isSelectModeActive}
-                        selectedMangaIds={selectedMangaIds}
-                        handleSelection={handleSelection}
-                        mode={mode}
-                        onMigrateSelect={onMigrateSelect}
-                    />
-                )}
-            </Box>
-        </KomgaLibrary>
+        <BrowseLibraryTitles titles={mangas.map((manga) => manga.title)} active={!!inLibraryIndicator}>
+            <KomgaLibrary mangaIds={mangas.map((manga) => manga.id)} active={!mode || mode === 'default'}>
+                <Box
+                    {...gridWrapperProps}
+                    ref={gridWrapperRef}
+                    sx={MUIUtil.mergeSx(gridWrapperProps?.sx, { overflow: 'hidden' })}
+                >
+                    {horizontal ? (
+                        <HorizontalGrid
+                            ref={gridRef}
+                            isLoading={isLoading}
+                            mangas={mangas}
+                            inLibraryIndicator={inLibraryIndicator}
+                            GridItemContainer={GridItemContainer}
+                            gridLayout={gridLayout}
+                            isSelectModeActive={isSelectModeActive}
+                            selectedMangaIds={selectedMangaIds}
+                            handleSelection={handleSelection}
+                            mode={mode}
+                            onMigrateSelect={onMigrateSelect}
+                        />
+                    ) : (
+                        <VerticalGrid
+                            ref={gridRef}
+                            isLoading={isLoading}
+                            mangas={mangas}
+                            inLibraryIndicator={inLibraryIndicator}
+                            GridItemContainer={GridItemContainer}
+                            hasNextPage={hasNextPage}
+                            loadMore={loadMore}
+                            gridLayout={gridLayout}
+                            isSelectModeActive={isSelectModeActive}
+                            selectedMangaIds={selectedMangaIds}
+                            handleSelection={handleSelection}
+                            mode={mode}
+                            onMigrateSelect={onMigrateSelect}
+                        />
+                    )}
+                </Box>
+            </KomgaLibrary>
+        </BrowseLibraryTitles>
     );
 };
