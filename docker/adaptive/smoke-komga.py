@@ -58,8 +58,14 @@ def main():
         "query { checkForWebUIUpdate { tag updateAvailable } }"
     )
     assert results["customWebUIUpdate"]["data"]["checkForWebUIUpdate"] == {
-        "tag": "r3549", "updateAvailable": False
+        "tag": "r3553", "updateAvailable": False
     }, results["customWebUIUpdate"]
+    results["databaseSettings"] = graphql(
+        "query { settings { databaseSchema hikariMaxPoolSize } }"
+    )
+    database_settings = results["databaseSettings"]["data"]["settings"]
+    assert isinstance(database_settings["databaseSchema"], str), database_settings
+    assert database_settings["hikariMaxPoolSize"] >= 1, database_settings
     results["schema"] = graphql(
         """query {
           komgaSettings { enabled apiUrl browserUrl credentialConfigured canManage autoLink showCounter }

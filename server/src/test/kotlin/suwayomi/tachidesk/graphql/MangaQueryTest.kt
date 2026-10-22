@@ -4,6 +4,8 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.AfterEach
+import suwayomi.tachidesk.manga.impl.Category
+import suwayomi.tachidesk.manga.impl.CategoryManga
 import suwayomi.tachidesk.manga.model.table.ChapterTable
 import suwayomi.tachidesk.manga.model.table.MangaTable
 import suwayomi.tachidesk.manga.model.table.MangaUserTable
@@ -16,6 +18,44 @@ import kotlin.test.assertEquals
 
 class MangaQueryTest : GraphQLTest() {
     private val user2: UserType = UserType.Admin(2)
+
+    @Test
+    fun categoryFiltersPreserveUncategorizedAndMultipleMemberships() {
+        val completed = Category.createCategory(1, "Completed filter regression")
+        val other = Category.createCategory(1, "Other filter regression")
+        try {
+            val uncategorized = createLibraryManga("Uncategorized")
+            val completedOnly = createLibraryManga("Completed only")
+            val both = createLibraryManga("Both categories")
+            val otherOnly = createLibraryManga("Other only")
+            CategoryManga.addMangaToCategory(1, completedOnly, completed)
+            CategoryManga.addMangaToCategory(1, both, completed)
+            CategoryManga.addMangaToCategory(1, both, other)
+            CategoryManga.addMangaToCategory(1, otherOnly, other)
+
+            val cases =
+                listOf(
+                    "" to setOf(uncategorized, completedOnly, both, otherOnly),
+                    "condition: { categoryIds: [$completed] }" to setOf(completedOnly, both),
+                    "filter: { categoryId: { equalTo: $completed } }" to setOf(completedOnly, both),
+                    "filter: { categoryId: { isNull: true } }" to setOf(uncategorized),
+                    "filter: { categoryId: { isNull: false } }" to setOf(completedOnly, both, otherOnly),
+                    "filter: { or: [{ categoryId: { equalTo: $completed } }, { categoryId: { equalTo: $other } }] }" to
+                        setOf(completedOnly, both, otherOnly),
+                )
+            for ((arguments, expected) in cases) {
+                val field = if (arguments.isEmpty()) "mangas" else "mangas($arguments)"
+                val response = graphql("query { $field { totalCount nodes { id } } }")
+                response.assertNoErrors()
+                val nodes = response.dataPath("mangas", "nodes") as List<*>
+                assertEquals(expected, nodes.map { (it as Map<*, *>)["id"] }.toSet(), arguments)
+                assertEquals(expected.size, response.dataPath("mangas", "totalCount"), arguments)
+            }
+        } finally {
+            Category.removeCategory(1, completed)
+            Category.removeCategory(1, other)
+        }
+    }
 
     @Test
     fun mangaReturnsMangaForOwner() {

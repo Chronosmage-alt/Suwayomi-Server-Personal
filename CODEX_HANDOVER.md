@@ -1,6 +1,37 @@
 # Suwayomi adaptive updates — handover
 
-Updated 19 October 2026. This document is context for a fresh Codex conversation.
+Updated 22 October 2026. This document is context for a fresh Codex conversation.
+
+## Current upstream integration — 22 October 2026
+
+The user approved bringing in the reviewed server and bundled WebUI updates,
+including the proposed tested-image publication. Broader slow-loading/performance
+investigation is explicitly deferred until after these fixes. NAS deployment is
+not included. See `docs/upstream-20261022-integration.md` for exact pins and scope.
+
+Server upstream target is `6b481e8b62938b9c060eb210b934e0fbfdfa466b` (13 commits
+after base `d4f88a34`); WebUI target is r3553
+`c3465cb4ea15a8778fa6ded50e68bddd18052145` (four commits after r3549).
+Preserve personal adaptive/history, Completed and Komga features. The updater's
+sole merge conflict retains the personal implementation with the upstream
+positive-last-read timestamp predicate. Imported updater tests must mock all FIVE
+arguments to the Boolean-returning method and account for personal skipped history.
+
+Local tooling remains under `C:/Users/bayleeh/.codex/tmp/suwayomi-r3549`.
+Quote the entire `-Pkotlin.compiler.execution.strategy=in-process` argument in
+PowerShell; otherwise it splits at the dot. New validation logs use `upstream-*`.
+Browser reports, screenshots and an isolated runtime/data copy are under
+`C:/Users/bayleeh/.codex/tmp/suwayomi-upstream-20261022`. Never rebuild/overwrite a
+JAR while a QA server runs from it; use a runtime copy. QA uses loopback only,
+disabled CEF and a known missing temporary Komga key path, with no live credentials.
+
+Local final validation passed: all 478 server tests (zero failures/errors/skips),
+ktlint and shadow JAR; all 66 WebUI tests, custom-schema codegen, TypeScript, lint,
+formatting, English extraction and production/PWA build. Browser checks passed at
+desktop/mobile sizes without page/GraphQL errors or overflow. Local packaged smoke
+checks passed including r3553, new DB settings and Komga operations. Build retains
+the pre-existing legacy minifier fallback and large-chunk warnings. Logs are
+`upstream-validation.log` and `upstream-webui-build.log` in the toolchain directory.
 
 ## Latest matching policy — explicit personal-library override
 

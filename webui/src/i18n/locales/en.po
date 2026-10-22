@@ -1178,6 +1178,10 @@ msgstr "Connected as {currentUsername} to {currentServerAddress}"
 msgid "Connected as {initialUsername} to {initialServerAddress}"
 msgstr "Connected as {initialUsername} to {initialServerAddress}"
 
+#: src/features/settings/screens/ServerSettings.tsx
+msgid "Connection"
+msgstr "Connection"
+
 #: src/features/komga/KomgaSettings.tsx
 msgid "Connection test failed."
 msgstr "Connection test failed."
@@ -2285,6 +2289,10 @@ msgstr "Hide history"
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "Hikari connection pool"
 msgstr "Hikari connection pool"
+
+#: src/features/settings/screens/ServerSettings.tsx
+msgid "Hikari max pool size"
+msgstr "Hikari max pool size"
 
 #: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
 msgid "Historical learning has not been assessed since this update."
@@ -3898,6 +3906,10 @@ msgstr "Scan: {0}. Indexed series: {1}. Processed {2} / {3}. Automatically linke
 msgid "Scanlator"
 msgstr "Scanlator"
 
+#: src/features/settings/screens/ServerSettings.tsx
+msgid "Schema"
+msgstr "Schema"
+
 #: src/features/tracker/components/cards/TrackerActiveCard.tsx
 #: src/features/tracker/components/cards/TrackerMangaCard.tsx
 msgid "Score"
@@ -4539,6 +4551,10 @@ msgstr "The login will be handled by the client."
 #: src/features/settings/Settings.constants.ts
 msgid "The login will be handled by the server."
 msgstr "The login will be handled by the server."
+
+#: src/features/settings/screens/ServerSettings.tsx
+msgid "The maximum number of actual connections to the database; see <0>HikariCP: About-Pool-Sizing</0>"
+msgstr "The maximum number of actual connections to the database; see <0>HikariCP: About-Pool-Sizing</0>"
 
 #: src/features/migration/MigrationManager.ts
 msgid "The migration runs on the client on the current device, NOT the server.\n"

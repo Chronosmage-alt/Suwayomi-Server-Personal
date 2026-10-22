@@ -1,6 +1,6 @@
 name: Adaptive NAS test image
 
-# Rebuild dev with r3549, adaptive/history, Completed and Komga M0068-M0071.
+# Rebuild dev with r3553, adaptive/history, Completed and Komga M0068-M0071.
 # Publish the checked-out revision under adaptive-test and its immutable SHA tag.
 
 on:
@@ -84,7 +84,7 @@ jobs:
           pnpm format:check
           pnpm test:ui
           pnpm exec vite build
-          printf 'r3549\n' > build/revision
+          printf 'r3553\n' > build/revision
           cp -R build ../docker/adaptive/webui
 
       - uses: docker/setup-buildx-action@v4
@@ -146,7 +146,7 @@ jobs:
           grep -q 'assets/' smoke-ui.html
           python3 docker/adaptive/smoke-komga.py
           docker exec adaptive-smoke sh -ec '
-            test "$(cat /home/suwayomi/.local/share/Tachidesk/webUI/revision)" = r3549
+            test "$(cat /home/suwayomi/.local/share/Tachidesk/webUI/revision)" = r3553
             for feature in setAdaptiveUpdatesEnabled provisionalIntervalDays historicalConfirmations setCompletedCategorySettings organiseCompletedManga komgaSettings komgaSearch komgaManga setKomgaSettings testKomgaConnection linkKomgaSeries unlinkKomgaSeries refreshKomgaManga scanKomgaLibrary komgaScanStatus komgaLibrarySummaries; do
               grep -R -q "$feature" /home/suwayomi/.local/share/Tachidesk/webUI/assets
             done
