@@ -58,3 +58,19 @@ integration. The H2 optimization is included, but no measured improvement is cla
 Logs and browser artifacts are outside Git under the existing temporary toolchain
 directory and `C:/Users/bayleeh/.codex/tmp/suwayomi-upstream-20261022`. Linux/Java 25
 container validation and image publication run in the existing `dev` workflow.
+
+## Publication
+
+The integration merge commit is `9502680fbe9d1f96a3517944df1da516fd3f117f`.
+[Actions run 39744851195](https://github.com/Chronosmage-alt/Suwayomi-Server-Personal/actions/runs/39744851195)
+passed Linux/Java 25 server checks, WebUI checks/build and packaged-container smoke
+checks before publishing. Registry manifests and OCI configuration were verified:
+
+- Image: `ghcr.io/chronosmage-alt/suwayomi-server-personal:adaptive-test`
+- Immutable tag: `ghcr.io/chronosmage-alt/suwayomi-server-personal:sha-9502680fbe9d`
+- Both tags resolve to
+  `sha256:21b56e956f1825cd3630da52b3dbeff0075b165947b3e49d9458a3ddb6d60d9b`.
+- Both images identify the full integration SHA in their OCI revision label.
+
+Disposable local QA server/proxy processes were stopped. No NAS deployment was
+performed. Reported loading performance remains a separate follow-up.

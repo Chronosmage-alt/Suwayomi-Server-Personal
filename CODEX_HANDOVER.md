@@ -33,6 +33,16 @@ checks passed including r3553, new DB settings and Komga operations. Build retai
 the pre-existing legacy minifier fallback and large-chunk warnings. Logs are
 `upstream-validation.log` and `upstream-webui-build.log` in the toolchain directory.
 
+Integration was committed/pushed on dev as merge commit
+`9502680fbe9d1f96a3517944df1da516fd3f117f`, retaining upstream server ancestry.
+Actions run 39744851195 succeeded including Linux/Java 25 checks and container
+smoke tests, and published `adaptive-test` plus `sha-9502680fbe9d`. Registry-verified
+digest for both is
+`sha256:21b56e956f1825cd3630da52b3dbeff0075b165947b3e49d9458a3ddb6d60d9b`,
+with OCI revision equal to the integration SHA. All task-owned local QA processes
+were stopped; checkout was clean after push. No NAS deployment occurred. The
+reported slow loading remains the next, separate investigation.
+
 ## Latest matching policy — explicit personal-library override
 
 The user supplied a completed scan: 300 indexed series, 309/309 processed,
