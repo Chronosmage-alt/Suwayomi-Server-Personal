@@ -35,6 +35,7 @@ import suwayomi.tachidesk.graphql.mutations.KomgaMutation
 import suwayomi.tachidesk.graphql.mutations.KoreaderSyncMutation
 import suwayomi.tachidesk.graphql.mutations.MangaMutation
 import suwayomi.tachidesk.graphql.mutations.MetaMutation
+import suwayomi.tachidesk.graphql.mutations.OwnerMutation
 import suwayomi.tachidesk.graphql.mutations.SettingsMutation
 import suwayomi.tachidesk.graphql.mutations.SourceMutation
 import suwayomi.tachidesk.graphql.mutations.SyncMutation
@@ -106,70 +107,73 @@ object GraphQLSchemaProvider {
     @OptIn(DelicateCoroutinesApi::class)
     var schemaFuture =
         GlobalScope.async {
-            toSchema(
-                config =
-                    SchemaGeneratorConfig(
-                        supportedPackages = listOf("suwayomi.tachidesk.graphql"),
-                        introspectionEnabled = true,
-                        hooks = CustomSchemaGeneratorHooks(),
-                    ),
-                queries =
-                    listOf(
-                        TopLevelObject(BackupQuery()),
-                        TopLevelObject(AdaptiveUpdateQuery()),
-                        TopLevelObject(CategoryQuery()),
-                        TopLevelObject(CompletedCategoryQuery()),
-                        TopLevelObject(KomgaQuery()),
-                        TopLevelObject(ChapterQuery()),
-                        TopLevelObject(DownloadQuery()),
-                        TopLevelObject(ExtensionQuery()),
-                        TopLevelObject(ExtensionStoreQuery()),
-                        TopLevelObject(InfoQuery()),
-                        TopLevelObject(KoreaderSyncQuery()),
-                        TopLevelObject(MangaQuery()),
-                        TopLevelObject(MetaQuery()),
-                        TopLevelObject(SettingsQuery()),
-                        TopLevelObject(SourceQuery()),
-                        TopLevelObject(SyncQuery()),
-                        TopLevelObject(TrackQuery()),
-                        TopLevelObject(UpdateQuery()),
-                        TopLevelObject(UserQuery()),
-                        TopLevelObject(UserSettingsQuery()),
-                    ),
-                mutations =
-                    listOf(
-                        TopLevelObject(BackupMutation()),
-                        TopLevelObject(AdaptiveUpdateMutation()),
-                        TopLevelObject(CategoryMutation()),
-                        TopLevelObject(CompletedCategoryMutation()),
-                        TopLevelObject(KomgaMutation()),
-                        TopLevelObject(ChapterMutation()),
-                        TopLevelObject(DownloadMutation()),
-                        TopLevelObject(ExtensionMutation()),
-                        TopLevelObject(ExtensionStoreMutation()),
-                        TopLevelObject(ImageMutation()),
-                        TopLevelObject(InfoMutation()),
-                        TopLevelObject(KoreaderSyncMutation()),
-                        TopLevelObject(MangaMutation()),
-                        TopLevelObject(MetaMutation()),
-                        TopLevelObject(SettingsMutation()),
-                        TopLevelObject(SyncMutation()),
-                        TopLevelObject(SourceMutation()),
-                        TopLevelObject(TrackMutation()),
-                        TopLevelObject(UpdateMutation()),
-                        TopLevelObject(UserMutation()),
-                        TopLevelObject(UserSettingsMutation()),
-                        TopLevelObject(WebviewMutation()),
-                    ),
-                subscriptions =
-                    listOf(
-                        TopLevelObject(DownloadSubscription()),
-                        TopLevelObject(InfoSubscription()),
-                        TopLevelObject(SyncSubscription()),
-                        TopLevelObject(UpdateSubscription()),
-                    ),
-            )
+            createSchema()
         }
+
+    // Historical account APIs remain available only to compatibility tests; the running server never exposes them.
+    internal fun createSchema(includeAccountManagement: Boolean = false): GraphQLSchema =
+        toSchema(
+            config =
+                SchemaGeneratorConfig(
+                    supportedPackages = listOf("suwayomi.tachidesk.graphql"),
+                    introspectionEnabled = true,
+                    hooks = CustomSchemaGeneratorHooks(),
+                ),
+            queries =
+                listOf(
+                    TopLevelObject(BackupQuery()),
+                    TopLevelObject(AdaptiveUpdateQuery()),
+                    TopLevelObject(CategoryQuery()),
+                    TopLevelObject(CompletedCategoryQuery()),
+                    TopLevelObject(KomgaQuery()),
+                    TopLevelObject(ChapterQuery()),
+                    TopLevelObject(DownloadQuery()),
+                    TopLevelObject(ExtensionQuery()),
+                    TopLevelObject(ExtensionStoreQuery()),
+                    TopLevelObject(InfoQuery()),
+                    TopLevelObject(KoreaderSyncQuery()),
+                    TopLevelObject(MangaQuery()),
+                    TopLevelObject(MetaQuery()),
+                    TopLevelObject(SettingsQuery()),
+                    TopLevelObject(SourceQuery()),
+                    TopLevelObject(SyncQuery()),
+                    TopLevelObject(TrackQuery()),
+                    TopLevelObject(UpdateQuery()),
+                    TopLevelObject(UserSettingsQuery()),
+                ).let { if (includeAccountManagement) it + TopLevelObject(UserQuery()) else it },
+            mutations =
+                listOf(
+                    TopLevelObject(BackupMutation()),
+                    TopLevelObject(AdaptiveUpdateMutation()),
+                    TopLevelObject(CategoryMutation()),
+                    TopLevelObject(CompletedCategoryMutation()),
+                    TopLevelObject(KomgaMutation()),
+                    TopLevelObject(ChapterMutation()),
+                    TopLevelObject(DownloadMutation()),
+                    TopLevelObject(ExtensionMutation()),
+                    TopLevelObject(ExtensionStoreMutation()),
+                    TopLevelObject(ImageMutation()),
+                    TopLevelObject(InfoMutation()),
+                    TopLevelObject(KoreaderSyncMutation()),
+                    TopLevelObject(MangaMutation()),
+                    TopLevelObject(MetaMutation()),
+                    TopLevelObject(SettingsMutation()),
+                    TopLevelObject(SyncMutation()),
+                    TopLevelObject(SourceMutation()),
+                    TopLevelObject(TrackMutation()),
+                    TopLevelObject(UpdateMutation()),
+                    TopLevelObject(if (includeAccountManagement) UserMutation() else OwnerMutation()),
+                    TopLevelObject(UserSettingsMutation()),
+                    TopLevelObject(WebviewMutation()),
+                ),
+            subscriptions =
+                listOf(
+                    TopLevelObject(DownloadSubscription()),
+                    TopLevelObject(InfoSubscription()),
+                    TopLevelObject(SyncSubscription()),
+                    TopLevelObject(UpdateSubscription()),
+                ),
+        )
 
     suspend fun getSchema(): GraphQLSchema = schemaFuture.await()
 

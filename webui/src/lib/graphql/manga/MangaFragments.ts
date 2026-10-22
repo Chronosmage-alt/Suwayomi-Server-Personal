@@ -107,17 +107,15 @@ export const MANGA_READER_FIELDS = gql`
     }
 `;
 
-export const MANGA_LIBRARY_FIELDS = gql`
+export const MANGA_LIBRARY_COMMON_FIELDS = gql`
     ${MANGA_BASE_FIELDS}
     ${MANGA_CHAPTER_STAT_FIELDS}
-    ${MANGA_CHAPTER_NODE_FIELDS}
     ${MANGA_META_FIELDS}
     ${SOURCE_BASE_FIELDS}
 
-    fragment MANGA_LIBRARY_FIELDS on MangaType {
+    fragment MANGA_LIBRARY_COMMON_FIELDS on MangaType {
         ...MANGA_BASE_FIELDS
         ...MANGA_CHAPTER_STAT_FIELDS
-        ...MANGA_CHAPTER_NODE_FIELDS
 
         genre
         lastFetchedAt
@@ -144,6 +142,16 @@ export const MANGA_LIBRARY_FIELDS = gql`
                 trackerId
             }
         }
+    }
+`;
+
+export const MANGA_LIBRARY_FIELDS = gql`
+    ${MANGA_LIBRARY_COMMON_FIELDS}
+    ${MANGA_CHAPTER_NODE_FIELDS}
+
+    fragment MANGA_LIBRARY_FIELDS on MangaType {
+        ...MANGA_LIBRARY_COMMON_FIELDS
+        ...MANGA_CHAPTER_NODE_FIELDS
     }
 `;
 

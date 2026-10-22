@@ -268,7 +268,7 @@ const sortManga = <Manga extends TMangaSort>(
 
 const SORT_CACHE = new CustomCache();
 type SortOptions = Pick<LibraryOptions, 'sortBy' | 'sortDesc'>;
-const useSortedMangas = <Manga extends MangaIdInfo & TMangasFilter & TMangaSort>(
+export const useSortedMangas = <Manga extends MangaIdInfo & TMangasFilter & TMangaSort>(
     categoryId: number | undefined,
     mangas: Manga[],
     options: SortOptions,
@@ -287,10 +287,11 @@ const useSortedMangas = <Manga extends MangaIdInfo & TMangasFilter & TMangaSort>
     const previousSortBy = cachedSortOptions?.sortBy;
     const previousSortDesc = cachedSortOptions?.sortDesc;
 
-    const haveMangasChanged = !isEqual(mangas, cachedMangas);
+    const haveMangasChanged = mangas !== cachedMangas;
     const haveMangaIdsChanged = !isEqual(mangaIds, cachedMangaIds);
     const haveSortOptionsChanged = previousSortBy !== options.sortBy || previousSortDesc !== options.sortDesc;
-    const reapplySorting = haveMangaIdsChanged || haveSortOptionsChanged;
+    const reapplySorting =
+        haveMangaIdsChanged || haveSortOptionsChanged || (haveMangasChanged && options.sortBy !== 'random');
 
     const sortedMangas = (() => {
         if (reapplySorting) {
@@ -306,7 +307,8 @@ const useSortedMangas = <Manga extends MangaIdInfo & TMangasFilter & TMangaSort>
 
     const sortedMangasUpdatedReferences = useMemo(() => {
         if (haveMangasChanged) {
-            return sortedMangas.map((sortedManga) => mangas.find((manga) => manga.id === sortedManga.id)!);
+            const byId = new Map(mangas.map((manga) => [manga.id, manga]));
+            return sortedMangas.map((sortedManga) => byId.get(sortedManga.id)!);
         }
 
         return sortedMangas;

@@ -57,15 +57,14 @@ class UserContextTest : GraphQLTest() {
     }
 
     @Test
-    fun bearerAccessTokenResolvesToUser() =
+    fun bearerAccessTokenForSecondaryAccountIsRejected() =
         runTest {
             val userId = createTestUser("jwtuser")
             val tokens = Jwt.generateJwt(userId)
 
             val user = getUserFromContext(ctx.also { bearer(it, tokens.accessToken) })
 
-            assertIs<UserType.User>(user)
-            assertEquals(userId, user.id)
+            assertIs<UserType.Visitor>(user)
         }
 
     @Test
@@ -82,7 +81,7 @@ class UserContextTest : GraphQLTest() {
     @Test
     fun cookieTokenFallsBackWhenNoAuthorizationHeader() =
         runTest {
-            val userId = createTestUser("jwtcookieuser")
+            val userId = 1
             val tokens = Jwt.generateJwt(userId)
 
             noAuthHeader(ctx)
@@ -90,14 +89,14 @@ class UserContextTest : GraphQLTest() {
 
             val user = getUserFromContext(ctx)
 
-            assertIs<UserType.User>(user)
+            assertIs<UserType.Admin>(user)
             assertEquals(userId, user.id)
         }
 
     @Test
     fun queryParamTokenFallsBackWhenNoHeaderOrCookie() =
         runTest {
-            val userId = createTestUser("jwtqueryuser")
+            val userId = 1
             val tokens = Jwt.generateJwt(userId)
 
             noAuthHeader(ctx)
@@ -106,7 +105,7 @@ class UserContextTest : GraphQLTest() {
 
             val user = getUserFromContext(ctx)
 
-            assertIs<UserType.User>(user)
+            assertIs<UserType.Admin>(user)
             assertEquals(userId, user.id)
         }
 

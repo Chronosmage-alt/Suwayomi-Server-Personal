@@ -83,7 +83,10 @@ object Jwt {
         )
     }
 
-    suspend fun refreshJwt(refreshToken: String): String {
+    suspend fun refreshJwt(
+        refreshToken: String,
+        expectedUserId: Int? = null,
+    ): String {
         val jwt = verifier.verify(refreshToken)
         require(jwt.getClaim("token_type").asString() == "refresh") {
             "Cannot use access token to refresh"
@@ -95,6 +98,7 @@ object Jwt {
         // without this check, a stale refresh token would keep minting valid access tokens
         // after the account's session version was bumped
         val user = jwt.subject.toInt()
+        require(expectedUserId == null || user == expectedUserId) { "This server only supports its owner account" }
         val tokenVersion = jwt.getClaim("token_version").asInt()
         require(tokenVersion == SessionVersion.current(user)) {
             "Token revoked by a password change"

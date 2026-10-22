@@ -38,6 +38,8 @@ import kotlin.test.assertTrue
  * is presented and addressed as id 0 regardless of its real DB id.
  */
 class CategoryDefaultGqlTest : GraphQLTest() {
+    override val includeAccountManagement = true
+
     private fun createUser(username: String): Int =
         transaction {
             UserCodeService.createUser(username, "password", null)

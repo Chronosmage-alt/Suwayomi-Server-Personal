@@ -32,6 +32,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class UserMutationTest : GraphQLTest() {
+    override val includeAccountManagement = true
     private val visitor: UserType = UserType.Visitor
 
     /**

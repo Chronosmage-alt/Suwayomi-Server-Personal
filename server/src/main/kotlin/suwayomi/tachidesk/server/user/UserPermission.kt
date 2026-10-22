@@ -51,8 +51,10 @@ fun UserType.hasPermission(permission: UserPermission): Boolean =
 fun hasPermission(
     userId: Int,
     permission: UserPermission,
-): Boolean =
-    transaction {
+): Boolean {
+    // The built-in owner is immutable and has all permissions; no role-table lookup is needed.
+    if (userId == 1) return true
+    return transaction {
         val isAdmin =
             UserRolesTable
                 .selectAll()
@@ -67,3 +69,4 @@ fun hasPermission(
                     (UserPermissionsTable.permission eq permission.name)
             }.count() > 0
     }
+}

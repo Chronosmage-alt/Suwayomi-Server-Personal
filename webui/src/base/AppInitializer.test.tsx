@@ -12,6 +12,7 @@ import { AppInitializer } from '@/base/AppInitializer.ts';
 const controls = vi.hoisted(() => ({
     about: vi.fn(),
     required: vi.fn(),
+    downloads: vi.fn(),
     subscribe: vi.fn(),
     unsubscribe: vi.fn(),
     authenticated: false,
@@ -24,7 +25,7 @@ vi.mock('@/lib/requests/RequestManager.ts', () => ({
         getAbout: () => ({ response: controls.about() }),
         getGlobalMeta: () => ({ response: controls.required() }),
         getServerSettings: () => ({ response: Promise.resolve() }),
-        getDownloadStatus: () => ({ response: Promise.resolve() }),
+        getDownloadStatus: () => ({ response: controls.downloads() }),
         getExtensionListFetch: () => ({ response: Promise.resolve() }),
         downloadSubscription: () => ({ subscribe: controls.subscribe }),
         updaterSubscription: () => ({ subscribe: controls.subscribe }),
@@ -52,6 +53,7 @@ beforeEach(() => {
     controls.authenticated = false;
     controls.about.mockResolvedValue({ data: {} });
     controls.required.mockResolvedValue(undefined);
+    controls.downloads.mockResolvedValue(undefined);
     controls.subscribe.mockImplementation(() => ({ unsubscribe: controls.unsubscribe }));
 });
 afterEach(() => {
@@ -60,6 +62,13 @@ afterEach(() => {
 });
 
 describe('application initialization', () => {
+    it('opens the app while the initial download queue is still loading', async () => {
+        controls.downloads.mockReturnValue(new Promise(() => {}));
+        await AppInitializer.start();
+        expect(controls.downloads).toHaveBeenCalledOnce();
+        expect(controls.notifierStart).toHaveBeenCalledOnce();
+        expect(controls.subscribe).toHaveBeenCalledTimes(4);
+    });
     it('initializes no-login access and replaces permanent subscriptions on restart', async () => {
         await AppInitializer.start();
         expect(controls.queue).toHaveBeenCalledOnce();

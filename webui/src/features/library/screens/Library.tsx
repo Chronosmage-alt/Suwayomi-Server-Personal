@@ -54,6 +54,8 @@ import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
 import type { MangaIdInfo } from '@/features/manga/Manga.types.ts';
 import { OffsetComponent } from '@/base/OffsetComponent.tsx';
 import { MUIUtil } from '@/lib/mui/MUI.util.ts';
+import { useGetCategoryMetadata } from '@/features/category/services/CategoryMetadata.ts';
+import { getLibraryQueryVariables } from '@/features/library/LibraryQuery.ts';
 
 const TitleWithSizeTag = styled('span')({
     display: 'flex',
@@ -69,7 +71,7 @@ export function Library() {
     const theme = useTheme();
 
     const {
-        settings: { showTabSize },
+        settings: { showTabSize, showContinueReadingButton },
     } = useMetadataServerSettings();
 
     const {
@@ -96,13 +98,17 @@ export function Library() {
     const [query] = useQueryParam(SearchParam.QUERY, StringParam);
 
     const activeTab: (typeof tabs)[number] | undefined = tabs.find((tab) => tab.id === tabSearchParam) ?? tabs[0];
+    const { sortBy } = useGetCategoryMetadata(activeTab ?? { id: -1 });
 
     const {
         data: categoryMangaResponse,
         error: mangaError,
         loading: mangaLoading,
         refetch: refetchCategoryMangas,
-    } = requestManager.useGetCategoryMangas(activeTab?.id, activeTab?.isDefaultCategory, { skip: !activeTab });
+    } = requestManager.useGetCategoryMangas(activeTab?.id, activeTab?.isDefaultCategory, {
+        skip: !activeTab,
+        variables: getLibraryQueryVariables(sortBy, showContinueReadingButton),
+    });
     const categoryMangas = categoryMangaResponse?.mangas.nodes ?? STABLE_EMPTY_ARRAY;
     const {
         visibleMangas: mangas,

@@ -2,6 +2,46 @@
 
 Updated 22 October 2026. This document is context for a fresh Codex conversation.
 
+## Library performance and single-owner runtime — 22 October 2026
+
+The user explicitly requested performance work and removal of multi-user behavior.
+They clarified slow loading occurs when opening the library in any category and
+that their setup currently has no login. Keep no-login access and existing owner 1;
+do not delete data/user foreign keys or require a new login. No NAS access/deployment
+has been performed. Details are in `docs/library-performance-single-owner.md`.
+
+The category query now selects chapter-summary dates only for the active sort,
+omits unused latest-read data and only finds first-unread targets when continue
+reading buttons are enabled. Highest chapter numbers remain available for migration;
+badges, duplicate/tracker filters and search metadata remain. Full manga details
+retain their original fragment. The initial download queue loads in the background.
+Sort updates avoid deep manga comparisons and quadratic card lookups, update live
+non-random ordering correctly and preserve random ordering during data refresh.
+
+The public personal schema exposes no user listing/lookup, invitations/registration,
+role administration or secondary-user recovery/password mutations. Owner-only login
+and refresh remain for optional protection; no-login mode is unchanged. HTTP/WS
+token resolution rejects secondary identities. Owner permission checks bypass role
+queries. Sync startup subscribes only to owner 1 without a new-user discovery timer.
+Historical account/storage tests deliberately use an internal compatibility schema;
+the actual production schema/session rules have separate OwnerAccountTest coverage.
+No database migrations or deletions were introduced. Account-related generated UI
+types were removed by real schema regeneration, not hand edits.
+
+Isolated tools remain under the `suwayomi-r3549` temporary directory. New performance
+scripts, raw measurements, seeded H2 data/runtime copies, browser artifacts and logs
+are under `C:/Users/bayleeh/.codex/tmp/suwayomi-performance-20261022`.
+The fixture has 300 manga/150,000 chapters in three categories. Alternating old/new
+queries, excluding two warm-up runs each, measured median 732 ms vs 258 ms with
+continue-reading data retained on both sides; core results were compared exactly.
+These are synthetic API timings under shared machine load, not measured NAS gains.
+Full server validation passed 480 tests, ktlint and shadowJar; final frontend tests
+passed 74, with TypeScript, lint and formatting passing. Desktop/mobile category and
+all date-sort navigation passed without page/GraphQL errors or overflow; covers were
+fixture placeholders. Packaged smoke validates the removed account API as well as
+Komga/default-user operations and assets. Local QA dismisses the unrelated official
+server-update prompt; it never downloads an official replacement.
+
 ## Current upstream integration — 22 October 2026
 
 The user approved bringing in the reviewed server and bundled WebUI updates,

@@ -60,7 +60,11 @@ suspend fun getUserFromToken(token: String?): UserType {
         return UserType.Visitor
     }
 
-    return Jwt.verifyJwt(token)
+    return when (val user = Jwt.verifyJwt(token)) {
+        is UserType.Admin -> if (user.id == 1) user else UserType.Visitor
+        is UserType.User -> if (user.id == 1) UserType.Admin(1) else UserType.Visitor
+        UserType.Visitor -> UserType.Visitor
+    }
 }
 
 fun UserType.requirePermissions(vararg permissions: UserPermission) {

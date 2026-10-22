@@ -3151,9 +3151,11 @@ export class RequestManager {
         isDefault: boolean,
         options?: QueryHookOptions<GetMangasLibraryQuery, GetMangasLibraryQueryVariables>,
     ): AbortableApolloUseQueryResponse<GetMangasLibraryQuery, GetMangasLibraryQueryVariables> {
-        return this.useGetMangas(
+        const { variables, ...queryOptions } = options ?? {};
+        return this.useGetMangas<GetMangasLibraryQuery, GetMangasLibraryQueryVariables>(
             GET_MANGAS_LIBRARY,
             {
+                ...variables,
                 filter: {
                     inLibrary: { equalTo: true },
                     categoryId: {
@@ -3162,7 +3164,7 @@ export class RequestManager {
                     },
                 },
             },
-            options,
+            queryOptions,
         );
     }
 

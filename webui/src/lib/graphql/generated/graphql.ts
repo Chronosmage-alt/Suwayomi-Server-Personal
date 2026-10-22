@@ -605,7 +605,6 @@ export type GetCategoryMangasQuery = {
                     totalCount: number;
                     nodes: Array<{ __typename: 'TrackRecordType'; id: number; trackerId: number }>;
                 };
-                chapters: { __typename: 'ChapterNodeList'; totalCount: number };
                 firstUnreadChapter: {
                     __typename: 'ChapterType';
                     id: number;
@@ -631,6 +630,7 @@ export type GetCategoryMangasQuery = {
                 latestFetchedChapter: { __typename: 'ChapterType'; id: number; fetchedAt: string } | null;
                 latestUploadedChapter: { __typename: 'ChapterType'; id: number; uploadDate: string } | null;
                 highestNumberedChapter: { __typename: 'ChapterType'; id: number; chapterNumber: number } | null;
+                chapters: { __typename: 'ChapterNodeList'; totalCount: number };
             }>;
             pageInfo: {
                 __typename: 'PageInfo';
@@ -2747,7 +2747,7 @@ export type MangaReaderFieldsFragment = {
     trackRecords: { __typename: 'TrackRecordNodeList'; totalCount: number };
 };
 
-export type MangaLibraryFieldsFragment = {
+export type MangaLibraryCommonFieldsFragment = {
     __typename: 'MangaType';
     genre: Array<string>;
     lastFetchedAt: string | null;
@@ -2782,6 +2782,42 @@ export type MangaLibraryFieldsFragment = {
         nodes: Array<{ __typename: 'TrackRecordType'; id: number; trackerId: number }>;
     };
     chapters: { __typename: 'ChapterNodeList'; totalCount: number };
+};
+
+export type MangaLibraryFieldsFragment = {
+    __typename: 'MangaType';
+    genre: Array<string>;
+    lastFetchedAt: string | null;
+    inLibraryAt: string;
+    status: Types.MangaStatus;
+    artist: string | null;
+    author: string | null;
+    description: string | null;
+    id: number;
+    title: string;
+    thumbnailUrl: string | null;
+    thumbnailUrlLastFetched: string | null;
+    inLibrary: boolean;
+    initialized: boolean;
+    sourceId: string;
+    unreadCount: number;
+    downloadCount: number;
+    bookmarkCount: number;
+    hasDuplicateChapters: boolean;
+    meta: Array<{ __typename: 'MangaMetaType'; mangaId: number; key: string; value: string }>;
+    source: {
+        __typename: 'SourceType';
+        id: string;
+        name: string;
+        displayName: string;
+        lang: string;
+        iconUrl: string;
+    } | null;
+    trackRecords: {
+        __typename: 'TrackRecordNodeList';
+        totalCount: number;
+        nodes: Array<{ __typename: 'TrackRecordType'; id: number; trackerId: number }>;
+    };
     firstUnreadChapter: {
         __typename: 'ChapterType';
         id: number;
@@ -2797,6 +2833,7 @@ export type MangaLibraryFieldsFragment = {
     latestFetchedChapter: { __typename: 'ChapterType'; id: number; fetchedAt: string } | null;
     latestUploadedChapter: { __typename: 'ChapterType'; id: number; uploadDate: string } | null;
     highestNumberedChapter: { __typename: 'ChapterType'; id: number; chapterNumber: number } | null;
+    chapters: { __typename: 'ChapterNodeList'; totalCount: number };
 };
 
 export type MangaMigrationFieldsFragment = {
@@ -3404,6 +3441,10 @@ export type GetMangasBaseQuery = {
 };
 
 export type GetMangasLibraryQueryVariables = Exact<{
+    includeContinueReading?: boolean;
+    includeLastRead?: boolean;
+    includeLatestFetched?: boolean;
+    includeLatestUploaded?: boolean;
     after?: string | null | undefined;
     before?: string | null | undefined;
     condition?: Types.MangaConditionInput | null | undefined;
@@ -3439,6 +3480,20 @@ export type GetMangasLibraryQuery = {
             downloadCount: number;
             bookmarkCount: number;
             hasDuplicateChapters: boolean;
+            firstUnreadChapter?: {
+                __typename: 'ChapterType';
+                id: number;
+                sourceOrder: number;
+                isRead: boolean;
+                mangaId: number;
+                chapterNumber: number;
+                name: string;
+                scanlator: string | null;
+            } | null;
+            highestNumberedChapter: { __typename: 'ChapterType'; id: number; chapterNumber: number } | null;
+            lastReadChapter?: { __typename: 'ChapterType'; id: number; sourceOrder: number; lastReadAt: string } | null;
+            latestFetchedChapter?: { __typename: 'ChapterType'; id: number; fetchedAt: string } | null;
+            latestUploadedChapter?: { __typename: 'ChapterType'; id: number; uploadDate: string } | null;
             meta: Array<{ __typename: 'MangaMetaType'; mangaId: number; key: string; value: string }>;
             source: {
                 __typename: 'SourceType';
@@ -3454,26 +3509,6 @@ export type GetMangasLibraryQuery = {
                 nodes: Array<{ __typename: 'TrackRecordType'; id: number; trackerId: number }>;
             };
             chapters: { __typename: 'ChapterNodeList'; totalCount: number };
-            firstUnreadChapter: {
-                __typename: 'ChapterType';
-                id: number;
-                sourceOrder: number;
-                isRead: boolean;
-                mangaId: number;
-                chapterNumber: number;
-                name: string;
-                scanlator: string | null;
-            } | null;
-            lastReadChapter: { __typename: 'ChapterType'; id: number; sourceOrder: number; lastReadAt: string } | null;
-            latestReadChapter: {
-                __typename: 'ChapterType';
-                id: number;
-                sourceOrder: number;
-                lastReadAt: string;
-            } | null;
-            latestFetchedChapter: { __typename: 'ChapterType'; id: number; fetchedAt: string } | null;
-            latestUploadedChapter: { __typename: 'ChapterType'; id: number; uploadDate: string } | null;
-            highestNumberedChapter: { __typename: 'ChapterType'; id: number; chapterNumber: number } | null;
         }>;
         pageInfo: {
             __typename: 'PageInfo';

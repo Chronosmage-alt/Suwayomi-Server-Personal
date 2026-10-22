@@ -91,8 +91,6 @@ object SyncManager {
     // Per-user config subscription jobs
     private val userConfigSubscriptions = ConcurrentHashMap<Int, Job>()
 
-    private val NEW_USER_CHECK_INTERVAL = 60.seconds
-
     /**
      * The per-user sync state. Returns a [StateFlow] that is `null` until the user has (started) syncing.
      */
@@ -109,17 +107,7 @@ object SyncManager {
     }
 
     fun scheduleSyncTask() {
-        // Subscribe to the sync config of all existing users
-        val userIds = transaction { UserAccountTable.selectAll().map { it[UserAccountTable.id].value } }
-        userIds.forEach { userId -> subscribeToUserSyncConfig(userId) }
-
-        // Periodically pick up newly created users (and clean up deleted ones)
-        HAScheduler.schedule(
-            { checkForNewUsers() },
-            interval = NEW_USER_CHECK_INTERVAL.inWholeMilliseconds,
-            delay = NEW_USER_CHECK_INTERVAL.inWholeMilliseconds,
-            name = "sync-new-user-check",
-        )
+        subscribeToUserSyncConfig(1)
     }
 
     internal fun checkForNewUsers() {

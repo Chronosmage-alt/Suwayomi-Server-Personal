@@ -43,7 +43,10 @@ abstract class GraphQLTest : ApplicationTest() {
     companion object {
         private val logger = KotlinLogging.logger {}
 
-        private val requestHandler: GraphQLRequestHandler by lazy {
+        private val requestHandler by lazy { createRequestHandler(false) }
+        private val compatibilityRequestHandler by lazy { createRequestHandler(true) }
+
+        private fun createRequestHandler(includeAccountManagement: Boolean): GraphQLRequestHandler {
             val exceptionHandler =
                 DataFetcherExceptionHandler { handlerParameters ->
                     future {
@@ -66,14 +69,21 @@ abstract class GraphQLTest : ApplicationTest() {
 
             val graphQL =
                 GraphQL
-                    .newGraphQL(runBlocking { GraphQLSchemaProvider.getSchema() })
-                    .queryExecutionStrategy(AsyncExecutionStrategy(exceptionHandler))
+                    .newGraphQL(
+                        if (includeAccountManagement) {
+                            GraphQLSchemaProvider.createSchema(includeAccountManagement = true)
+                        } else {
+                            runBlocking { GraphQLSchemaProvider.getSchema() }
+                        },
+                    ).queryExecutionStrategy(AsyncExecutionStrategy(exceptionHandler))
                     .mutationExecutionStrategy(AsyncExecutionStrategy(exceptionHandler))
                     .build()
 
-            GraphQLRequestHandler(graphQL, TachideskDataLoaderRegistryFactory.create())
+            return GraphQLRequestHandler(graphQL, TachideskDataLoaderRegistryFactory.create())
         }
     }
+
+    protected open val includeAccountManagement = false
 
     /** The default admin user (id 1) used when a test does not specify one. */
     protected val admin: UserType = UserType.Admin(1)
@@ -114,7 +124,8 @@ abstract class GraphQLTest : ApplicationTest() {
             val request = GraphQLRequest(query = query, variables = variables)
 
             @Suppress("UNCHECKED_CAST")
-            requestHandler.executeRequest(request, context) as GraphQLResponse<*>
+            (if (includeAccountManagement) compatibilityRequestHandler else requestHandler)
+                .executeRequest(request, context) as GraphQLResponse<*>
         }
 
     /** Assert that the response contains no GraphQL errors. */

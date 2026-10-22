@@ -52,6 +52,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class PermissionsTest : GraphQLTest() {
+    override val includeAccountManagement = true
+
     companion object {
         private const val SAFE_SOURCE_ID = 424242L
         private const val NSFW_SOURCE_ID = 424243L

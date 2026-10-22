@@ -538,30 +538,6 @@ export type CreateCategoryPayload = {
     clientMutationId?: Maybe<Scalars['String']['output']>;
 };
 
-export type CreateRecoveryCodeInput = {
-    clientMutationId?: InputMaybe<Scalars['String']['input']>;
-    userId: Scalars['Int']['input'];
-};
-
-export type CreateRecoveryCodePayload = {
-    __typename?: 'CreateRecoveryCodePayload';
-    clientMutationId?: Maybe<Scalars['String']['output']>;
-    code: Scalars['String']['output'];
-    expiresAt: Scalars['LongString']['output'];
-};
-
-export type CreateRegistrationCodeInput = {
-    clientMutationId?: InputMaybe<Scalars['String']['input']>;
-    permissions?: InputMaybe<Array<UserPermission>>;
-};
-
-export type CreateRegistrationCodePayload = {
-    __typename?: 'CreateRegistrationCodePayload';
-    clientMutationId?: Maybe<Scalars['String']['output']>;
-    code: Scalars['String']['output'];
-    expiresAt: Scalars['LongString']['output'];
-};
-
 export enum DatabaseType {
     H2 = 'H2',
     Postgresql = 'POSTGRESQL',
@@ -1793,10 +1769,6 @@ export type Mutation = {
     connectKoSyncAccount: KoSyncConnectPayload;
     createBackup: CreateBackupPayload;
     createCategory?: Maybe<CreateCategoryPayload>;
-    /** Issues a one-time recovery code bound to CreateRecoveryCodeInput.userId. */
-    createRecoveryCode: CreateRecoveryCodePayload;
-    /** Issues a one-time registration code. */
-    createRegistrationCode: CreateRegistrationCodePayload;
     deleteCategory?: Maybe<DeleteCategoryPayload>;
     deleteCategoryMeta?: Maybe<DeleteCategoryMetaPayload>;
     deleteCategoryMetas?: Maybe<DeleteCategoryMetasPayload>;
@@ -1833,13 +1805,8 @@ export type Mutation = {
     organiseCompletedManga: CompletedCategoryPreview;
     pullKoSyncProgress?: Maybe<PullKoSyncProgressPayload>;
     pushKoSyncProgress?: Maybe<PushKoSyncProgressPayload>;
-    /** Redeems a recovery code with a self-chosen new password. */
-    redeemRecoveryCode: RedeemRecoveryCodePayload;
-    /** Redeems a registration code with a username and a self-chosen password. */
-    redeemRegistrationCode: RedeemRegistrationCodePayload;
     refreshKomgaManga: KomgaMangaInfo;
     refreshToken: RefreshTokenPayload;
-    register: RegisterPayload;
     removeExtensionStore?: Maybe<RemoveExtensionStorePayload>;
     reorderChapterDownload?: Maybe<ReorderChapterDownloadPayload>;
     reorderChapterDownloads?: Maybe<ReorderChapterDownloadPayload>;
@@ -1848,8 +1815,6 @@ export type Mutation = {
     resetUserSettings: ResetUserSettingsPayload;
     resetWebUIUpdateStatus?: Maybe<WebUiUpdateStatus>;
     restoreBackup: RestoreBackupPayload;
-    /** Revokes an outstanding user code. */
-    revokeUserCode: RevokeUserCodePayload;
     scanKomgaLibrary: KomgaScanStatus;
     setAdaptiveMangaMode: AdaptiveMangaSchedule;
     setAdaptiveSource: AdaptiveUpdateSettings;
@@ -1864,7 +1829,6 @@ export type Mutation = {
     setKomgaSettings: KomgaSettings;
     setMangaMeta?: Maybe<SetMangaMetaPayload>;
     setMangaMetas?: Maybe<SetMangaMetasPayload>;
-    setPassword: SetPasswordPayload;
     setSettings: SetSettingsPayload;
     setSourceMeta?: Maybe<SetSourceMetaPayload>;
     setSourceMetas?: Maybe<SetSourceMetasPayload>;
@@ -1893,7 +1857,6 @@ export type Mutation = {
     updateSourcePreference?: Maybe<UpdateSourcePreferencePayload>;
     updateStop: UpdateStopPayload;
     updateTrack: UpdateTrackPayload;
-    updateUser: UpdateUserPayload;
     updateWebUI?: Maybe<WebUiUpdatePayload>;
 };
 
@@ -1931,14 +1894,6 @@ export type MutationCreateBackupArgs = {
 
 export type MutationCreateCategoryArgs = {
     input: CreateCategoryInput;
-};
-
-export type MutationCreateRecoveryCodeArgs = {
-    input: CreateRecoveryCodeInput;
-};
-
-export type MutationCreateRegistrationCodeArgs = {
-    input: CreateRegistrationCodeInput;
 };
 
 export type MutationDeleteCategoryArgs = {
@@ -2078,24 +2033,12 @@ export type MutationPushKoSyncProgressArgs = {
     input: PushKoSyncProgressInput;
 };
 
-export type MutationRedeemRecoveryCodeArgs = {
-    input: RedeemRecoveryCodeInput;
-};
-
-export type MutationRedeemRegistrationCodeArgs = {
-    input: RedeemRegistrationCodeInput;
-};
-
 export type MutationRefreshKomgaMangaArgs = {
     mangaId: Scalars['Int']['input'];
 };
 
 export type MutationRefreshTokenArgs = {
     input: RefreshTokenInput;
-};
-
-export type MutationRegisterArgs = {
-    input: RegisterInput;
 };
 
 export type MutationRemoveExtensionStoreArgs = {
@@ -2124,10 +2067,6 @@ export type MutationResetUserSettingsArgs = {
 
 export type MutationRestoreBackupArgs = {
     input: RestoreBackupInput;
-};
-
-export type MutationRevokeUserCodeArgs = {
-    input: RevokeUserCodeInput;
 };
 
 export type MutationSetAdaptiveMangaModeArgs = {
@@ -2187,10 +2126,6 @@ export type MutationSetMangaMetaArgs = {
 
 export type MutationSetMangaMetasArgs = {
     input: SetMangaMetasInput;
-};
-
-export type MutationSetPasswordArgs = {
-    input: SetPasswordInput;
 };
 
 export type MutationSetSettingsArgs = {
@@ -2299,10 +2234,6 @@ export type MutationUpdateStopArgs = {
 
 export type MutationUpdateTrackArgs = {
     input: UpdateTrackInput;
-};
-
-export type MutationUpdateUserArgs = {
-    input: UpdateUserInput;
 };
 
 export type MutationUpdateWebUiArgs = {
@@ -2734,20 +2665,6 @@ export type PartialUserSettingsTypeInput = {
     updateMangas?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
-export type PermissionsFilterInput = {
-    distinctFrom?: InputMaybe<UserPermission>;
-    distinctFromAll?: InputMaybe<Array<UserPermission>>;
-    distinctFromAny?: InputMaybe<Array<UserPermission>>;
-    equalTo?: InputMaybe<UserPermission>;
-    in?: InputMaybe<Array<UserPermission>>;
-    isNull?: InputMaybe<Scalars['Boolean']['input']>;
-    notDistinctFrom?: InputMaybe<UserPermission>;
-    notEqualTo?: InputMaybe<UserPermission>;
-    notEqualToAll?: InputMaybe<Array<UserPermission>>;
-    notEqualToAny?: InputMaybe<Array<UserPermission>>;
-    notIn?: InputMaybe<Array<UserPermission>>;
-};
-
 export type PlatformInfo = {
     __typename?: 'PlatformInfo';
     arch: Scalars['String']['output'];
@@ -2831,11 +2748,7 @@ export type Query = {
     trackers: TrackerNodeList;
     /** @deprecated Replaced with libraryUpdateStatus, replace with libraryUpdateStatus */
     updateStatus: UpdateStatus;
-    user: UserType;
-    /** Outstanding (unconsumed, unexpired) user codes. */
-    userCodes: Array<UserCodeType>;
     userSettings: UserSettingsType;
-    users: UserNodeList;
     validateBackup: ValidateBackupResult;
 };
 
@@ -3018,56 +2931,8 @@ export type QueryTrackersArgs = {
     orderByType?: InputMaybe<SortOrder>;
 };
 
-export type QueryUserArgs = {
-    id?: InputMaybe<Scalars['Int']['input']>;
-};
-
-export type QueryUserCodesArgs = {
-    forUserId?: InputMaybe<Scalars['Int']['input']>;
-};
-
-export type QueryUsersArgs = {
-    after?: InputMaybe<Scalars['Cursor']['input']>;
-    before?: InputMaybe<Scalars['Cursor']['input']>;
-    condition?: InputMaybe<UserConditionInput>;
-    filter?: InputMaybe<UserFilterInput>;
-    first?: InputMaybe<Scalars['Int']['input']>;
-    last?: InputMaybe<Scalars['Int']['input']>;
-    offset?: InputMaybe<Scalars['Int']['input']>;
-    order?: InputMaybe<Array<UserOrderInput>>;
-};
-
 export type QueryValidateBackupArgs = {
     input: ValidateBackupInput;
-};
-
-export type RedeemRecoveryCodeInput = {
-    clientMutationId?: InputMaybe<Scalars['String']['input']>;
-    code: Scalars['String']['input'];
-    newPassword: Scalars['String']['input'];
-};
-
-export type RedeemRecoveryCodePayload = {
-    __typename?: 'RedeemRecoveryCodePayload';
-    accessToken: Scalars['String']['output'];
-    clientMutationId?: Maybe<Scalars['String']['output']>;
-    refreshToken: Scalars['String']['output'];
-    user: UserType;
-};
-
-export type RedeemRegistrationCodeInput = {
-    clientMutationId?: InputMaybe<Scalars['String']['input']>;
-    code: Scalars['String']['input'];
-    password: Scalars['String']['input'];
-    username: Scalars['String']['input'];
-};
-
-export type RedeemRegistrationCodePayload = {
-    __typename?: 'RedeemRegistrationCodePayload';
-    accessToken: Scalars['String']['output'];
-    clientMutationId?: Maybe<Scalars['String']['output']>;
-    refreshToken: Scalars['String']['output'];
-    user: UserType;
 };
 
 export type RefreshTokenInput = {
@@ -3078,18 +2943,6 @@ export type RefreshTokenInput = {
 export type RefreshTokenPayload = {
     __typename?: 'RefreshTokenPayload';
     accessToken: Scalars['String']['output'];
-    clientMutationId?: Maybe<Scalars['String']['output']>;
-};
-
-export type RegisterInput = {
-    clientMutationId?: InputMaybe<Scalars['String']['input']>;
-    password: Scalars['String']['input'];
-    userPermissions?: InputMaybe<Array<UserPermission>>;
-    username: Scalars['String']['input'];
-};
-
-export type RegisterPayload = {
-    __typename?: 'RegisterPayload';
     clientMutationId?: Maybe<Scalars['String']['output']>;
 };
 
@@ -3152,16 +3005,6 @@ export type RestoreBackupPayload = {
     clientMutationId?: Maybe<Scalars['String']['output']>;
     id: Scalars['String']['output'];
     status?: Maybe<BackupRestoreStatus>;
-};
-
-export type RevokeUserCodeInput = {
-    clientMutationId?: InputMaybe<Scalars['String']['input']>;
-    id: Scalars['Int']['input'];
-};
-
-export type RevokeUserCodePayload = {
-    __typename?: 'RevokeUserCodePayload';
-    clientMutationId?: Maybe<Scalars['String']['output']>;
 };
 
 export type SearchTrackerInput = {
@@ -3290,17 +3133,6 @@ export type SetMangaMetasPayload = {
     clientMutationId?: Maybe<Scalars['String']['output']>;
     mangas: Array<MangaType>;
     metas: Array<MangaMetaType>;
-};
-
-export type SetPasswordInput = {
-    clientMutationId?: InputMaybe<Scalars['String']['input']>;
-    newPassword: Scalars['String']['input'];
-    oldPassword: Scalars['String']['input'];
-};
-
-export type SetPasswordPayload = {
-    __typename?: 'SetPasswordPayload';
-    clientMutationId?: Maybe<Scalars['String']['output']>;
 };
 
 export type SetSettingsInput = {
@@ -4457,19 +4289,6 @@ export type UpdateTrackPayload = {
     trackRecord?: Maybe<TrackRecordType>;
 };
 
-export type UpdateUserInput = {
-    clientMutationId?: InputMaybe<Scalars['String']['input']>;
-    permissions?: InputMaybe<Array<UserPermission>>;
-    role?: InputMaybe<UserRole>;
-    userId: Scalars['Int']['input'];
-};
-
-export type UpdateUserPayload = {
-    __typename?: 'UpdateUserPayload';
-    clientMutationId?: Maybe<Scalars['String']['output']>;
-    user: UserType;
-};
-
 export type UpdaterJobsInfoType = {
     __typename?: 'UpdaterJobsInfoType';
     finishedJobs: Scalars['Int']['output'];
@@ -4493,43 +4312,10 @@ export type UpdaterUpdates = {
     omittedUpdates: Scalars['Boolean']['output'];
 };
 
-export enum UserCodePurpose {
-    Recovery = 'RECOVERY',
-    Registration = 'REGISTRATION',
-}
-
-export type UserCodeType = {
-    __typename?: 'UserCodeType';
-    createdAt: Scalars['LongString']['output'];
-    createdBy: UserType;
-    expiresAt: Scalars['LongString']['output'];
-    id: Scalars['Int']['output'];
-    permissions?: Maybe<Array<UserPermission>>;
-    purpose: UserCodePurpose;
-    user?: Maybe<UserType>;
-};
-
-export type UserConditionInput = {
-    id?: InputMaybe<Scalars['Int']['input']>;
-    permission?: InputMaybe<UserPermission>;
-    role?: InputMaybe<Scalars['String']['input']>;
-    username?: InputMaybe<Scalars['String']['input']>;
-};
-
 export type UserEdge = Edge & {
     __typename?: 'UserEdge';
     cursor: Scalars['Cursor']['output'];
     node: UserType;
-};
-
-export type UserFilterInput = {
-    and?: InputMaybe<Array<UserFilterInput>>;
-    id?: InputMaybe<IntFilterInput>;
-    not?: InputMaybe<UserFilterInput>;
-    or?: InputMaybe<Array<UserFilterInput>>;
-    permission?: InputMaybe<PermissionsFilterInput>;
-    role?: InputMaybe<StringFilterInput>;
-    username?: InputMaybe<StringFilterInput>;
 };
 
 export type UserNodeList = NodeList & {
@@ -4538,16 +4324,6 @@ export type UserNodeList = NodeList & {
     nodes: Array<UserType>;
     pageInfo: PageInfo;
     totalCount: Scalars['Int']['output'];
-};
-
-export enum UserOrderBy {
-    Id = 'ID',
-    Username = 'USERNAME',
-}
-
-export type UserOrderInput = {
-    by: UserOrderBy;
-    byType?: InputMaybe<SortOrder>;
 };
 
 export enum UserPermission {

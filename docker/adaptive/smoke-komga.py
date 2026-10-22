@@ -92,6 +92,11 @@ def main():
     results["settingsType"] = graphql('query { __type(name:"KomgaSettings") { fields { name } } }')
     queries = {field["name"] for field in results["queryType"]["data"]["__type"]["fields"]}
     mutations = {field["name"] for field in results["mutationType"]["data"]["__type"]["fields"]}
+    assert not {"users", "user", "userCodes"} & queries, queries
+    assert not {
+        "register", "updateUser", "createRegistrationCode", "redeemRegistrationCode",
+        "createRecoveryCode", "redeemRecoveryCode", "revokeUserCode", "setPassword",
+    } & mutations, mutations
     assert {"komgaSettings", "komgaSearch", "komgaManga", "komgaScanStatus", "komgaLibrarySummaries"} <= queries
     assert {
         "setKomgaSettings",

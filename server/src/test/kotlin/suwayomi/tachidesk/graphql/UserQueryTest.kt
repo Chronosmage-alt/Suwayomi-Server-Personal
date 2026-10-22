@@ -26,6 +26,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class UserQueryTest : GraphQLTest() {
+    override val includeAccountManagement = true
     private var originalDownloadAsCbz: Boolean = false
 
     @BeforeEach

@@ -11,7 +11,7 @@ import { PAGE_INFO } from '@/lib/graphql/common/Fragments.ts';
 import {
     MANGA_BASE_FIELDS,
     MANGA_LIBRARY_DUPLICATE_SCREEN_FIELDS,
-    MANGA_LIBRARY_FIELDS,
+    MANGA_LIBRARY_COMMON_FIELDS,
     MANGA_META_FIELDS,
     MANGA_MIGRATION_FIELDS,
     MANGA_READER_FIELDS,
@@ -179,10 +179,14 @@ export const GET_MANGAS_BASE = gql`
 
 // returns the current manga from the database
 export const GET_MANGAS_LIBRARY = gql`
-    ${MANGA_LIBRARY_FIELDS}
+    ${MANGA_LIBRARY_COMMON_FIELDS}
     ${PAGE_INFO}
 
     query GET_MANGAS_LIBRARY(
+        $includeContinueReading: Boolean! = true
+        $includeLastRead: Boolean! = false
+        $includeLatestFetched: Boolean! = false
+        $includeLatestUploaded: Boolean! = false
         $after: Cursor
         $before: Cursor
         $condition: MangaConditionInput
@@ -203,7 +207,33 @@ export const GET_MANGAS_LIBRARY = gql`
             order: $order
         ) {
             nodes {
-                ...MANGA_LIBRARY_FIELDS
+                ...MANGA_LIBRARY_COMMON_FIELDS
+                firstUnreadChapter @include(if: $includeContinueReading) {
+                    id
+                    sourceOrder
+                    isRead
+                    mangaId
+                    chapterNumber
+                    name
+                    scanlator
+                }
+                highestNumberedChapter {
+                    id
+                    chapterNumber
+                }
+                lastReadChapter @include(if: $includeLastRead) {
+                    id
+                    sourceOrder
+                    lastReadAt
+                }
+                latestFetchedChapter @include(if: $includeLatestFetched) {
+                    id
+                    fetchedAt
+                }
+                latestUploadedChapter @include(if: $includeLatestUploaded) {
+                    id
+                    uploadDate
+                }
             }
             pageInfo {
                 ...PAGE_INFO
