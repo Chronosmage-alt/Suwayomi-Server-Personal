@@ -42,6 +42,23 @@ fixture placeholders. Packaged smoke validates the removed account API as well a
 Komga/default-user operations and assets. Local QA dismisses the unrelated official
 server-update prompt; it never downloads an official replacement.
 
+Final local verification: 480 server tests passed against the personal schema
+by default (only four historical account classes opt into compatibility), zero
+failures/errors/skips; server ktlint and JAR build passed. All 74 frontend tests,
+TypeScript, lint, formatting, schema generation, English extraction and production
+Vite/PWA build passed. Both continue-reading settings and all date-sort modes
+passed in desktop/mobile browser checks. Quantitative claims are limited to the
+alternating synthetic API benchmark; browser timings were noisy and are not a
+measured overall/NAS speedup. All task-owned QA/browser processes were stopped.
+
+Implementation was committed and pushed as `dcdc5d4bba9d23542db2b8ffb60b8045033573fa`.
+Actions run 39755210388 succeeded, including Linux/Java 25, WebUI and container
+smoke checks, then published `adaptive-test` and `sha-dcdc5d4bba9d`. Both were
+registry-verified at
+`sha256:2b4059449eb977e4b4b956c00f739e2af0a928039cccb8f19f0650de1c917d29`
+with the implementation SHA in their OCI revision label. No NAS deployment or
+production-library performance measurement was performed.
+
 ## Current upstream integration — 22 October 2026
 
 The user approved bringing in the reviewed server and bundled WebUI updates,

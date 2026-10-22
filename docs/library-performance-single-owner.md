@@ -90,3 +90,19 @@ Browser checks establish behavior and layout, not a reliable end-to-end speedup
 measurement: fixture covers are placeholders, the host is shared, and the unrelated
 official server-update prompt was dismissed. The alternating API comparison above
 is the quantitative result. No NAS deployment or production-library timing occurred.
+
+## Published image
+
+Implementation commit: `dcdc5d4bba9d23542db2b8ffb60b8045033573fa` on `dev`.
+[Actions run 39755210388](https://github.com/Chronosmage-alt/Suwayomi-Server-Personal/actions/runs/39755210388)
+passed Linux/Java 25 server tests/build, WebUI validation/build and container smoke
+tests before publishing.
+
+- Image: `ghcr.io/chronosmage-alt/suwayomi-server-personal:adaptive-test`
+- Immutable tag: `ghcr.io/chronosmage-alt/suwayomi-server-personal:sha-dcdc5d4bba9d`
+- Registry-verified digest for both:
+  `sha256:2b4059449eb977e4b4b956c00f739e2af0a928039cccb8f19f0650de1c917d29`
+- OCI revision label for both equals the full implementation SHA.
+
+All task-owned browser and QA server processes were stopped. Updating the NAS to
+this image and measuring the real library remain outside this local/CI validation.
