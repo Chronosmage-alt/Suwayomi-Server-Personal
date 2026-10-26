@@ -32,6 +32,7 @@ import suwayomi.tachidesk.manga.model.table.MangaTable
 import suwayomi.tachidesk.manga.model.table.MangaUserTable
 import suwayomi.tachidesk.manga.model.table.getWithUserData
 import suwayomi.tachidesk.manga.model.table.toDataClass
+import suwayomi.tachidesk.manga.model.table.uncategorizedLibraryManga
 
 object Category {
     /**
@@ -199,18 +200,7 @@ object Category {
 
     private fun needsDefaultCategory(userId: Int) =
         transaction {
-            MangaTable
-                .getWithUserData(userId)
-                .leftJoin(
-                    CategoryMangaTable,
-                    onColumn = { MangaTable.id },
-                    otherColumn = { CategoryMangaTable.manga },
-                    additionalConstraint = { CategoryMangaTable.user eq userId },
-                ).selectAll()
-                .where { MangaUserTable.inLibrary eq true }
-                .andWhere { CategoryMangaTable.manga.isNull() }
-                .empty()
-                .not()
+            !uncategorizedLibraryManga(userId).empty()
         }
 
     const val DEFAULT_CATEGORY_NAME = "Default"
@@ -244,7 +234,7 @@ object Category {
                 .where { CategoryTable.user eq userId }
                 .orderBy(CategoryTable.order to SortOrder.ASC)
                 .let {
-                    if (needsDefaultCategory(userId) || includeDefault) {
+                    if (includeDefault || needsDefaultCategory(userId)) {
                         it
                     } else {
                         it.andWhere { CategoryTable.isDefaultCategory eq false }

@@ -18,5 +18,6 @@ object CategoryMangaTable : IntIdTable() {
 
     init {
         uniqueIndex(user, category, manga)
+        index("categorymanga_user_manga", false, user, manga)
     }
 }

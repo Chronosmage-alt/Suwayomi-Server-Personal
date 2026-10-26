@@ -8,9 +8,12 @@ package suwayomi.tachidesk.manga.model.table
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.leftJoin
+import org.jetbrains.exposed.v1.core.notExists
+import org.jetbrains.exposed.v1.jdbc.select
 import suwayomi.tachidesk.global.model.table.UserAccountTable
 
 object MangaUserTable : IntIdTable() {
@@ -31,8 +34,20 @@ object MangaUserTable : IntIdTable() {
 
     init {
         uniqueIndex(manga, user)
+        index("mangauser_user_library_manga", false, user, inLibrary, manga)
     }
 }
+
+/** Library membership and category assignments are both scoped to the requesting user. */
+fun uncategorizedLibraryManga(userId: Int) =
+    MangaUserTable.select(MangaUserTable.manga).where {
+        (MangaUserTable.user eq userId) and (MangaUserTable.inLibrary eq true) and
+            notExists(
+                CategoryMangaTable.select(CategoryMangaTable.manga).where {
+                    (CategoryMangaTable.user eq userId) and (CategoryMangaTable.manga eq MangaUserTable.manga)
+                },
+            )
+    }
 
 fun MangaTable.getWithUserData(userId: Int) =
     leftJoin(

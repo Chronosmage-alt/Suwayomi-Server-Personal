@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
@@ -21,6 +22,8 @@ import suwayomi.tachidesk.manga.model.table.CategoryMangaTable
 import suwayomi.tachidesk.manga.model.table.CategoryTable
 import suwayomi.tachidesk.manga.model.table.ChapterTable
 import suwayomi.tachidesk.manga.model.table.MangaTable
+import suwayomi.tachidesk.manga.model.table.MangaUserTable
+import suwayomi.tachidesk.manga.model.table.uncategorizedLibraryManga
 import suwayomi.tachidesk.test.ApplicationTest
 import suwayomi.tachidesk.test.clearTables
 import suwayomi.tachidesk.test.createChapters
@@ -32,6 +35,29 @@ import kotlin.test.assertFailsWith
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CategoryMangaTest : ApplicationTest() {
+    @Test
+    fun `default category follows uncategorized library membership`() {
+        val defaultId = Category.getDefaultCategoryId(1)!!
+        val categoryId = Category.createCategory(1, "Assigned")
+        val mangaId = createLibraryManga("Uncategorized")
+        assertEquals(1L, transaction { uncategorizedLibraryManga(1).count() })
+        assertEquals(true, Category.getCategoryList(1).any { it.id == defaultId })
+
+        CategoryManga.addMangaToCategory(1, mangaId, categoryId)
+        assertEquals(0L, transaction { uncategorizedLibraryManga(1).count() })
+        assertEquals(false, Category.getCategoryList(1).any { it.id == defaultId })
+        assertEquals(true, Category.getCategoryList(1, includeDefault = true).any { it.id == defaultId })
+
+        val removedId = createLibraryManga("Removed")
+        transaction {
+            MangaUserTable.update({ MangaUserTable.manga eq removedId }) {
+                it[inLibrary] = false
+            }
+        }
+        assertEquals(0L, transaction { uncategorizedLibraryManga(1).count() })
+        assertEquals(false, Category.getCategoryList(1).any { it.id == defaultId })
+    }
+
     @BeforeEach
     fun setUp() {
         // other test classes clear the CATEGORY table without restoring user 1's default row

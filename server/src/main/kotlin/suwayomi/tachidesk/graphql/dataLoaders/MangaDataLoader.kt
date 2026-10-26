@@ -31,6 +31,7 @@ import suwayomi.tachidesk.manga.model.table.CategoryMangaTable
 import suwayomi.tachidesk.manga.model.table.MangaTable
 import suwayomi.tachidesk.manga.model.table.MangaUserTable
 import suwayomi.tachidesk.manga.model.table.getWithUserData
+import suwayomi.tachidesk.manga.model.table.uncategorizedLibraryManga
 import suwayomi.tachidesk.server.JavalinSetup
 import suwayomi.tachidesk.server.JavalinSetup.future
 import suwayomi.tachidesk.server.user.requireUser
@@ -113,17 +114,7 @@ class MangaCountForCategoryDataLoader : KotlinDataLoader<Int, Int> {
                     val count = MangaTable.id.count()
                     val countByRef =
                         if (ids.contains(defaultCategoryId)) {
-                            MangaTable
-                                .getWithUserData(userId)
-                                .leftJoin(
-                                    CategoryMangaTable,
-                                    onColumn = { MangaTable.id },
-                                    otherColumn = { CategoryMangaTable.manga },
-                                    additionalConstraint = { CategoryMangaTable.user eq userId },
-                                ).select(count)
-                                .where { MangaUserTable.inLibrary eq true }
-                                .andWhere { CategoryMangaTable.manga.isNull() }
-                                .let { mapOf(defaultCategoryId to it.single()[count].toInt()) }
+                            mapOf(defaultCategoryId to uncategorizedLibraryManga(userId).count().toInt())
                         } else {
                             emptyMap()
                         } +
