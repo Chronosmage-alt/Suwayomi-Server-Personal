@@ -58,7 +58,7 @@ def main():
         "query { checkForWebUIUpdate { tag updateAvailable } }"
     )
     assert results["customWebUIUpdate"]["data"]["checkForWebUIUpdate"] == {
-        "tag": "r3553", "updateAvailable": False
+        "tag": "r3562", "updateAvailable": False
     }, results["customWebUIUpdate"]
     results["databaseSettings"] = graphql(
         "query { settings { databaseSchema hikariMaxPoolSize } }"

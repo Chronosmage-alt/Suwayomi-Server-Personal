@@ -33,6 +33,22 @@ export const GET_MANGA_META = gql`
     }
 `;
 
+// Notification filtering needs metadata only, without library cards or chapter summaries.
+export const GET_MANGAS_META = gql`
+    ${MANGA_META_FIELDS}
+
+    query GET_MANGAS_META($filter: MangaFilterInput, $first: Int) {
+        mangas(filter: $filter, first: $first) {
+            nodes {
+                id
+                meta {
+                    ...MANGA_META_FIELDS
+                }
+            }
+        }
+    }
+`;
+
 // returns the current manga from the database
 export const GET_MANGA_SCREEN = gql`
     ${MANGA_SCREEN_FIELDS}

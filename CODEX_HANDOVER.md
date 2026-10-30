@@ -1,6 +1,24 @@
 # Suwayomi adaptive updates — handover
 
-Updated 22 October 2026. This document is context for a fresh Codex conversation.
+Updated 30 October 2026. This document is context for a fresh Codex conversation.
+
+## Bundled WebUI r3562 — 30 October 2026
+
+The user accepted the recommended WebUI integration. Official base r3553
+`c3465cb4ea15a8778fa6ded50e68bddd18052145` advances nine commits to r3562
+`7d9f8ee679ed0ce5683ea570e3845798bee7d6de`. Details are in
+`docs/webui-r3562-integration.md`. Preserve the personal startup generation,
+cancellation/retry and notifier safeguards. Excluded scanlators now use the new
+`GET_MANGAS_META` batch query, not the broad library-card query from upstream.
+GraphQL codegen used the existing personal `server/build/adaptive-schema.graphql`;
+only operation types changed. No server runtime or dependency changes were made.
+The custom CI revision and smoke expectations use r3562. All 91 frontend tests,
+TypeScript, lint, formatting, English extraction and production Vite/PWA build
+passed locally. Temporary artifacts are in the `suwayomi-webui-20261030` directory
+under the existing Codex tmp root. Desktop/mobile browser checks also passed for
+chapter progress and custom library settings with no overflow or browser/GraphQL
+errors. The separate fixture runtime and proxy were stopped. Changes remain local;
+no image publication or NAS deployment was performed.
 
 ## Library performance and single-owner runtime — 22 October 2026
 

@@ -33,13 +33,11 @@ export class AppInitializer {
             return;
         }
 
-        void AppInitializer.fetchBackgroundData();
-
         await AppInitializer.fetchRequiredData();
         if (generation !== AppInitializer.generation) {
             return;
         }
-        await AppInitializer.startPostDataFetchLogic();
+        void AppInitializer.startNonRequired();
     }
 
     static stop(): void {
@@ -80,7 +78,7 @@ export class AppInitializer {
         ]);
     }
 
-    private static async startPostDataFetchLogic(): Promise<void> {
+    private static async startNonRequired(): Promise<void> {
         await AppInitializer.executeActions([
             [
                 'resumeMigration',
@@ -98,11 +96,6 @@ export class AppInitializer {
                 },
             ],
             ['libraryUpdateNotifier', () => LibraryUpdateNotifier.start()],
-        ]);
-    }
-
-    private static async fetchBackgroundData(): Promise<void> {
-        await AppInitializer.executeActions([
             // Populate the download cache without holding the library behind a large queue response.
             ['downloadStatus', () => requestManager.getDownloadStatus().response],
             // Fetch extension list on startup to show up-to-date number of available extension updates in the navigation bar

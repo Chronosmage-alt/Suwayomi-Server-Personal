@@ -54,6 +54,7 @@ beforeEach(() => {
     controls.about.mockResolvedValue({ data: {} });
     controls.required.mockResolvedValue(undefined);
     controls.downloads.mockResolvedValue(undefined);
+    controls.notifierStart.mockResolvedValue(undefined);
     controls.subscribe.mockImplementation(() => ({ unsubscribe: controls.unsubscribe }));
 });
 afterEach(() => {
@@ -65,15 +66,18 @@ describe('application initialization', () => {
     it('opens the app while the initial download queue is still loading', async () => {
         controls.downloads.mockReturnValue(new Promise(() => {}));
         await AppInitializer.start();
+        await vi.advanceTimersByTimeAsync(0);
         expect(controls.downloads).toHaveBeenCalledOnce();
         expect(controls.notifierStart).toHaveBeenCalledOnce();
         expect(controls.subscribe).toHaveBeenCalledTimes(4);
     });
     it('initializes no-login access and replaces permanent subscriptions on restart', async () => {
         await AppInitializer.start();
+        await vi.advanceTimersByTimeAsync(0);
         expect(controls.queue).toHaveBeenCalledOnce();
         expect(controls.subscribe).toHaveBeenCalledTimes(4);
         await AppInitializer.start();
+        await vi.advanceTimersByTimeAsync(0);
         expect(controls.unsubscribe).toHaveBeenCalledTimes(4);
         expect(controls.subscribe).toHaveBeenCalledTimes(8);
         AppInitializer.stop();
@@ -100,7 +104,25 @@ describe('application initialization', () => {
         await started;
         expect(controls.required).toHaveBeenCalledOnce();
         expect(controls.notifierStart).not.toHaveBeenCalled();
+        expect(controls.subscribe).not.toHaveBeenCalled();
+        expect(controls.unsubscribe).not.toHaveBeenCalled();
+    });
+
+    it('does not hold startup behind a slow notifier', async () => {
+        controls.notifierStart.mockReturnValue(new Promise(() => {}));
+        await AppInitializer.start();
+        await vi.advanceTimersByTimeAsync(0);
+        expect(controls.notifierStart).toHaveBeenCalledOnce();
         expect(controls.subscribe).toHaveBeenCalledTimes(4);
-        expect(controls.unsubscribe).toHaveBeenCalledTimes(4);
+    });
+
+    it('retries synchronous background failures without duplicating subscriptions', async () => {
+        controls.downloads.mockImplementationOnce(() => {
+            throw new Error('offline');
+        });
+        await AppInitializer.start();
+        await vi.advanceTimersByTimeAsync(5000);
+        expect(controls.downloads).toHaveBeenCalledTimes(2);
+        expect(controls.subscribe).toHaveBeenCalledTimes(4);
     });
 });

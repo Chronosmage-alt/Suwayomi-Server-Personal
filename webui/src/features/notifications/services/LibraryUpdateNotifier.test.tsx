@@ -6,6 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import '@/lib/dayjs/Setup.ts';
+import '@/lib/koration/Setup.ts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Subject } from 'rxjs';
 import { i18n } from '@lingui/core';
@@ -15,6 +17,7 @@ const controls = vi.hoisted(() => ({
     settings: { notifyNewChapters: true, notifyNewChaptersLastNotifiedAt: 100 },
     watch: vi.fn(),
     chapters: vi.fn(),
+    mangas: vi.fn(),
     save: vi.fn(),
     notify: vi.fn(),
 }));
@@ -22,6 +25,7 @@ vi.mock('@/lib/requests/RequestManager.ts', () => ({
     requestManager: {
         graphQLClient: { client: { watchFragment: controls.watch } },
         getChapters: (...args: unknown[]) => ({ response: controls.chapters(...args) }),
+        getMangas: (...args: unknown[]) => ({ response: controls.mangas(...args) }),
     },
 }));
 vi.mock('@/features/settings/services/ServerSettingsMetadata.ts', () => ({
@@ -44,6 +48,7 @@ beforeEach(() => {
     controls.watch.mockReturnValue(status);
     controls.settings = { notifyNewChapters: true, notifyNewChaptersLastNotifiedAt: 100 };
     controls.chapters.mockResolvedValue(result());
+    controls.mangas.mockResolvedValue({ data: { mangas: { nodes: [{ id: 42, meta: [] }] } } });
     controls.save.mockResolvedValue(undefined);
     controls.notify.mockResolvedValue(undefined);
     i18n.load('en', {});
@@ -60,6 +65,7 @@ describe('chapter notifications with adaptive updates', () => {
         await LibraryUpdateNotifier.start();
         expect(controls.watch).not.toHaveBeenCalled();
         expect(controls.chapters).not.toHaveBeenCalled();
+        expect(controls.mangas).not.toHaveBeenCalled();
     });
 
     it('ignores incomplete state and waits until an update is finished', async () => {
@@ -95,6 +101,44 @@ describe('chapter notifications with adaptive updates', () => {
         status.next({ data: { isRunning: false } });
         await settled();
         expect(controls.notify).not.toHaveBeenCalled();
+    });
+
+    it('ignores excluded scanlators and still advances past their chapters', async () => {
+        controls.chapters
+            .mockResolvedValueOnce(result([{ ...chapter, scanlator: 'Hidden' }]))
+            .mockResolvedValueOnce(result([], 1));
+        controls.mangas.mockResolvedValue({
+            data: { mangas: { nodes: [{ id: 42, meta: [{ key: 'webUI_excludedScanlators', value: '["Hidden"]' }] }] } },
+        });
+        await LibraryUpdateNotifier.start();
+        status.next({ data: { isRunning: false } });
+        await settled();
+        expect(controls.notify).not.toHaveBeenCalled();
+        expect(controls.save).toHaveBeenCalledWith('notifyNewChaptersLastNotifiedAt', 110);
+        expect(controls.mangas.mock.calls[0][1]).toEqual({ filter: { id: { in: [42] } }, first: 1 });
+    });
+
+    it('keeps allowed chapters across pages and fetches preferences once per manga', async () => {
+        controls.chapters
+            .mockResolvedValueOnce({
+                data: {
+                    chapters: {
+                        nodes: [{ ...chapter, scanlator: 'Hidden' }],
+                        pageInfo: { hasNextPage: true, endCursor: 'next' },
+                    },
+                },
+            })
+            .mockResolvedValueOnce(result([], 1))
+            .mockResolvedValueOnce(result([{ ...chapter, id: 2, fetchedAt: '120', scanlator: 'Allowed' }]));
+        controls.mangas.mockResolvedValue({
+            data: { mangas: { nodes: [{ id: 42, meta: [{ key: 'webUI_excludedScanlators', value: '["Hidden"]' }] }] } },
+        });
+        await LibraryUpdateNotifier.start();
+        status.next({ data: { isRunning: false } });
+        await vi.waitFor(() => expect(controls.notify).toHaveBeenCalledOnce());
+        expect(controls.notify.mock.calls[0][1].body).toBe('1 new chapter');
+        expect(controls.mangas).toHaveBeenCalledOnce();
+        expect(controls.save).toHaveBeenCalledWith('notifyNewChaptersLastNotifiedAt', 120);
     });
 
     it('discards an in-flight result after disabling', async () => {
