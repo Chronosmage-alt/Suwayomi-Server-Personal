@@ -54,7 +54,7 @@ vi.mock('@/features/tracker/components/cards/TrackerCard.tsx', () => ({
     TrackerMode: { SEARCH: 'SEARCH', INFO: 'INFO', UNTRACKED: 'UNTRACKED' },
     TrackerCard: ({ tracker }: { tracker: { name: string } }) => <p>{tracker.name}</p>,
 }));
-vi.mock('@/base/utils/Toast.ts', () => ({ makeToast: vi.fn() }));
+vi.mock('@/base/notification/Notifications.ts', () => ({ Notifications: { success: vi.fn(), error: vi.fn() } }));
 afterEach(() => {
     cleanup();
     vi.clearAllMocks();

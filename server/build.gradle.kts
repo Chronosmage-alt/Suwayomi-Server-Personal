@@ -183,6 +183,11 @@ tasks {
         archiveClassifier.set("")
         destinationDirectory.set(File("$rootDir/server/build"))
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        // AndroidCompat precedes the stub dependency; keep its implementations.
+        // New upstream overrides may still be present in the published stub JAR.
+        filesMatching("android/**") {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        }
         mergeServiceFiles("META-INF/services")
         dependencies {
             // The deprecated GraalVM js-community POM chain declares `<type>pom</type>`

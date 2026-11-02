@@ -8,16 +8,10 @@
 
 import { CombinedGraphQLErrors } from '@apollo/client';
 import type { ReactNode } from 'react';
-import { makeToast } from '@/base/utils/Toast.ts';
+import { Notifications } from '@/base/notification/Notifications.ts';
 import { t } from '@lingui/core/macro';
 
-export const jsonSaveParse = <T = any>(...args: Parameters<typeof JSON.parse>): T | null => {
-    try {
-        return JSON.parse(...args);
-    } catch (e) {
-        return null;
-    }
-};
+export { jsonSaveParse } from '@/lib/Json.ts';
 
 export const getErrorMessage = (error: unknown): string => {
     if (error instanceof Error || CombinedGraphQLErrors.is(error)) {
@@ -101,9 +95,9 @@ export const maybeExecuteWithDelay = (
 export const copyToClipboard = async (text: string) => {
     try {
         await navigator.clipboard.writeText(text);
-        makeToast(t`Copied to clipboard`, 'info');
+        Notifications.info(t`Copied to clipboard`);
     } catch (e) {
-        makeToast(t`Could not copy to clipboard`, 'error', getErrorMessage(e));
+        Notifications.error(t`Could not copy to clipboard`, getErrorMessage(e));
     }
 };
 

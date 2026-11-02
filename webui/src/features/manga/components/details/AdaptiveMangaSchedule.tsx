@@ -29,7 +29,7 @@ import type {
     ResetAdaptiveMangaMutationVariables,
 } from '@/lib/graphql/generated/graphql.ts';
 import { AdaptiveUpdateMode } from '@/lib/graphql/generated/graphql-base.types.ts';
-import { makeToast } from '@/base/utils/Toast.ts';
+import { Notifications } from '@/base/notification/Notifications.ts';
 import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 
 const date = (value: string) => new Date(Number(value)).toLocaleString();
@@ -56,7 +56,7 @@ export const AdaptiveMangaSchedule = ({ mangaId }: { mangaId: number }) => {
             await operation();
             await refetch();
         } catch (e) {
-            makeToast(t`Failed to save changes`, 'error', getErrorMessage(e));
+            Notifications.error(t`Failed to save changes`, getErrorMessage(e));
         }
     };
     if (error) {

@@ -161,11 +161,11 @@ msgstr "{availableUpdates, plural, one {# update available} other {# updates ava
 msgid "{categoryCount, plural, one {# category} other {# categories}}"
 msgstr "{categoryCount, plural, one {# category} other {# categories}}"
 
-#: src/features/notifications/services/LibraryUpdateNotifier.ts
+#: src/features/updates/LibraryUpdateNotifier.ts
 msgid "{count, plural, one {# new chapter} other {# new chapters}}"
 msgstr "{count, plural, one {# new chapter} other {# new chapters}}"
 
-#: src/features/notifications/services/LibraryUpdateNotifier.ts
+#: src/features/updates/LibraryUpdateNotifier.ts
 msgid "{count, plural, one {#+ new chapter} other {#+ new chapters}}"
 msgstr "{count, plural, one {#+ new chapter} other {#+ new chapters}}"
 
@@ -331,7 +331,7 @@ msgstr "{currentAutoUpdateIntervalHours}h"
 msgid "{currentDownloadAheadLimit, plural, one {# Chapter} other {# Chapters}}"
 msgstr "{currentDownloadAheadLimit, plural, one {# Chapter} other {# Chapters}}"
 
-#: src/features/notifications/services/LibraryUpdateNotifier.ts
+#: src/features/updates/LibraryUpdateNotifier.ts
 msgid "{entryCount, plural, one {in # entry} other {in # entries}}"
 msgstr "{entryCount, plural, one {in # entry} other {in # entries}}"
 
@@ -778,6 +778,10 @@ msgstr "Badges"
 msgid "Basic Authentication"
 msgstr "Basic Authentication"
 
+#: src/base/notification/BasicAuthDeprecationReminder.ts
+msgid "Basic Authentication deprecation"
+msgstr "Basic Authentication deprecation"
+
 #: src/features/reader/settings/ReaderSettings.constants.tsx
 msgid "Behaviour"
 msgstr "Behaviour"
@@ -964,6 +968,10 @@ msgstr "Category selection dialog"
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "CBZ MIME-Type"
 msgstr "CBZ MIME-Type"
+
+#: src/base/notification/BasicAuthDeprecationReminder.ts
+msgid "Change"
+msgstr "Change"
 
 #: src/features/manga/Manga.constants.ts
 msgid "Change categories"
@@ -1501,6 +1509,10 @@ msgstr "Creating theme…"
 #: src/features/theme/Themes.ts
 msgid "Crimson"
 msgstr "Crimson"
+
+#: src/features/reader/settings/layout/ReaderLayoutSettings.tsx
+msgid "Crop borders"
+msgstr "Crop borders"
 
 #: src/features/migration/components/MigrationDestinationSourceList.tsx
 msgid "Current source"
@@ -3515,13 +3527,14 @@ msgstr "Page"
 msgid "Page gap"
 msgstr "Page gap"
 
-#: src/features/chapter/components/cards/ChapterCard.tsx
+#: src/features/chapter/services/Chapters.ts
 msgid "Page: {page}"
 msgstr "Page: {page}"
 
-#: src/features/chapter/components/cards/ChapterCard.tsx
-msgid "Page: {page}/{pageCount}"
-msgstr "Page: {page}/{pageCount}"
+#. placeholder {0}: chapter.pageCount
+#: src/features/chapter/services/Chapters.ts
+msgid "Page: {page}/{0}"
+msgstr "Page: {page}/{0}"
 
 #: src/features/browse/screens/BrowseSettings.tsx
 msgid "Parallel source requests"
@@ -4532,6 +4545,10 @@ msgstr "Test Connection"
 msgid "That haven't been started"
 msgstr "That haven't been started"
 
+#: src/base/notification/BasicAuthDeprecationReminder.ts
+msgid "The \"Basic Authentication\" mode is deprecated and will be removed in the future. Switch to another authentication mode"
+msgstr "The \"Basic Authentication\" mode is deprecated and will be removed in the future. Switch to another authentication mode"
+
 #: src/features/settings/screens/ServerSettings.tsx
 msgid "The address of the FlareSolverr server"
 msgstr "The address of the FlareSolverr server"
@@ -4657,6 +4674,10 @@ msgstr "This is independent of Exclude Completed. It does not refresh sources, c
 #: src/features/app-updates/components/VersionInfo.tsx
 msgid "This is the latest version"
 msgstr "This is the latest version"
+
+#: src/features/settings/Settings.constants.ts
+msgid "This mode is deprecated and will be removed in the future"
+msgstr "This mode is deprecated and will be removed in the future"
 
 #: src/features/manga/components/details/AdaptiveMangaSchedule.tsx
 msgid "This title uses normal automatic updates."

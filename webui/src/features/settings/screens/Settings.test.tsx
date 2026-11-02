@@ -22,7 +22,7 @@ vi.mock('@/base/utils/MediaQuery.tsx', () => ({
 }));
 vi.mock('@/features/navigation-bar/hooks/useAppTitle.ts', () => ({ useAppTitle: vi.fn() }));
 vi.mock('@/features/navigation-bar/NavbarContext.tsx', () => ({ useNavBarContext: () => ({ bottomBarHeight: 0 }) }));
-vi.mock('@/base/OffsetComponent.tsx', () => ({
+vi.mock('@/base/components/OffsetComponent.tsx', () => ({
     OffsetComponent: ({ children }: { children: React.ReactNode }) => <aside>{children}</aside>,
     useOffsetComponent: () => ({ topOffset: 64 }),
 }));

@@ -32,7 +32,7 @@ import type {
     SetAdaptiveSourceMutation,
     SetAdaptiveSourceMutationVariables,
 } from '@/lib/graphql/generated/graphql.ts';
-import { makeToast } from '@/base/utils/Toast.ts';
+import { Notifications } from '@/base/notification/Notifications.ts';
 import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 
 const sourceKey = (sourceId: string, providerPackage: string) => `${sourceId}:${providerPackage}`;
@@ -65,7 +65,7 @@ export const AdaptiveUpdateSettings = () => {
             await operation();
             await refetch();
         } catch (e) {
-            makeToast(t`Failed to save changes`, 'error', getErrorMessage(e));
+            Notifications.error(t`Failed to save changes`, getErrorMessage(e));
         }
     };
     if (error) {

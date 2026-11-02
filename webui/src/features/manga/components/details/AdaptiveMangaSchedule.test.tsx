@@ -38,7 +38,7 @@ vi.mock('@apollo/client/react', () => ({
     }),
     useMutation: () => [vi.fn(), { loading: false }],
 }));
-vi.mock('@/base/utils/Toast.ts', () => ({ makeToast: vi.fn() }));
+vi.mock('@/base/notification/Notifications.ts', () => ({ Notifications: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/lib/HelperFunctions.ts', () => ({ getErrorMessage: vi.fn() }));
 i18n.load('en', {});
 i18n.activate('en');

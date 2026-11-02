@@ -16,6 +16,7 @@ export default defineConfig({
     resolve: { alias: { '@': path.resolve(import.meta.dirname, './src') } },
     test: {
         environment: 'jsdom',
+        maxWorkers: 2,
         include: ['src/**/*.test.tsx'],
         restoreMocks: true,
     },

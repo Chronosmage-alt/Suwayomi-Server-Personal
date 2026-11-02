@@ -7,7 +7,7 @@
  */
 
 /* oxlint-disable max-classes-per-file */
-import { jsonSaveParse } from '@/lib/HelperFunctions.ts';
+import { jsonSaveParse } from '@/lib/Json.ts';
 import { SubpathUtil } from '@/lib/utils/SubpathUtil.ts';
 
 const THIRD_PARTY_KEYS = ['mui-mode'];

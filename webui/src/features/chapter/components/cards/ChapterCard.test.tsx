@@ -6,16 +6,26 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import '@/lib/dayjs/Setup.ts';
+import '@/lib/koration/Setup.ts';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import { i18n } from '@lingui/core';
 import { I18nProvider } from '@lingui/react';
 import { MemoryRouter } from 'react-router-dom';
+import type * as ChaptersModule from '@/features/chapter/services/Chapters.ts';
 import { ChapterCard } from '@/features/chapter/components/cards/ChapterCard.tsx';
 
-vi.mock('@/features/chapter/services/Chapters.ts', () => ({
-    Chapters: { getReaderOpenChapterLocationState: () => ({}) },
-}));
+vi.mock('@/features/chapter/services/Chapters.ts', async (importOriginal) => {
+    const actual = await importOriginal<typeof ChaptersModule>();
+    return {
+        Chapters: class extends actual.Chapters {
+            static getReaderOpenChapterLocationState() {
+                return {};
+            }
+        },
+    };
+});
 vi.mock('@/features/reader/services/ReaderService.ts', () => ({ ReaderService: { openReader: vi.fn() } }));
 vi.mock('@/features/chapter/components/actions/ChapterActionMenuItems.tsx', () => ({
     ChapterActionMenuItems: () => null,

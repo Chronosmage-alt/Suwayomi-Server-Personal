@@ -11,7 +11,7 @@ import '@/lib/koration/Setup.ts';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Subject } from 'rxjs';
 import { i18n } from '@lingui/core';
-import { LibraryUpdateNotifier } from '@/features/notifications/services/LibraryUpdateNotifier.ts';
+import { LibraryUpdateNotifier } from '@/features/updates/LibraryUpdateNotifier.ts';
 
 const controls = vi.hoisted(() => ({
     settings: { notifyNewChapters: true, notifyNewChaptersLastNotifiedAt: 100 },
@@ -26,13 +26,14 @@ vi.mock('@/lib/requests/RequestManager.ts', () => ({
         graphQLClient: { client: { watchFragment: controls.watch } },
         getChapters: (...args: unknown[]) => ({ response: controls.chapters(...args) }),
         getMangas: (...args: unknown[]) => ({ response: controls.mangas(...args) }),
+        updateMangaMeta: () => ({ response: Promise.resolve() }),
     },
 }));
 vi.mock('@/features/settings/services/ServerSettingsMetadata.ts', () => ({
     getMetadataServerSettings: async () => controls.settings,
     updateMetadataServerSettings: controls.save,
 }));
-vi.mock('@/features/notifications/services/Notifications.ts', () => ({ Notifications: { show: controls.notify } }));
+vi.mock('@/base/notification/Notifications.ts', () => ({ Notifications: { info: controls.notify } }));
 vi.mock('@/features/authentication/AuthManager.ts', () => ({ AuthManager: { isAuthRequired: () => false } }));
 vi.mock('@/features/manga/services/Mangas.ts', () => ({ Mangas: { getThumbnailUrl: () => '' } }));
 vi.mock('@/lib/react-router/ReactRouter.ts', () => ({ ReactRouter: { navigate: vi.fn() } }));
@@ -136,7 +137,7 @@ describe('chapter notifications with adaptive updates', () => {
         await LibraryUpdateNotifier.start();
         status.next({ data: { isRunning: false } });
         await vi.waitFor(() => expect(controls.notify).toHaveBeenCalledOnce());
-        expect(controls.notify.mock.calls[0][1].body).toBe('1 new chapter');
+        expect(controls.notify.mock.calls[0][1]).toBe('1 new chapter');
         expect(controls.mangas).toHaveBeenCalledOnce();
         expect(controls.save).toHaveBeenCalledWith('notifyNewChaptersLastNotifiedAt', 120);
     });

@@ -44,7 +44,7 @@ vi.mock('@/features/authentication/AuthManager.ts', () => ({
     },
 }));
 vi.mock('@/features/migration/MigrationManager.ts', () => ({ MigrationManager: { isActive: () => true } }));
-vi.mock('@/features/notifications/services/LibraryUpdateNotifier.ts', () => ({
+vi.mock('@/features/updates/LibraryUpdateNotifier.ts', () => ({
     LibraryUpdateNotifier: { start: controls.notifierStart, stop: controls.notifierStop },
 }));
 beforeEach(() => {

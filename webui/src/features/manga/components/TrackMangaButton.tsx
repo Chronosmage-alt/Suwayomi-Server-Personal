@@ -15,7 +15,6 @@ import CheckIcon from '@mui/icons-material/Check';
 import { useLingui } from '@lingui/react/macro';
 import { plural } from '@lingui/core/macro';
 import { requestManager } from '@/lib/requests/RequestManager.ts';
-import { makeToast } from '@/base/utils/Toast.ts';
 import { TrackManga } from '@/features/tracker/components/TrackManga.tsx';
 import { Trackers } from '@/features/tracker/services/Trackers.ts';
 import { FlexWrapButton } from '@/base/components/buttons/FlexWrapButton.tsx';
@@ -25,6 +24,7 @@ import type { MangaTitleInfo, MangaTrackRecordInfo } from '@/features/manga/Mang
 import { AppRoutes } from '@/base/AppRoute.constants.ts';
 import { MediaQuery } from '@/base/utils/MediaQuery.tsx';
 import { STABLE_EMPTY_ARRAY } from '@/base/Base.constants.ts';
+import { Notifications } from '@/base/notification/Notifications.ts';
 
 export const TrackMangaButton = ({ manga }: { manga: MangaTrackRecordInfo & MangaTitleInfo }) => {
     const { t } = useLingui();
@@ -41,7 +41,7 @@ export const TrackMangaButton = ({ manga }: { manga: MangaTrackRecordInfo & Mang
 
     const handleClick = (openPopup: () => void) => {
         if (trackerList.error) {
-            makeToast(t`Could not load track info`, 'error', trackerList.error?.toString());
+            Notifications.error(t`Could not load track info`, trackerList.error?.toString());
             return;
         }
 
