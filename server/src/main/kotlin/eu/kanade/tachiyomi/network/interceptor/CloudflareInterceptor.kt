@@ -49,7 +49,7 @@ class CloudflareInterceptor(
         val originalResponse = chain.proceed(originalRequest)
 
         // Check if Cloudflare anti-bot is on
-        if (!(originalResponse.code in ERROR_CODES && originalResponse.header("Server") in SERVER_CHECK)) {
+        if (!isCloudflareChallenge(originalResponse)) {
             return originalResponse
         }
 
@@ -62,9 +62,9 @@ class CloudflareInterceptor(
         val flareResponseFallback = serverConfig.flareSolverrAsResponseFallback.value
 
         return try {
-            originalResponse.close()
             resolveCloudflare(chain, originalRequest, originalResponse, flareResponseFallback)
         } catch (e: Exception) {
+            originalResponse.close()
             // Because OkHttp's enqueue only handles IOExceptions, wrap the exception so that we don't crash the entire app
             throw IOException(e)
         }
@@ -94,6 +94,7 @@ class CloudflareInterceptor(
                                 result.userAgent,
                             )
 
+                        originalResponse.close()
                         return chain.proceed(request)
                     }
 
@@ -126,6 +127,7 @@ class CloudflareInterceptor(
                         ),
                     )
 
+                    originalResponse.close()
                     chain.proceed(request)
                 } else {
                     CFClearance.inflightCalls.remove(host, bypassRequest)
@@ -168,6 +170,7 @@ class CloudflareInterceptor(
 
                 setUserAgent(flareResponse.solution.userAgent)
 
+                originalResponse.close()
                 return originalResponse
                     .newBuilder()
                     .code(flareResponse.solution.status)
@@ -178,9 +181,16 @@ class CloudflareInterceptor(
             }
         }
 
+        // A solver that did not detect a challenge may legitimately return no clearance.
+        // Preserve the origin response so source interceptors can handle token/auth errors.
+        if (flareResponse.solution.cookies.none { it.name in COOKIE_NAMES }) {
+            return originalResponse
+        }
+
         val request =
             CFClearance.requestWithFlareSolverr(flareResponse, setUserAgent, originalRequest)
 
+        originalResponse.close()
         return chain.proceed(request)
     }
 
@@ -201,6 +211,31 @@ class CloudflareInterceptor(
         private val SERVER_CHECK = arrayOf("cloudflare-nginx", "cloudflare")
         val COOKIE_NAMES = listOf("cf_clearance")
         private val CHROME_IMAGE_TEMPLATE_REGEX = Regex("""<title>(.*?) \(\d+×\d+\)</title>""")
+
+        internal fun isCloudflareChallenge(response: Response): Boolean {
+            // Cloudflare also proxies ordinary origin errors. Its Server header alone
+            // does not mean a challenge was served (e.g. an expired image token).
+            if (response.header("cf-mitigated").equals("challenge", ignoreCase = true)) return true
+            if (response.code !in ERROR_CODES ||
+                SERVER_CHECK.none { it.equals(response.header("Server"), ignoreCase = true) }
+            ) {
+                return false
+            }
+            val contentType =
+                response
+                    .header("Content-Type")
+                    .orEmpty()
+                    .substringBefore(';')
+                    .trim()
+            if (!contentType.equals("text/html", ignoreCase = true)) return false
+
+            // peekBody leaves the response available to the extension's interceptors.
+            val body = response.peekBody(64 * 1024).string()
+            return CHALLENGE_MARKERS.any { body.contains(it, ignoreCase = true) }
+        }
+
+        private val CHALLENGE_MARKERS =
+            listOf("/cdn-cgi/challenge-platform/", "cf-chl-", "_cf_chl_", "id=\"challenge-form\"", "id='challenge-form'")
     }
 }
 
