@@ -330,13 +330,13 @@ export class LibraryUpdateNotifier {
 
     /** An entry without any chapter from before the last notification got its chapter list fetched for the first time */
     private static async isInitialFetch(mangaId: MangaIdInfo['id'], lastNotifiedAt: number): Promise<boolean> {
-        const { totalCount } = await LibraryUpdateNotifier.fetchChapters(
+        const { nodes } = await LibraryUpdateNotifier.fetchChapters(
             { mangaId: { equalTo: mangaId }, fetchedAt: { lessThanOrEqualTo: `${lastNotifiedAt}` } },
             { first: 1 },
             false,
         );
 
-        return !totalCount;
+        return !nodes.length;
     }
 
     /** Uses the fetch date of the server instead of the clock of the client, which can differ */

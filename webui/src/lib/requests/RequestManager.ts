@@ -20,6 +20,7 @@ import { CombinedGraphQLErrors, Observable } from '@apollo/client/core';
 import { useMutation, useQuery, useSubscription } from '@apollo/client/react';
 import type { Reference } from '@apollo/client/utilities';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { evictMangaChapterLists } from '@/lib/requests/MangaChapterCache.ts';
 import { d } from 'koration';
 import type { IRestClient } from '@/lib/requests/client/RestClient.ts';
 import { RestClient } from '@/lib/requests/client/RestClient.ts';
@@ -351,7 +352,6 @@ import { KO_SYNC_LOGIN, KO_SYNC_LOGOUT } from '@/lib/graphql/koreader/KoreaderSy
 import { GET_KO_SYNC_STATUS } from '@/lib/graphql/koreader/KoreaderSyncQuery.ts';
 import { ImageCache } from '@/lib/service-worker/ImageCache.ts';
 import { Sources } from '@/features/source/services/Sources.ts';
-import uniqBy from 'lodash/fp/uniqBy';
 import { EXTENSION_STORE_FIELDS } from '@/lib/graphql/extension/store/ExtensionStoreFragments.ts';
 import { ADD_EXTENSION_STORE, REMOVE_EXTENSION_STORE } from '@/lib/graphql/extension/store/ExtensionStoreMutation.ts';
 import { assertIsDefined } from '@/base/Asserts.ts';
@@ -3605,17 +3605,20 @@ export class RequestManager {
             options,
         );
 
+        const updatedChapters = result.data?.chapters.nodes;
         useEffect(() => {
-            this.graphQLClient.client.refetchQueries({
+            if (!updatedChapters?.length) {
+                return;
+            }
+            void this.graphQLClient.client.refetchQueries({
                 updateCache(cache) {
-                    uniqBy('mangaId', result.data?.chapters.nodes).forEach((chapter) => {
-                        Object.keys((cache as InMemoryCache).extract().ROOT_QUERY as object)
-                            .filter((key) => key.includes('chapters') && key.includes(`mangaId":${chapter.mangaId}`))
-                            .forEach((key) => cache.evict({ fieldName: key }));
-                    });
+                    evictMangaChapterLists(
+                        cache,
+                        updatedChapters.map((chapter) => chapter.mangaId),
+                    );
                 },
             });
-        }, [result]);
+        }, [updatedChapters]);
 
         return {
             ...result,
@@ -3818,15 +3821,12 @@ export class RequestManager {
 
                     const cache = this.graphQLClient.client.cache as InMemoryCache;
 
-                    updatesChanged?.mangaUpdates
-                        .filter((update) => update.status === MangaJobStatus.Complete)
-                        .forEach((update) =>
-                            Object.keys(cache.extract().ROOT_QUERY as object)
-                                .filter(
-                                    (key) => key.includes('chapters') && key.includes(`mangaId":${update.manga.id}`),
-                                )
-                                .forEach((key) => cache.evict({ fieldName: key })),
-                        );
+                    evictMangaChapterLists(
+                        cache,
+                        updatesChanged?.mangaUpdates
+                            .filter((update) => update.status === MangaJobStatus.Complete)
+                            .map((update) => update.manga.id) ?? [],
+                    );
 
                     subscriber.next(result);
                 },

@@ -39,8 +39,8 @@ vi.mock('@/features/manga/services/Mangas.ts', () => ({ Mangas: { getThumbnailUr
 vi.mock('@/lib/react-router/ReactRouter.ts', () => ({ ReactRouter: { navigate: vi.fn() } }));
 
 let status: Subject<{ data: { isRunning?: boolean; skippedMangasCount?: number } }>;
-const result = (nodes: unknown[] = [], totalCount = nodes.length) => ({
-    data: { chapters: { nodes, totalCount, pageInfo: { hasNextPage: false } } },
+const result = (nodes: unknown[] = []) => ({
+    data: { chapters: { nodes, pageInfo: { hasNextPage: false } } },
 });
 const chapter = { id: 1, fetchedAt: '110', manga: { id: 42, title: 'Fixture manga', thumbnailUrl: null } };
 beforeEach(() => {
@@ -86,7 +86,9 @@ describe('chapter notifications with adaptive updates', () => {
     });
 
     it('reports stored new chapters and preserves updater state', async () => {
-        controls.chapters.mockResolvedValueOnce(result([chapter])).mockResolvedValueOnce(result([], 1));
+        controls.chapters
+            .mockResolvedValueOnce(result([chapter]))
+            .mockResolvedValueOnce(result([{ ...chapter, fetchedAt: '90' }]));
         await LibraryUpdateNotifier.start();
         const data = { isRunning: false, skippedMangasCount: 9 };
         status.next({ data });
@@ -97,7 +99,7 @@ describe('chapter notifications with adaptive updates', () => {
     });
 
     it('does not notify an initial chapter import', async () => {
-        controls.chapters.mockResolvedValueOnce(result([chapter])).mockResolvedValueOnce(result([], 0));
+        controls.chapters.mockResolvedValueOnce(result([chapter])).mockResolvedValueOnce(result([]));
         await LibraryUpdateNotifier.start();
         status.next({ data: { isRunning: false } });
         await settled();
@@ -107,7 +109,7 @@ describe('chapter notifications with adaptive updates', () => {
     it('ignores excluded scanlators and still advances past their chapters', async () => {
         controls.chapters
             .mockResolvedValueOnce(result([{ ...chapter, scanlator: 'Hidden' }]))
-            .mockResolvedValueOnce(result([], 1));
+            .mockResolvedValueOnce(result([{ ...chapter, fetchedAt: '90' }]));
         controls.mangas.mockResolvedValue({
             data: { mangas: { nodes: [{ id: 42, meta: [{ key: 'webUI_excludedScanlators', value: '["Hidden"]' }] }] } },
         });
@@ -129,7 +131,7 @@ describe('chapter notifications with adaptive updates', () => {
                     },
                 },
             })
-            .mockResolvedValueOnce(result([], 1))
+            .mockResolvedValueOnce(result([{ ...chapter, fetchedAt: '90' }]))
             .mockResolvedValueOnce(result([{ ...chapter, id: 2, fetchedAt: '120', scanlator: 'Allowed' }]));
         controls.mangas.mockResolvedValue({
             data: { mangas: { nodes: [{ id: 42, meta: [{ key: 'webUI_excludedScanlators', value: '["Hidden"]' }] }] } },

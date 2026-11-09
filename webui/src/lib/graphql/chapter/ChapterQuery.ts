@@ -122,7 +122,6 @@ export const GET_CHAPTERS_UPDATES = gql`
             pageInfo {
                 ...PAGE_INFO
             }
-            totalCount
         }
     }
 `;

@@ -731,11 +731,6 @@ export type ChapterUpdateListFieldsFragment = {
         inLibrary: boolean;
         initialized: boolean;
         sourceId: string;
-        unreadCount: number;
-        downloadCount: number;
-        bookmarkCount: number;
-        hasDuplicateChapters: boolean;
-        chapters: { __typename: 'ChapterNodeList'; totalCount: number };
     };
 };
 
@@ -1051,7 +1046,6 @@ export type GetChaptersUpdatesQuery = {
     lastUpdateTimestamp: { __typename: 'LastUpdateTimestampPayload'; timestamp: string };
     chapters: {
         __typename: 'ChapterNodeList';
-        totalCount: number;
         nodes: Array<{
             __typename: 'ChapterType';
             fetchedAt: string;
@@ -1078,11 +1072,6 @@ export type GetChaptersUpdatesQuery = {
                 inLibrary: boolean;
                 initialized: boolean;
                 sourceId: string;
-                unreadCount: number;
-                downloadCount: number;
-                bookmarkCount: number;
-                hasDuplicateChapters: boolean;
-                chapters: { __typename: 'ChapterNodeList'; totalCount: number };
             };
         }>;
         pageInfo: {

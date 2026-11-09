@@ -73,14 +73,12 @@ export const CHAPTER_LIST_FIELDS = gql`
 export const CHAPTER_UPDATE_LIST_FIELDS = gql`
     ${CHAPTER_LIST_FIELDS}
     ${MANGA_BASE_FIELDS}
-    ${MANGA_CHAPTER_STAT_FIELDS}
 
     fragment CHAPTER_UPDATE_LIST_FIELDS on ChapterType {
         ...CHAPTER_LIST_FIELDS
 
         manga {
             ...MANGA_BASE_FIELDS
-            ...MANGA_CHAPTER_STAT_FIELDS
         }
     }
 `;
