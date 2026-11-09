@@ -7,6 +7,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, renderHook } from '@testing-library/react';
 import { AppInitializer } from '@/base/AppInitializer.ts';
 
 const controls = vi.hoisted(() => ({
@@ -63,6 +64,58 @@ afterEach(() => {
 });
 
 describe('application initialization', () => {
+    it('does not execute queued setup after an immediate stop', async () => {
+        const started = AppInitializer.start();
+        AppInitializer.stop();
+        await started;
+        expect(controls.about).not.toHaveBeenCalled();
+        expect(controls.queue).not.toHaveBeenCalled();
+        expect(controls.subscribe).not.toHaveBeenCalled();
+    });
+
+    it('reports required initialization errors and clears them after recovery', async () => {
+        controls.required.mockRejectedValueOnce(new Error('offline'));
+        const { result, unmount } = renderHook(() => AppInitializer.useStatus());
+        expect(result.current.initialized).toBe(false);
+        let started: Promise<void>;
+        await act(async () => {
+            started = AppInitializer.start();
+            await vi.advanceTimersByTimeAsync(0);
+        });
+        const loading = result.current.actions.find((action) => action.key === 'globalMeta');
+        expect(loading?.active).toBe(true);
+        expect(loading?.error).toEqual(new Error('offline'));
+        expect(loading?.message).toBeDefined();
+        expect(result.current.initialized).toBe(false);
+        await act(async () => {
+            await vi.advanceTimersByTimeAsync(5000);
+            await started;
+        });
+        expect(result.current.initialized).toBe(true);
+        expect(result.current.actions.find((action) => action.key === 'globalMeta')?.error).toBeUndefined();
+        act(() => AppInitializer.stop());
+        expect(result.current.initialized).toBe(false);
+        expect(result.current.actions).toEqual([]);
+        unmount();
+    });
+
+    it('ignores an authentication response received after stopping', async () => {
+        let finish!: (value: { data: object }) => void;
+        controls.about.mockReturnValue(
+            new Promise((resolve) => {
+                finish = resolve;
+            }),
+        );
+        const started = AppInitializer.start();
+        await vi.advanceTimersByTimeAsync(0);
+        AppInitializer.stop();
+        finish({ data: {} });
+        await started;
+        expect(controls.authenticated).toBe(false);
+        expect(controls.queue).not.toHaveBeenCalled();
+        expect(controls.required).not.toHaveBeenCalled();
+    });
+
     it('opens the app while the initial download queue is still loading', async () => {
         controls.downloads.mockReturnValue(new Promise(() => {}));
         await AppInitializer.start();

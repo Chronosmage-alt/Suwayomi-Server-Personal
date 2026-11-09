@@ -103,6 +103,7 @@ export type AddExtensionStorePayload = {
 };
 
 export enum AuthMode {
+    /** @deprecated Please switch to another AuthMode */
     BasicAuth = 'BASIC_AUTH',
     None = 'NONE',
     SimpleLogin = 'SIMPLE_LOGIN',

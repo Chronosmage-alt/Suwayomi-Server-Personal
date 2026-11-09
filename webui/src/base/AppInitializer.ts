@@ -15,75 +15,87 @@ import { MigrationManager } from '@/features/migration/MigrationManager.ts';
 import { defaultPromiseErrorHandler } from '@/lib/DefaultPromiseErrorHandler.ts';
 import { LibraryUpdateNotifier } from '@/features/updates/LibraryUpdateNotifier.ts';
 import { BasicAuthDeprecationReminder } from '@/base/notification/BasicAuthDeprecationReminder.ts';
+import type { MessageDescriptor } from '@lingui/core';
+import { useSyncExternalStore } from 'react';
+import { msg } from '@lingui/core/macro';
 
-type ActionConfig = [Key: string, Setup: () => Promise<unknown> | unknown][];
-type InFlightAction = [Key: string, InFlightSetup: Promise<unknown> | unknown];
+type Action = {
+    key: string;
+    message?: MessageDescriptor;
+    errorMessage?: MessageDescriptor;
+    required: boolean;
+    setup: () => Promise<unknown> | unknown;
+    active?: boolean;
+    error?: unknown;
+};
+
+type Status = {
+    initialized: boolean;
+    actions: Omit<Action, 'setup'>[];
+};
+
+type Config = readonly (
+    | Action
+    | ((Omit<Action, 'required'> & { required: false })[] | (Omit<Action, 'required'> & { required: true })[])
+)[];
 
 export class AppInitializer {
     private static generation = 0;
 
-    private static actions: ControlledPromise[] = [];
+    private static initialized = false;
+
+    private static actions = new Map<string, Action & { controller: ControlledPromise }>();
 
     private static subscriptions: any[] = [];
 
-    static async start(): Promise<void> {
-        AppInitializer.stop();
-        const { generation } = AppInitializer;
-        await AppInitializer.authenticate();
-        if (generation !== AppInitializer.generation) {
-            return;
-        }
+    private static subscribeCount: number = 0;
 
-        await AppInitializer.fetchRequiredData();
-        if (generation !== AppInitializer.generation) {
-            return;
-        }
-        void AppInitializer.startNonRequired();
-    }
+    private static subscribers = new Map<number, () => void>();
 
-    static stop(): void {
-        AppInitializer.generation += 1;
-        AppInitializer.actions.forEach((promise) => promise.resolve());
-        AppInitializer.actions = [];
-        AppInitializer.subscriptions.forEach((subscription) => subscription.unsubscribe());
-        AppInitializer.subscriptions = [];
-        LibraryUpdateNotifier.stop();
-    }
+    private static notifierValue: number = 0;
 
-    private static async authenticate(): Promise<void> {
-        const { generation } = AppInitializer;
-        await AppInitializer.executeActions([
-            [
-                'initializeAuthentication',
-                async () => {
-                    const response = await requestManager.getAbout().response;
+    private static config: Config = [
+        {
+            key: 'initializeAuthentication',
+            message: msg`Checking for authentication…`,
+            errorMessage: msg`Unable to determine authentication`,
+            required: true,
+            setup: async () => {
+                const { generation } = AppInitializer;
+                const response = await requestManager.getAbout().response;
 
-                    if (generation !== AppInitializer.generation || AuthManager.isAuthInitialized()) {
-                        return;
-                    }
+                if (generation !== AppInitializer.generation || AuthManager.isAuthInitialized()) {
+                    return;
+                }
 
-                    assertIsDefined(response?.data);
+                assertIsDefined(response?.data);
 
-                    AuthManager.setAuthRequired(false);
-                    AuthManager.setAuthInitialized(true);
-                    requestManager.processQueues();
-                },
-            ],
-        ]);
-    }
-
-    private static async fetchRequiredData(): Promise<void> {
-        await AppInitializer.executeActions([
-            ['globalMeta', () => requestManager.getGlobalMeta().response],
-            ['serverSettings', () => requestManager.getServerSettings().response],
-        ]);
-    }
-
-    private static async startNonRequired(): Promise<void> {
-        await AppInitializer.executeActions([
-            [
-                'resumeMigration',
-                () => {
+                AuthManager.setAuthRequired(false);
+                AuthManager.setAuthInitialized(true);
+                requestManager.processQueues();
+            },
+        },
+        [
+            {
+                key: 'globalMeta',
+                message: msg`Loading client settings…`,
+                errorMessage: msg`Unable to load client settings`,
+                required: true,
+                setup: () => requestManager.getGlobalMeta().response,
+            },
+            {
+                key: 'serverSettings',
+                message: msg`Loading server settings…`,
+                errorMessage: msg`Unable to load server settings`,
+                required: true,
+                setup: () => requestManager.getServerSettings().response,
+            },
+        ],
+        [
+            {
+                key: 'resumeMigration',
+                required: false,
+                setup: () => {
                     if (!MigrationManager.isActive()) {
                         navigator.locks
                             ?.request('migration-executor', async () => {
@@ -95,102 +107,181 @@ export class AppInitializer {
                             .catch(defaultPromiseErrorHandler('ResumeMigration'));
                     }
                 },
-            ],
-            ['libraryUpdateNotifier', () => LibraryUpdateNotifier.start()],
-            // Populate the download cache without holding the library behind a large queue response.
-            ['downloadStatus', () => requestManager.getDownloadStatus().response],
+            },
+            {
+                key: 'libraryUpdateNotifier',
+                required: false,
+                setup: () => LibraryUpdateNotifier.start(),
+            },
+            // Load the full download status once on startup to fill the cache
+            {
+                key: 'downloadStatus',
+                required: false,
+                setup: () => requestManager.getDownloadStatus().response,
+            },
             // Fetch extension list on startup to show up-to-date number of available extension updates in the navigation bar
             // without having to open the extensions page.
-            ['fetchExtensionList', () => requestManager.getExtensionListFetch().response],
+            {
+                key: 'fetchExtensionList',
+                required: false,
+                setup: () => requestManager.getExtensionListFetch().response,
+            },
             /*
              * Creates permanent subscriptions to always have the latest data.
              *
              * E.g. in case a view is open, which does not subscribe to the download updates, finished downloads are never received
              * and thus, data of existing chapters/mangas in the cache get outdated
              */
-            ['downloadSubscription', () => this.subscriptions.push(requestManager.downloadSubscription().subscribe())],
-            ['updaterSubscription', () => this.subscriptions.push(requestManager.updaterSubscription().subscribe())],
-            ['webUISubscription', () => this.subscriptions.push(requestManager.webUIUpdateSubscription().subscribe())],
-            ['syncSubscription', () => this.subscriptions.push(requestManager.syncSubscription().subscribe())],
-            ['basicAuthDeprecationReminder', () => BasicAuthDeprecationReminder.start()],
-        ]);
+            {
+                key: 'downloadSubscription',
+                required: false,
+                setup: () => this.subscriptions.push(requestManager.downloadSubscription().subscribe()),
+            },
+            {
+                key: 'updaterSubscription',
+                required: false,
+                setup: () => this.subscriptions.push(requestManager.updaterSubscription().subscribe()),
+            },
+            {
+                key: 'webUISubscription',
+                required: false,
+                setup: () => this.subscriptions.push(requestManager.webUIUpdateSubscription().subscribe()),
+            },
+            {
+                key: 'syncSubscription',
+                required: false,
+                setup: () => this.subscriptions.push(requestManager.syncSubscription().subscribe()),
+            },
+            { key: 'basicAuthDeprecationReminder', required: false, setup: () => BasicAuthDeprecationReminder.start() },
+        ],
+    ];
+
+    static async start(): Promise<void> {
+        AppInitializer.stop();
+        const { generation } = AppInitializer;
+
+        for (const actions of AppInitializer.config) {
+            // oxlint-disable-next-line no-await-in-loop
+            await AppInitializer.startActions(actions);
+            if (generation !== AppInitializer.generation) {
+                return;
+            }
+        }
+        AppInitializer.initialized = true;
+        AppInitializer.notify();
     }
 
-    private static async executeActions(
-        actions: ActionConfig,
-        {
-            timeout = d(5).seconds.inWholeMilliseconds,
-            timeoutMultiplier = 1.5,
-            maxTimeout = d(2).minutes.inWholeMilliseconds,
-            promise,
-        }: {
-            timeout?: number;
-            timeoutMultiplier?: number;
-            maxTimeout?: number;
-            promise?: ControlledPromise;
-        } = {},
-    ): Promise<void> {
-        const finalPromise = promise ?? new ControlledPromise();
-        if (!promise) {
-            AppInitializer.actions.push(finalPromise);
-        }
+    static stop(): void {
+        AppInitializer.generation += 1;
+        AppInitializer.initialized = false;
+        AppInitializer.actions.forEach(({ controller }) => controller.resolve());
+        AppInitializer.actions.clear();
+        AppInitializer.subscriptions.forEach((subscription) => subscription.unsubscribe());
+        AppInitializer.subscriptions = [];
+        LibraryUpdateNotifier.stop();
+        AppInitializer.notify();
+    }
 
-        const isAborted = async () => {
-            try {
-                const result = (await Promise.race([finalPromise.promise, Promise.resolve(false)])) ?? true;
+    private static subscribe(callback: () => void): () => void {
+        const key = AppInitializer.subscribeCount++;
+        AppInitializer.subscribers.set(key, callback);
 
-                return result;
-            } catch (error) {
-                return true;
-            }
+        return () => this.unsubscribe(key);
+    }
+
+    private static unsubscribe(key: number): void {
+        AppInitializer.subscribers.delete(key);
+    }
+
+    private static notify(): void {
+        AppInitializer.notifierValue = (AppInitializer.notifierValue + 1) % Number.MAX_SAFE_INTEGER;
+        AppInitializer.subscribers.forEach((callback) => callback());
+    }
+
+    public static useStatus(): Status {
+        useSyncExternalStore(AppInitializer.subscribe.bind(AppInitializer), () => AppInitializer.notifierValue);
+
+        return {
+            initialized: AppInitializer.initialized,
+            actions: [...AppInitializer.actions.values()].map(
+                ({ key, message, errorMessage, error, required, active }) => ({
+                    key,
+                    message,
+                    errorMessage,
+                    error,
+                    required,
+                    active,
+                }),
+            ),
         };
+    }
 
-        if (await isAborted()) {
-            return;
+    private static async startActions(actions: Action | Action[]): Promise<void[]> {
+        if (Array.isArray(actions)) {
+            const areRequired = actions[0].required;
+
+            const promise = Promise.all(actions.map((action) => AppInitializer.executeActions(action)));
+
+            if (!areRequired) {
+                return Promise.resolve([]);
+            }
+
+            await promise;
+
+            return promise;
         }
 
-        const inFlightActions = actions.map(([key, fn]) => [key, Promise.resolve().then(fn)] satisfies InFlightAction);
+        const promise = await AppInitializer.executeActions(actions);
 
-        const results = Promise.all(
-            inFlightActions.map(async ([key, inFlightAction]) => {
-                try {
-                    await inFlightAction;
+        return [promise];
+    }
 
-                    return [key, true] as [string, boolean];
-                } catch (e) {
-                    return [key, false] as [string, boolean];
-                }
-            }),
-        );
-
-        const actionWithSuccessState = await Promise.race([results, finalPromise.promise]);
-        if (!actionWithSuccessState) {
-            return;
+    private static async executeActions(action: Action): Promise<void> {
+        const { generation } = AppInitializer;
+        const controller = new ControlledPromise();
+        const current = { ...action, controller, active: true };
+        AppInitializer.actions.set(action.key, current);
+        AppInitializer.notify();
+        let timeout = d(5).seconds.inWholeMilliseconds;
+        while (generation === AppInitializer.generation) {
+            // Each retry depends on the previous attempt.
+            // oxlint-disable-next-line no-await-in-loop
+            const result = await Promise.race([
+                Promise.resolve()
+                    .then(() => {
+                        if (generation === AppInitializer.generation) {
+                            return action.setup();
+                        }
+                        return undefined;
+                    })
+                    .then(
+                        () => ({ succeeded: true as const }),
+                        (error: unknown) => ({ succeeded: false as const, error }),
+                    ),
+                controller.promise.then(() => undefined),
+            ]);
+            if (!result || generation !== AppInitializer.generation) {
+                return;
+            }
+            if (result.succeeded) {
+                current.active = false;
+                current.error = undefined;
+                AppInitializer.notify();
+                controller.resolve();
+                return;
+            }
+            current.error = result.error;
+            AppInitializer.notify();
+            const retryDelay = timeout;
+            // oxlint-disable-next-line no-await-in-loop
+            await new Promise<void>((resolve) => {
+                const timer = setTimeout(resolve, retryDelay);
+                void controller.promise.then(() => {
+                    clearTimeout(timer);
+                    resolve();
+                });
+            });
+            timeout = Math.min(timeout * 1.5, d(2).minutes.inWholeMilliseconds);
         }
-        const failedActions = actionWithSuccessState.filter(([_, succeeded]) => !succeeded);
-
-        if (!failedActions.length) {
-            finalPromise.resolve();
-            AppInitializer.actions = AppInitializer.actions.filter((action) => action !== finalPromise);
-
-            return;
-        }
-
-        await Promise.race([
-            finalPromise.promise,
-            new Promise((resolve) => {
-                setTimeout(resolve, timeout);
-            }),
-        ]);
-
-        await AppInitializer.executeActions(
-            actions.filter(([key]) => failedActions.some(([k]) => k === key)),
-            {
-                timeout: Math.min(timeout * timeoutMultiplier, maxTimeout),
-                timeoutMultiplier,
-                maxTimeout,
-                promise: finalPromise,
-            },
-        );
     }
 }

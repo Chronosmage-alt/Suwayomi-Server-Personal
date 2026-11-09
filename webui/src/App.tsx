@@ -8,7 +8,7 @@
 
 import CssBaseline from '@mui/material/CssBaseline';
 import type { PropsWithChildren, ReactNode } from 'react';
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { loadErrorMessages, loadDevMessages } from '@apollo/client/dev';
 import { loadable } from 'react-lazily/loadable';
@@ -34,6 +34,10 @@ import { MigrationFABIndicator } from '@/features/migration/components/Migration
 import { SplashScreen } from '@/features/authentication/components/SplashScreen.tsx';
 import { OffsetContainer } from '@/base/components/OffsetComponent.tsx';
 import { AppInitializer } from '@/base/AppInitializer.ts';
+import { useLingui } from '@lingui/react/macro';
+import { TypographyMaxLines } from '@/base/components/texts/TypographyMaxLines.tsx';
+import Stack from '@mui/material/Stack';
+import { getErrorMessage } from '@/lib/HelperFunctions.ts';
 
 const { Browse } = loadable(() => import('@/features/browse/screens/Browse.tsx'), lazyLoadFallback);
 const { DownloadQueue } = loadable(() => import('@/features/downloads/screens/DownloadQueue.tsx'), lazyLoadFallback);
@@ -122,22 +126,16 @@ const ScrollToTop = () => {
 };
 
 const InitializeGuard = ({ children }: PropsWithChildren) => {
+    const { t } = useLingui();
     const { accessToken, refreshToken, isAuthRequired } = AuthManager.useSession();
 
-    const [isInitialized, setIsInitialized] = useState(false);
+    const { initialized, actions } = AppInitializer.useStatus();
 
     useEffect(() => {
-        let active = true;
-        AppInitializer.start().then(() => {
-            if (active) {
-                setIsInitialized(true);
-            }
-        });
+        void AppInitializer.start();
 
         return () => {
-            active = false;
             AppInitializer.stop();
-            setIsInitialized(false);
         };
     }, []);
 
@@ -145,8 +143,27 @@ const InitializeGuard = ({ children }: PropsWithChildren) => {
         return <LoginPage redirect={false} />;
     }
 
-    if (!isInitialized) {
-        return <SplashScreen />;
+    if (!initialized) {
+        const activeAction = actions.find((action) => action.required && action.active);
+        const message = activeAction?.message;
+        const errorMessage = activeAction?.errorMessage;
+        const error = activeAction?.error;
+
+        return (
+            <SplashScreen
+                message={
+                    <Stack sx={{ pt: 4, alignItems: 'center' }}>
+                        <TypographyMaxLines>{!!message && t(message)}</TypographyMaxLines>
+                        <TypographyMaxLines color="textSecondary" variant="body2">
+                            {!!error && !!errorMessage && t(errorMessage)}
+                        </TypographyMaxLines>
+                        <TypographyMaxLines color="textSecondary" variant="body2">
+                            {getErrorMessage(error)}
+                        </TypographyMaxLines>
+                    </Stack>
+                }
+            />
+        );
     }
 
     return children;
@@ -193,10 +210,10 @@ const MainApp = () => {
             id="appMainContainer"
             component="main"
             sx={{
-                minHeight: `calc(100vh - ${appBarHeight + bottomBarHeight}px)`,
-                width: `calc(100vw - (100vw - 100%) - ${navBarWidth}px)`,
-                minWidth: `calc(100vw - (100vw - 100%) - ${navBarWidth}px)`,
-                maxWidth: `calc(100vw - (100vw - 100%) - ${navBarWidth}px)`,
+                minHeight: `calc(100dvh - ${appBarHeight + bottomBarHeight}px)`,
+                width: `calc(100dvw - (100dvw - 100%) - ${navBarWidth}px)`,
+                minWidth: `calc(100dvw - (100dvw - 100%) - ${navBarWidth}px)`,
+                maxWidth: `calc(100dvw - (100dvw - 100%) - ${navBarWidth}px)`,
                 position: 'relative',
                 mt: `${appBarHeight}px`,
                 pb: `calc(${bottomBarHeight}px + ${!bottomBarHeight ? 'env(safe-area-inset-bottom)' : '0px'})`,
@@ -345,7 +362,7 @@ export const App: React.FC = () => (
 
             <Box sx={{ display: 'flex' }}>
                 <OffsetContainerRoot>
-                    <Box sx={{ flexShrink: 0, position: 'relative', height: '100vh' }}>
+                    <Box sx={{ flexShrink: 0, position: 'relative', height: '100dvh' }}>
                         <DefaultNavBar />
                     </Box>
                     <Routes>
