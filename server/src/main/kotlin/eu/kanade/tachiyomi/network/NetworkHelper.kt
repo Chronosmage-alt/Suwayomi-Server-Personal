@@ -9,6 +9,7 @@ package eu.kanade.tachiyomi.network
 
 import android.content.Context
 import eu.kanade.tachiyomi.network.interceptor.CloudflareInterceptor
+import eu.kanade.tachiyomi.network.interceptor.ImageHostDiagnostics
 import eu.kanade.tachiyomi.network.interceptor.UncaughtExceptionInterceptor
 import eu.kanade.tachiyomi.network.interceptor.UserAgentInterceptor
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -68,6 +69,7 @@ class NetworkHelper(
 
     private val baseClientBuilder: OkHttpClient.Builder
         get() {
+            val imageDiagnostics = ImageHostDiagnostics()
             val builder =
                 OkHttpClient
                     .Builder()
@@ -82,6 +84,8 @@ class NetworkHelper(
                         ),
                     ).addInterceptor(UncaughtExceptionInterceptor())
                     .addInterceptor(UserAgentInterceptor(::defaultUserAgentProvider))
+                    .eventListenerFactory { imageDiagnostics.listener() }
+                    .addNetworkInterceptor(imageDiagnostics)
 
             // if (preferences.verboseLogging().get()) {
             val httpLoggingInterceptor =
@@ -95,6 +99,7 @@ class NetworkHelper(
                     },
                 ).apply {
                     level = HttpLoggingInterceptor.Level.BASIC
+                    redactQueryParams("token", "access_token", "api_key", "key", "signature", "sig")
                 }
             builder.addNetworkInterceptor(httpLoggingInterceptor)
             // }
