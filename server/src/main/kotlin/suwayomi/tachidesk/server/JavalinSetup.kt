@@ -44,7 +44,6 @@ import suwayomi.tachidesk.i18n.LocalizationHelper
 import suwayomi.tachidesk.i18n.MR
 import suwayomi.tachidesk.manga.MangaAPI
 import suwayomi.tachidesk.manga.impl.util.network.isHostUnreachable
-import suwayomi.tachidesk.opds.OpdsAPI
 import suwayomi.tachidesk.server.user.ForbiddenException
 import suwayomi.tachidesk.server.user.UnauthorizedException
 import suwayomi.tachidesk.server.user.UserType
@@ -140,7 +139,6 @@ object JavalinSetup {
                             MangaAPI.defineEndpoints()
                         }
 
-                        OpdsAPI.defineEndpoints()
                         GraphQL.defineEndpoints()
 
                         after { ctx ->

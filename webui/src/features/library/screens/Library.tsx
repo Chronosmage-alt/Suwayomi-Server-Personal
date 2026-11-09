@@ -25,7 +25,6 @@ import { LibraryToolbarMenu } from '@/features/library/components/LibraryToolbar
 import { LibraryMangaGrid } from '@/features/library/components/LibraryMangaGrid.tsx';
 import { AppbarSearch } from '@/base/components/AppbarSearch.tsx';
 import { UpdateChecker } from '@/features/updates/components/UpdateChecker.tsx';
-import { SyncButton } from '@/features/sync/components/SyncButton.tsx';
 import { useSelectableCollection } from '@/base/collection/hooks/useSelectableCollection.ts';
 import { SelectableCollectionSelectMode } from '@/base/collection/components/SelectableCollectionSelectMode.tsx';
 import { useGetVisibleLibraryMangas } from '@/features/library/hooks/useGetVisibleLibraryMangas.ts';
@@ -227,7 +226,6 @@ export function Library() {
                 <>
                     <AppbarSearch searchHistoryKey="library" suggestions={mangaTitles} />
                     <LibraryToolbarMenu category={activeTab} mangas={mangas} />
-                    <SyncButton />
                     <UpdateChecker categoryId={activeTab?.id} />
                 </>
             )}

@@ -16,7 +16,6 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.upsert
 import suwayomi.tachidesk.graphql.directives.RequireAuth
 import suwayomi.tachidesk.graphql.types.ChapterMetaType
 import suwayomi.tachidesk.graphql.types.ChapterType
@@ -25,7 +24,6 @@ import suwayomi.tachidesk.graphql.types.SyncConflictInfoType
 import suwayomi.tachidesk.manga.impl.Chapter
 import suwayomi.tachidesk.manga.impl.Manga
 import suwayomi.tachidesk.manga.impl.chapter.getChapterDownloadReadyById
-import suwayomi.tachidesk.manga.impl.sync.KoreaderSyncService
 import suwayomi.tachidesk.manga.model.table.ChapterMetaTable
 import suwayomi.tachidesk.manga.model.table.ChapterTable
 import suwayomi.tachidesk.manga.model.table.ChapterUserTable
@@ -110,13 +108,6 @@ class ChapterMutation {
                         this[ChapterUserTable.lastReadAt] = now
                     }
                 }
-            }
-        }
-
-        // Sync with KoreaderSync when progress is updated
-        if (patch.lastPageRead != null || patch.isRead == true) {
-            ids.forEach { chapterId ->
-                KoreaderSyncService.schedulePushProgress(userId, chapterId)
             }
         }
     }
@@ -465,37 +456,7 @@ class ChapterMutation {
         val paramsMap = input.toParams()
 
         return future {
-            var chapter = getChapterDownloadReadyById(userId, chapterId)
-            val syncResult = KoreaderSyncService.checkAndPullProgress(userId, chapter.id)
-            var syncConflictInfo: SyncConflictInfoType? = null
-
-            if (syncResult != null) {
-                if (syncResult.isConflict) {
-                    syncConflictInfo =
-                        SyncConflictInfoType(
-                            deviceName = syncResult.device,
-                            remotePage = syncResult.pageRead,
-                        )
-                }
-
-                if (syncResult.shouldUpdate) {
-                    // Update DB for SILENT and RECEIVE
-                    transaction {
-                        ChapterUserTable.upsert(ChapterUserTable.chapter, ChapterUserTable.user) {
-                            it[user] = userId
-                            it[ChapterUserTable.chapter] = chapter.id
-                            it[lastPageRead] = syncResult.pageRead
-                            it[lastReadAt] = syncResult.timestamp
-                        }
-                    }
-                }
-                // For PROMPT, SILENT, and RECEIVE, return the remote progress
-                chapter =
-                    chapter.copy(
-                        lastPageRead = if (syncResult.shouldUpdate) syncResult.pageRead else chapter.lastPageRead,
-                        lastReadAt = if (syncResult.shouldUpdate) syncResult.timestamp else chapter.lastReadAt,
-                    )
-            }
+            val chapter = getChapterDownloadReadyById(userId, chapterId)
 
             val params =
                 buildString {
@@ -528,7 +489,7 @@ class ChapterMutation {
                                 .first()
                         },
                     ),
-                syncConflict = syncConflictInfo,
+                syncConflict = null,
             )
         }
     }

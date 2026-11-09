@@ -14,7 +14,6 @@ import suwayomi.tachidesk.manga.impl.Chapter
 import suwayomi.tachidesk.manga.impl.ChapterDownloadHelper
 import suwayomi.tachidesk.manga.impl.Manga
 import suwayomi.tachidesk.manga.impl.Page
-import suwayomi.tachidesk.manga.impl.sync.KoreaderSyncService
 import suwayomi.tachidesk.server.JavalinSetup.Attribute
 import suwayomi.tachidesk.server.JavalinSetup.future
 import suwayomi.tachidesk.server.JavalinSetup.getAttribute
@@ -105,11 +104,7 @@ object MangaController {
                         ctx.result(it.first)
 
                         if (updateProgress == true) {
-                            val chapterId = Chapter.updateChapterProgress(userId, mangaId, chapterIndex, pageNo = index)
-                            // Sync progress with KoreaderSync if chapter update was successful
-                            if (chapterId != -1) {
-                                KoreaderSyncService.schedulePushProgress(userId, chapterId)
-                            }
+                            Chapter.updateChapterProgress(userId, mangaId, chapterIndex, pageNo = index)
                         }
                     }
                 }

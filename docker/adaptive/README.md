@@ -65,7 +65,10 @@ H2. Verify the production database type before importing anything.
    offline snapshot. Never copy a live database file or point two servers at it.
 3. Save the fresh test database separately. Copy production's `database.mv.db`
    into this project's `data` folder, leaving the original untouched. Ensure the
-   copied file is writable by the configured test UID/GID.
+   copied file is writable by the configured test UID/GID. Also copy the matching
+   `settings/migrations.xml` from the same stopped snapshot. It records the H2
+   engine migration version; omitting it can make a modern database file look
+   like an old H2 format. Keep this file paired with its database snapshot.
 4. Keep the test instance's fresh server.conf. Do not copy production download,
    local-source, backup, sync or integration paths/settings into the test instance.
 5. Restart production, then start only this test project and inspect migration logs.

@@ -28,6 +28,7 @@ vi.mock('@/lib/requests/RequestManager.ts', () => ({
                     nodes: [
                         { id: 1, name: 'AniList', isLoggedIn: controls.loggedIn, isTokenExpired: false },
                         { id: 2, name: 'MyAnimeList', isLoggedIn: controls.loggedIn, isTokenExpired: false },
+                        { id: 3, name: 'MangaBaka', isLoggedIn: controls.loggedIn, isTokenExpired: false },
                     ],
                 },
             },
@@ -39,6 +40,7 @@ vi.mock('@/lib/requests/RequestManager.ts', () => ({
                         nodes: [
                             { id: 101, trackerId: 1 },
                             { id: 102, trackerId: 2 },
+                            { id: 103, trackerId: 3 },
                         ],
                     },
                 },
@@ -78,7 +80,7 @@ describe('existing tracker providers', () => {
         expect(screen.getByText('Komga inventory')).toBeTruthy();
         expect(controls.refresh).not.toHaveBeenCalled();
     });
-    it('keeps linked AniList and MAL visible and refreshes each only once', () => {
+    it('keeps linked AniList MAL and MangaBaka visible and refreshes each only once', () => {
         i18n.load('en', {});
         i18n.activate('en');
         const ui = (
@@ -91,8 +93,9 @@ describe('existing tracker providers', () => {
         const view = render(ui);
         expect(screen.getByText('AniList')).toBeTruthy();
         expect(screen.getByText('MyAnimeList')).toBeTruthy();
-        expect(controls.refresh.mock.calls).toEqual([[101], [102]]);
+        expect(screen.getByText('MangaBaka')).toBeTruthy();
+        expect(controls.refresh.mock.calls).toEqual([[101], [102], [103]]);
         view.rerender(ui);
-        expect(controls.refresh).toHaveBeenCalledTimes(2);
+        expect(controls.refresh).toHaveBeenCalledTimes(3);
     });
 });

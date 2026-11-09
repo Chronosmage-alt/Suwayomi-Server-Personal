@@ -147,11 +147,6 @@ export class AppInitializer {
                 required: false,
                 setup: () => this.subscriptions.push(requestManager.webUIUpdateSubscription().subscribe()),
             },
-            {
-                key: 'syncSubscription',
-                required: false,
-                setup: () => this.subscriptions.push(requestManager.syncSubscription().subscribe()),
-            },
             { key: 'basicAuthDeprecationReminder', required: false, setup: () => BasicAuthDeprecationReminder.start() },
         ],
     ];

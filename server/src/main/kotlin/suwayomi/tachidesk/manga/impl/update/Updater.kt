@@ -36,7 +36,6 @@ import org.jetbrains.exposed.v1.core.leftJoin
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import suwayomi.tachidesk.global.impl.sync.SyncManager
 import suwayomi.tachidesk.global.model.table.UserAccountTable
 import suwayomi.tachidesk.global.model.table.UserSettingsTable
 import suwayomi.tachidesk.manga.impl.Category
@@ -446,8 +445,6 @@ class Updater : IUpdater {
         }
         scope
             .launch {
-                SyncManager.ensureSync(userId)
-
                 saveLastUpdateTimestamp()
 
                 val includeInUpdateStatusToCategoryMap = categories.groupBy { it.includeInUpdate }

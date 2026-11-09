@@ -36,8 +36,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.upsert
-import suwayomi.tachidesk.global.impl.sync.SyncYomiSyncService
-import suwayomi.tachidesk.global.impl.sync.chapterTombstoneKey
 import suwayomi.tachidesk.global.model.table.UserAccountTable
 import suwayomi.tachidesk.manga.impl.download.DownloadManager
 import suwayomi.tachidesk.manga.impl.track.Track
@@ -417,15 +415,6 @@ object Chapter {
                 (chaptersToInsert + chaptersToUpdate).map { ObservedChapter(it.url, it.chapterNumber, it.uploadDate) },
             )
         }
-
-        val tombstoneKey = { chapterUrl: String ->
-            chapterTombstoneKey(mangaEntry[MangaTable.sourceReference], mangaEntry[MangaTable.url], chapterUrl)
-        }
-        val deletedIds = chaptersIdsToDelete.toSet()
-        SyncYomiSyncService.recordChapterListChange(
-            removedKeys = chaptersInDb.filter { it.id in deletedIds }.map { tombstoneKey(it.url) },
-            addedKeys = chaptersToInsert.map { tombstoneKey(it.url) },
-        )
 
         val inLibraryUserIds =
             transaction {

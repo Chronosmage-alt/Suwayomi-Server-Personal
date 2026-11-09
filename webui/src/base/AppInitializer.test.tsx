@@ -122,20 +122,20 @@ describe('application initialization', () => {
         await vi.advanceTimersByTimeAsync(0);
         expect(controls.downloads).toHaveBeenCalledOnce();
         expect(controls.notifierStart).toHaveBeenCalledOnce();
-        expect(controls.subscribe).toHaveBeenCalledTimes(4);
+        expect(controls.subscribe).toHaveBeenCalledTimes(3);
     });
     it('initializes no-login access and replaces permanent subscriptions on restart', async () => {
         await AppInitializer.start();
         await vi.advanceTimersByTimeAsync(0);
         expect(controls.queue).toHaveBeenCalledOnce();
-        expect(controls.subscribe).toHaveBeenCalledTimes(4);
+        expect(controls.subscribe).toHaveBeenCalledTimes(3);
         await AppInitializer.start();
         await vi.advanceTimersByTimeAsync(0);
-        expect(controls.unsubscribe).toHaveBeenCalledTimes(4);
-        expect(controls.subscribe).toHaveBeenCalledTimes(8);
+        expect(controls.unsubscribe).toHaveBeenCalledTimes(3);
+        expect(controls.subscribe).toHaveBeenCalledTimes(6);
         AppInitializer.stop();
         AppInitializer.stop();
-        expect(controls.unsubscribe).toHaveBeenCalledTimes(8);
+        expect(controls.unsubscribe).toHaveBeenCalledTimes(6);
     });
 
     it('retries failed required data without duplicating subscriptions', async () => {
@@ -144,7 +144,7 @@ describe('application initialization', () => {
         await vi.advanceTimersByTimeAsync(5000);
         await started;
         expect(controls.required).toHaveBeenCalledTimes(2);
-        expect(controls.subscribe).toHaveBeenCalledTimes(4);
+        expect(controls.subscribe).toHaveBeenCalledTimes(3);
         expect(controls.notifierStart).toHaveBeenCalledOnce();
     });
 
@@ -166,7 +166,7 @@ describe('application initialization', () => {
         await AppInitializer.start();
         await vi.advanceTimersByTimeAsync(0);
         expect(controls.notifierStart).toHaveBeenCalledOnce();
-        expect(controls.subscribe).toHaveBeenCalledTimes(4);
+        expect(controls.subscribe).toHaveBeenCalledTimes(3);
     });
 
     it('retries synchronous background failures without duplicating subscriptions', async () => {
@@ -176,6 +176,6 @@ describe('application initialization', () => {
         await AppInitializer.start();
         await vi.advanceTimersByTimeAsync(5000);
         expect(controls.downloads).toHaveBeenCalledTimes(2);
-        expect(controls.subscribe).toHaveBeenCalledTimes(4);
+        expect(controls.subscribe).toHaveBeenCalledTimes(3);
     });
 });
