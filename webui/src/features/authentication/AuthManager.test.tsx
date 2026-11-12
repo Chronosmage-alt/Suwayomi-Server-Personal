@@ -9,6 +9,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AuthManager } from '@/features/authentication/AuthManager.ts';
 
+vi.mock('@/base/AppSession.ts', () => ({ AppSession: {} }));
+
 const storage = vi.hoisted(() => new Map<string, string>());
 vi.mock('@/lib/storage/AppStorage.ts', () => ({
     AppStorage: {
